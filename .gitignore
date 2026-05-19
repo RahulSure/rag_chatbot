@@ -1,0 +1,70 @@
+# Environment
+.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Frontend / Node.js (platform/apps/web)
+# ──────────────────────────────────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+.turbo/
+next-env.d.ts
+*.tsbuildinfo
+.vercel/
+
+# Node debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+
+# Test coverage
+coverage/
+
+# Next.js local env
+.env.local
+.env*.local
+
+# Vector store (local ChromaDB — no longer used)
+chroma_db/
+
+# OCR output (regenerated from PDF)
+# data/processed/
+
+# Raw PDFs / large binaries (distribute separately, exceed GitHub 100MB limit)
+data/raw/
+*.pdf
+
+# API response log (generated at runtime)
+responses.json
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log

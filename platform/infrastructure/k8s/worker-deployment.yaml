@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shrimali-worker
+  namespace: shrimali
+  labels:
+    app: shrimali-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shrimali-worker
+  template:
+    metadata:
+      labels:
+        app: shrimali-worker
+    spec:
+      containers:
+        - name: worker
+          image: shrimali/worker:latest
+          envFrom:
+            - secretRef:
+                name: shrimali-secrets
+          env:
+            - name: REDIS_URL
+              value: "redis://shrimali-redis:6379"
+            - name: CELERY_BROKER_URL
+              value: "redis://shrimali-redis:6379/0"
+          command:
+            - celery
+            - -A
+            - platform.services.worker.celery_app
+            - worker
+            - --loglevel=info
+            - --concurrency=1
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "3Gi"
+              cpu: "2000m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shrimali-beat
+  namespace: shrimali
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shrimali-beat
+  template:
+    metadata:
+      labels:
+        app: shrimali-beat
+    spec:
+      containers:
+        - name: beat
+          image: shrimali/worker:latest
+          envFrom:
+            - secretRef:
+                name: shrimali-secrets
+          env:
+            - name: CELERY_BROKER_URL
+              value: "redis://shrimali-redis:6379/0"
+          command:
+            - celery
+            - -A
+            - platform.services.worker.celery_app
+            - beat
+            - --loglevel=info
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"

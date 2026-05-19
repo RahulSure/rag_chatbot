@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shrimali-web
+  namespace: shrimali
+  labels:
+    app: shrimali-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: shrimali-web
+  template:
+    metadata:
+      labels:
+        app: shrimali-web
+    spec:
+      containers:
+        - name: web
+          image: shrimali/web:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: "https://api.shrimali.ai"
+            - name: NEXT_PUBLIC_SITE_URL
+              value: "https://shrimali.ai"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shrimali-web
+  namespace: shrimali
+spec:
+  selector:
+    app: shrimali-web
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP
