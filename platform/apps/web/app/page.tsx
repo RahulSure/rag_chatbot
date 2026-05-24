@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import { HeroSection } from "@/components/HeroSection";
 import { DailyWisdomSection } from "@/components/DailyWisdom";
 import { TopicsGrid } from "@/components/TopicsGrid";
 import { ArticleCard } from "@/components/ArticleCard";
+import { VideoCarousel } from "@/components/VideoCarousel";
 import { getArticles, getBooks, getTrendingQueries } from "@/lib/api";
 import Link from "next/link";
 import { ArrowRight, BookOpen } from "lucide-react";
@@ -16,7 +16,8 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroSection />
+      {/* Hero video carousel — primary attraction */}
+      <VideoCarousel />
 
       {/* Daily Wisdom */}
       <Suspense fallback={<div className="h-48" />}>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
 import { WhatsAppCTA } from "@/components/WhatsAppCTA";
+import { GalaxyBackground } from "@/components/GalaxyBackground";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -44,11 +45,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <body className="cosmic-bg min-h-screen antialiased">
-        <Navbar />
-        <main className="pt-16">{children}</main>
-        <WhatsAppCTA />
-        <footer className="border-t border-gold/10 py-12 px-6 mt-20">
+      <body className="min-h-screen antialiased bg-background">
+        <GalaxyBackground />
+        <div className="relative z-10">
+          <Navbar />
+          <main className="pt-16">{children}</main>
+          <WhatsAppCTA />
+          <footer className="border-t border-gold/10 py-12 px-6 mt-20">
           <div className="max-w-6xl mx-auto text-center">
             <div className="text-2xl mb-3">🕉</div>
             <p className="font-serif text-gold text-lg mb-2">
@@ -82,6 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </p>
           </div>
         </footer>
+        </div>
       </body>
     </html>
   );

@@ -40,6 +40,8 @@ const config: Config = {
         serif: ["Playfair Display", "Georgia", "serif"],
         sans: ["Inter", "system-ui", "sans-serif"],
         devanagari: ["Noto Sans Devanagari", "Arial", "sans-serif"],
+        cinzel: ["Cinzel Decorative", "Cinzel", "Playfair Display", "serif"],
+        cormorant: ["Cormorant Garamond", "Playfair Display", "serif"],
       },
       backgroundImage: {
         "cosmic-gradient": "radial-gradient(ellipse at top, #1a0a2e 0%, #0a0a0f 60%)",

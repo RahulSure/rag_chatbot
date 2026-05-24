@@ -170,6 +170,73 @@ curl -X POST http://localhost:8000/ingest \
 
 ---
 
+## Running the Platform (Monorepo)
+
+The [platform/](platform/) directory contains the newer monorepo layout with a FastAPI backend ([platform/apps/api/](platform/apps/api/)) and a Next.js frontend ([platform/apps/web/](platform/apps/web/)).
+
+Run all commands from the **repo root** (`/Users/ananyaroy/sayantan/rag_chatbot`) unless otherwise noted.
+
+### Backend — FastAPI (`platform/apps/api`)
+
+1. Activate the Python venv and install backend dependencies:
+   ```bash
+   source env/bin/activate
+   pip install -r platform/apps/api/requirements.txt
+   ```
+
+2. Ensure `.env` exists at the repo root (see [Configuration](#configuration)). It is loaded by [platform/apps/api/main.py](platform/apps/api/main.py) via `load_dotenv()`.
+
+3. Start the API on port `8000`. The `apps.api.main` import path is resolved relative to the `platform/` directory, so `cd` in first:
+   ```bash
+   cd platform
+   uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+   Equivalently, you can run the module directly:
+   ```bash
+   cd platform && python -m apps.api.main
+   ```
+
+   > **Note:** Running `uvicorn ... --app-dir platform` from the repo root can fail with `ModuleNotFoundError: No module named 'apps'` depending on uvicorn's reload-worker behavior. Use `cd platform` instead.
+
+4. Verify it is up:
+   ```bash
+   curl http://localhost:8000/health
+   ```
+   Interactive docs: <http://localhost:8000/api/docs>
+
+### Frontend — Next.js (`platform/apps/web`)
+
+1. Install JS dependencies (uses Yarn — `yarn.lock` is committed):
+   ```bash
+   cd platform/apps/web
+   yarn install
+   ```
+
+2. The default API URL is set in [platform/apps/web/.env.local](platform/apps/web/.env.local):
+   ```
+   NEXT_PUBLIC_API_URL=http://localhost:8000
+   NEXT_PUBLIC_SITE_URL=http://localhost:3000
+   ```
+   Adjust if the backend runs on a different host/port.
+
+3. Start the dev server on port `3000`:
+   ```bash
+   yarn dev
+   ```
+   Open <http://localhost:3000>.
+
+4. Production build:
+   ```bash
+   yarn build && yarn start
+   ```
+
+### Running both together
+
+Open two terminals — one for the backend, one for the frontend — and keep them running. The frontend talks to the backend over `NEXT_PUBLIC_API_URL`, so start the backend first so the `/health` check succeeds before loading the UI.
+
+---
+
 ## Project Structure
 
 ```

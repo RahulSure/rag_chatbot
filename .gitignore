@@ -68,3 +68,7 @@ responses.json
 
 # Logs
 *.log
+
+*.mp4
+data/
+public/videos/
