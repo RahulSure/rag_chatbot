@@ -261,3 +261,4 @@ rag_chatbot/
 ├── .env.example             # Template — safe to commit
 └── requirements.txt
 ```
+# astro-rag
