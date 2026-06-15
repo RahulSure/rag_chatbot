@@ -123,15 +123,44 @@ Now reply naturally, in flowing conversational language:
 """
 
 
-@lru_cache(maxsize=1)
-def get_query_engine(similarity_top_k: int = 12):
+def _build_metadata_filters(
+    book_slug: str | None = None,
+    topic: str | None = None,
+    language: str | None = None,
+):
+    """Build a LlamaIndex MetadataFilters from optional metadata constraints.
+
+    Returns None when no filter is requested so the retriever falls back to its
+    unfiltered behavior.
+    """
+    from llama_index.core.vector_stores import MetadataFilter, MetadataFilters
+
+    pairs = [
+        ("book_slug", book_slug),
+        ("topic", topic),
+        ("language", language),
+    ]
+    filters = [MetadataFilter(key=k, value=v) for k, v in pairs if v]
+    return MetadataFilters(filters=filters) if filters else None
+
+
+@lru_cache(maxsize=8)
+def get_query_engine(
+    similarity_top_k: int = 12,
+    book_slug: str | None = None,
+    topic: str | None = None,
+    language: str | None = None,
+):
     """
     Build and cache a LlamaIndex RetrieverQueryEngine.
 
     Parameters
     ----------
     similarity_top_k:
-        Number of top chunks to retrieve from ChromaDB per query.
+        Number of top chunks to retrieve per query.
+    book_slug, topic, language:
+        Optional metadata filters applied to the vector search. Each maps to
+        a `metadata.<field>` filter the Atlas vector_index already declares.
     """
     from llama_index.core import VectorStoreIndex, StorageContext, Settings
     from llama_index.core.prompts import PromptTemplate
@@ -161,6 +190,7 @@ def get_query_engine(similarity_top_k: int = 12):
     retriever = VectorIndexRetriever(
         index=index,
         similarity_top_k=similarity_top_k,
+        filters=_build_metadata_filters(book_slug, topic, language),
     )
 
     qa_prompt = PromptTemplate(_HINDI_RAG_PROMPT)
@@ -175,7 +205,12 @@ def get_query_engine(similarity_top_k: int = 12):
     return query_engine
 
 
-def get_streaming_query_engine(similarity_top_k: int = 12):
+def get_streaming_query_engine(
+    similarity_top_k: int = 12,
+    book_slug: str | None = None,
+    topic: str | None = None,
+    language: str | None = None,
+):
     """Returns a streaming-enabled query engine (not cached — streaming = stateful)."""
     from llama_index.core import VectorStoreIndex, StorageContext, Settings
     from llama_index.core.prompts import PromptTemplate
@@ -205,6 +240,7 @@ def get_streaming_query_engine(similarity_top_k: int = 12):
     retriever = VectorIndexRetriever(
         index=index,
         similarity_top_k=similarity_top_k,
+        filters=_build_metadata_filters(book_slug, topic, language),
     )
 
     qa_prompt = PromptTemplate(_HINDI_RAG_PROMPT)

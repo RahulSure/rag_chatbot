@@ -144,7 +144,12 @@ def _handle_filtered(req: FilteredQueryRequest, session_id: str) -> QueryRespons
     from rag.query_engine import get_query_engine
 
     try:
-        engine = get_query_engine(similarity_top_k=req.top_k)
+        engine = get_query_engine(
+            similarity_top_k=req.top_k,
+            book_slug=req.book_slug,
+            topic=req.topic,
+            language=req.language,
+        )
         response = engine.query(req.question)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))

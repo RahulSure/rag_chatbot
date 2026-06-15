@@ -50,7 +50,7 @@ def _get_reader():
     return _reader
 
 
-def ocr_page(pdf_path: str, page_number: int, dpi: int) -> str:
+def _render_page(pdf_path: str, page_number: int, dpi: int):
     import fitz
     import numpy as np
 
@@ -58,11 +58,49 @@ def ocr_page(pdf_path: str, page_number: int, dpi: int) -> str:
     page = doc[page_number - 1]
     pix  = page.get_pixmap(matrix=fitz.Matrix(dpi / 72, dpi / 72), alpha=False)
     img  = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, 3)
+    is_landscape = pix.width > pix.height
     doc.close()
+    return img, is_landscape
 
+
+def _ocr_image(img) -> str:
     reader  = _get_reader()
     results = reader.readtext(img, detail=0, paragraph=True)
     return "\n".join(results)
+
+
+def ocr_page(pdf_path: str, page_number: int, dpi: int) -> str:
+    img, _ = _render_page(pdf_path, page_number, dpi)
+    return _ocr_image(img)
+
+
+def _book_pages_for_pdf(pdf_path: str, pdf_page: int, dpi: int, two_up: bool):
+    """Yield (image, is_book_page) tuples for a single PDF page.
+
+    With two_up=True landscape PDF pages are split into left then right halves;
+    portrait pages pass through. Each yielded image becomes one book page.
+    """
+    img, is_landscape = _render_page(pdf_path, pdf_page, dpi)
+    if two_up and is_landscape:
+        mid = img.shape[1] // 2
+        yield img[:, :mid]
+        yield img[:, mid:]
+    else:
+        yield img
+
+
+def _book_page_offset(pdf_path: str, up_to_pdf_page: int, dpi: int, two_up: bool) -> int:
+    """How many book pages precede ``up_to_pdf_page`` (1-indexed exclusive)."""
+    if not two_up:
+        return up_to_pdf_page - 1
+    import fitz
+    doc = fitz.open(pdf_path)
+    count = 0
+    for i in range(up_to_pdf_page - 1):
+        page = doc[i]
+        count += 2 if page.rect.width > page.rect.height else 1
+    doc.close()
+    return count
 
 
 def _existing_pages(out_path: Path) -> set[int]:
@@ -78,6 +116,7 @@ def transcribe_range(
     dpi: int,
     out_path: str,
     resume: bool = False,
+    two_up: bool = False,
 ) -> None:
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -88,28 +127,38 @@ def transcribe_range(
     if done:
         print(f"[transcribe] Resume: {len(done)} pages already done, skipping them.")
 
+    book_page = _book_page_offset(pdf_path, start, dpi, two_up) + 1
     mode = "a" if (resume and out.exists()) else "w"
     with open(out, mode, encoding="utf-8") as fh:
-        for page_num in range(start, end + 1):
-            if page_num in done:
-                continue
+        for pdf_page in range(start, end + 1):
+            images = list(_book_pages_for_pdf(pdf_path, pdf_page, dpi, two_up))
+            idx = pdf_page - start + 1
+            for half_idx, img in enumerate(images):
+                if book_page in done:
+                    book_page += 1
+                    continue
 
-            idx = page_num - start + 1
-            print(f"[transcribe] Page {page_num} ({idx}/{total}) ...", end=" ", flush=True)
+                half_label = "" if len(images) == 1 else f" {'L' if half_idx == 0 else 'R'}"
+                print(
+                    f"[transcribe] PDF {pdf_page}{half_label} → पृष्ठ {book_page} ({idx}/{total}) ...",
+                    end=" ",
+                    flush=True,
+                )
 
-            try:
-                text = ocr_page(pdf_path, page_num, dpi)
-            except Exception as exc:
-                print(f"ERROR — {exc}")
-                text = f"[OCR failed: {exc}]"
+                try:
+                    text = _ocr_image(img)
+                except Exception as exc:
+                    print(f"ERROR — {exc}")
+                    text = f"[OCR failed: {exc}]"
 
-            char_count = len(text.replace(" ", "").replace("\n", ""))
-            print(f"chars={char_count}")
+                char_count = len(text.replace(" ", "").replace("\n", ""))
+                print(f"chars={char_count}")
 
-            fh.write(f"--- पृष्ठ {page_num} ---\n")
-            fh.write(text.strip())
-            fh.write("\n\n")
-            fh.flush()
+                fh.write(f"--- पृष्ठ {book_page} ---\n")
+                fh.write(text.strip())
+                fh.write("\n\n")
+                fh.flush()
+                book_page += 1
 
     print(f"\n[transcribe] Saved → {out}")
 
@@ -125,6 +174,9 @@ def main() -> None:
     ap.add_argument("--out",    default=DEFAULT_OUT)
     ap.add_argument("--resume", action="store_true",
                     help="Append to existing file, skipping already-done pages")
+    ap.add_argument("--two-up", action="store_true",
+                    help="Split landscape PDF pages into left/right halves "
+                         "(for books scanned 2-up); markers count book pages, not PDF pages")
     args = ap.parse_args()
 
     pdf_path = Path(args.pdf)
@@ -146,6 +198,7 @@ def main() -> None:
         dpi=args.dpi,
         out_path=args.out,
         resume=args.resume,
+        two_up=args.two_up,
     )
 
 

@@ -61,6 +61,9 @@ def load_documents_from_transcription(
     if book == "mantra_rahasya":
         from ingestion.load_transcription import load_mantra_rahasya_transcription
         documents = load_mantra_rahasya_transcription(transcription_path)
+    elif book == "apsara_sadhna":
+        from ingestion.load_transcription import load_apsara_sadhna_transcription
+        documents = load_apsara_sadhna_transcription(transcription_path)
     else:
         from ingestion.load_transcription import load_saundarya_transcription
         documents = load_saundarya_transcription(transcription_path)
@@ -136,6 +139,10 @@ def _infer_topic(chapter_title: str) -> str:
         return "beauty_spirituality"
     if "कामदेव" in title_lower or "riti" in title_lower:
         return "tantra"
+    if "अप्सरा" in title_lower or "apsara" in title_lower:
+        return "apsara"
+    if "उर्वशी" in title_lower or "नाभिदर्शना" in title_lower or "मृगाक्षी" in title_lower or "भैरवी" in title_lower:
+        return "apsara"
     return "spiritual_teachings"
 
 
@@ -224,7 +231,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run the RAG ingestion pipeline")
     parser.add_argument("--transcription", metavar="PATH", default=None)
     parser.add_argument("--book", default="saundarya",
-                        choices=["saundarya", "mantra_rahasya"],
+                        choices=["saundarya", "mantra_rahasya", "apsara_sadhna"],
                         help="Chapter map to apply (default: saundarya)")
     parser.add_argument("--skip-ocr", action="store_true")
     parser.add_argument("--force", action="store_true")

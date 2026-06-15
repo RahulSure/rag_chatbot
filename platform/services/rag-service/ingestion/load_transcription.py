@@ -8,8 +8,9 @@ Supported books
 ---------------
 - Saundarya (सौन्दर्य)  — load_saundarya_transcription()
 - Mantra Rahasya         — load_mantra_rahasya_transcription()
+- Apsara Sadhna          — load_apsara_sadhna_transcription()
 
-Both functions share the same underlying parser via load_transcription().
+All functions share the same underlying parser via load_transcription().
 """
 
 from __future__ import annotations
@@ -37,6 +38,20 @@ _SAUNDARYA_CHAPTERS: dict[int, tuple[int, str]] = {
 
 _MANTRA_RAHASYA_CHAPTERS: dict[int, tuple[int, str]] = {
     285: (1, "मन्त्र रहस्य — उत्तरार्ध"),
+}
+
+# ── Apsara Sadhna chapter map (book-page numbering after --two-up split) ──────
+# Pages 1–5 = front matter (cover, ads, copyright, photos) → skipped.
+# Page 35 is a publisher's book catalog inside ch.7; left in as minor noise.
+
+_APSARA_SADHNA_CHAPTERS: dict[int, tuple[int, str]] = {
+    6:  (1, "प्रस्तावना"),
+    7:  (2, "उर्वशी के साथ तीन दिन"),
+    17: (3, "उर्वशी तंत्र"),
+    21: (4, "नाभिदर्शना अप्सरा"),
+    25: (5, "मृगाक्षी अप्सरा"),
+    29: (6, "भैरवी चक्र"),
+    32: (7, "अप्सरा साधना में सिद्धि के अचूक उपाय"),
 }
 
 
@@ -143,4 +158,18 @@ def load_mantra_rahasya_transcription(path: str | Path) -> list:
         chapter_map=_MANTRA_RAHASYA_CHAPTERS,
         source_name="mantra_rahasya.txt",
         skip_front_matter=False,   # all pages are main content
+    )
+
+
+def load_apsara_sadhna_transcription(path: str | Path) -> list:
+    """Load Apsara Sadhna transcription with chapter metadata.
+
+    Page numbers refer to the post-split book-page sequence produced by
+    `transcribe_pages.py --two-up`, not raw PDF pages.
+    """
+    return load_transcription(
+        path=path,
+        chapter_map=_APSARA_SADHNA_CHAPTERS,
+        source_name="apsara_sadhna.txt",
+        skip_front_matter=True,
     )
