@@ -188,7 +188,7 @@ def _handle_streaming(req: QueryRequest) -> StreamingResponse:
             engine = get_streaming_query_engine(similarity_top_k=req.top_k)
             streaming_response = engine.query(req.question)
             for token in streaming_response.response_gen:
-                yield f"data: {token}\n\n"
+                yield f"data: {json.dumps(token)}\n\n"
             yield "data: [DONE]\n\n"
         except Exception as exc:
             yield f"data: [ERROR] {str(exc)}\n\n"

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getArticles, getTopics } from "@/lib/api";
 import { ArticleCard } from "@/components/ArticleCard";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Spiritual Knowledge Blog",
   description:

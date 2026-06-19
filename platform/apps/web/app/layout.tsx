@@ -40,6 +40,13 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true },
   },
+  manifest: "/manifest.json",
+  themeColor: "#c9a84c",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Shrimali AI",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

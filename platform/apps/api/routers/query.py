@@ -108,6 +108,37 @@ def filtered_query(req: FilteredQueryRequest):
     return _handle_filtered(req, session_id)
 
 
+def _generate_follow_ups(question: str, answer: str) -> list[str]:
+    """Ask the LLM for 3 follow-up questions based on the answer."""
+    try:
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "services" / "rag-service"))
+        from llm.krutrim_llm import OurLLM
+
+        llm = OurLLM(
+            api_key=os.getenv("KRUTRIM_API_KEY", ""),
+            model_name=os.getenv("KRUTRIM_MODEL", "gpt-oss-120b"),
+        )
+        prompt = (
+            f"A seeker asked: \"{question}\"\n"
+            f"The answer given was: \"{answer[:500]}\"\n\n"
+            "Generate exactly 3 short, curiosity-sparking follow-up questions a spiritual seeker might ask next. "
+            "Reply ONLY as a JSON array of 3 strings, no explanation. Example: [\"Q1?\", \"Q2?\", \"Q3?\"]"
+        )
+        result = llm.complete(prompt)
+        text = result.text.strip()
+        # extract JSON array from response
+        start = text.find("[")
+        end = text.rfind("]") + 1
+        if start != -1 and end > start:
+            questions = json.loads(text[start:end])
+            return [q for q in questions if isinstance(q, str)][:3]
+    except Exception:
+        pass
+    return []
+
+
 def _handle_sync(req: QueryRequest, session_id: str) -> QueryResponse:
     import sys
     from pathlib import Path
@@ -127,12 +158,14 @@ def _handle_sync(req: QueryRequest, session_id: str) -> QueryResponse:
     answer = str(response)
     _save_session_turn(session_id, req.question, answer)
     _log_query(req.question, session_id)
+    suggested = _generate_follow_ups(req.question, answer)
 
     return QueryResponse(
         answer=answer,
         sources=_source_nodes_to_schema(response.source_nodes),
         model=os.getenv("KRUTRIM_MODEL", "gpt-oss-120b"),
         session_id=session_id,
+        suggested_questions=suggested,
     )
 
 

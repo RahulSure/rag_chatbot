@@ -45,7 +45,7 @@ from fastapi.responses import JSONResponse
 
 load_dotenv()
 
-from apps.api.routers import query, books, articles, wisdom, analytics, admin
+from apps.api.routers import query, books, articles, wisdom, analytics, admin, subscribe
 from apps.api.middleware import StructuredLoggingMiddleware, setup_logging, add_metrics_endpoint
 
 setup_logging()
@@ -88,6 +88,7 @@ app.include_router(articles.router)
 app.include_router(wisdom.router)
 app.include_router(analytics.router)
 app.include_router(admin.router)
+app.include_router(subscribe.router)
 
 
 @app.get("/health", tags=["Utility"])

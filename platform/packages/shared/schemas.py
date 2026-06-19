@@ -43,6 +43,7 @@ class QueryResponse(BaseModel):
     sources: list[SourceNode]
     model: str
     session_id: Optional[str] = None
+    suggested_questions: list[str] = []
 
 
 # ──────────────────────────────────────────────────────────────────────────────

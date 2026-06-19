@@ -81,7 +81,10 @@ export default async function ArticlePage({ params }: Props) {
       : null;
 
   return (
-    <div className="min-h-screen py-12 px-6">
+    <div className="min-h-screen py-12 px-6 relative">
+      {/* Comfortable reading overlay — dims the galaxy stars for the article only */}
+      <div className="fixed inset-0 bg-[#0d0b14]/80 backdrop-blur-[2px] pointer-events-none z-0" />
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -93,7 +96,7 @@ export default async function ArticlePage({ params }: Props) {
         />
       )}
 
-      <article className="max-w-3xl mx-auto">
+      <article className="max-w-3xl mx-auto relative z-10 bg-[#100e1a]/70 backdrop-blur-md rounded-2xl px-8 py-10 border border-gold/10 shadow-2xl">
         {/* Back */}
         <Link
           href="/blog"

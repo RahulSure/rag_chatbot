@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import { streamQuery, SourceNode } from "./api";
+import { useState, useCallback } from "react";
+import { sendQuery, SourceNode } from "./api";
 
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   sources?: SourceNode[];
+  suggestedQuestions?: string[];
   isStreaming?: boolean;
   sessionId?: string;
 }
@@ -16,7 +17,6 @@ export function useStreamChat(sessionIdRef: React.MutableRefObject<string | unde
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
 
   const sendMessage = useCallback(
     async (question: string) => {
@@ -40,21 +40,20 @@ export function useStreamChat(sessionIdRef: React.MutableRefObject<string | unde
       setIsLoading(true);
       setError(null);
 
-      let accumulated = "";
-
       try {
-        for await (const token of streamQuery(question, 12, sessionIdRef.current)) {
-          accumulated += token;
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantId ? { ...m, content: accumulated } : m
-            )
-          );
-        }
+        const response = await sendQuery(question, 12, sessionIdRef.current);
 
         setMessages((prev) =>
           prev.map((m) =>
-            m.id === assistantId ? { ...m, isStreaming: false } : m
+            m.id === assistantId
+              ? {
+                  ...m,
+                  content: response.answer,
+                  sources: response.sources,
+                  suggestedQuestions: response.suggested_questions ?? [],
+                  isStreaming: false,
+                }
+              : m
           )
         );
       } catch (err) {

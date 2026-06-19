@@ -167,7 +167,7 @@ function MessageBubble({
   onWhatsApp,
   onFollowUp,
 }: {
-  msg: ChatMessage;
+  msg: ChatMessage & { suggestedQuestions?: string[] };
   copiedId: string | null;
   onCopy: (id: string, text: string) => void;
   onWhatsApp: (text: string) => void;
@@ -211,6 +211,26 @@ function MessageBubble({
             {msg.sources.slice(0, 3).map((src, i) => (
               <SourceCard key={i} source={src} />
             ))}
+          </div>
+        )}
+
+        {/* Suggested follow-ups */}
+        {!isUser && !msg.isStreaming && msg.suggestedQuestions && msg.suggestedQuestions.length > 0 && (
+          <div className="w-full space-y-2">
+            <p className="text-xs text-cosmic-500">You might also ask:</p>
+            <div className="flex flex-wrap gap-2">
+              {msg.suggestedQuestions.map((q, i) => (
+                <button
+                  key={i}
+                  onClick={() => onFollowUp(q)}
+                  className="px-3 py-1.5 rounded-full text-xs border border-gold/20 bg-gold/5
+                             text-cosmic-300 hover:border-gold/50 hover:text-foreground
+                             transition-all font-devanagari text-left"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

@@ -1,8 +1,11 @@
 import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
 import { DailyWisdomSection } from "@/components/DailyWisdom";
 import { TopicsGrid } from "@/components/TopicsGrid";
 import { ArticleCard } from "@/components/ArticleCard";
 import { VideoCarousel } from "@/components/VideoCarousel";
+import { EmailCapture } from "@/components/EmailCapture";
 import { getArticles, getBooks, getTrendingQueries } from "@/lib/api";
 import Link from "next/link";
 import { ArrowRight, BookOpen } from "lucide-react";
@@ -23,6 +26,9 @@ export default async function HomePage() {
       <Suspense fallback={<div className="h-48" />}>
         <DailyWisdomSection />
       </Suspense>
+
+      {/* Email Capture */}
+      <EmailCapture />
 
       {/* Topics Grid */}
       <Suspense fallback={<div className="h-48" />}>

@@ -17,6 +17,7 @@ export interface QueryResponse {
   sources: SourceNode[];
   model: string;
   session_id?: string;
+  suggested_questions?: string[];
 }
 
 export interface ArticleListItem {
@@ -170,7 +171,7 @@ export async function getArticles(
 ): Promise<ArticleListItem[]> {
   const params = new URLSearchParams({ status: "published", limit: String(limit), skip: String(skip) });
   if (topic) params.set("topic", topic);
-  const res = await fetch(`${API_BASE}/articles?${params}`, { next: { revalidate: 600 } });
+  const res = await fetch(`${API_BASE}/articles?${params}`, { cache: "no-store" });
   if (!res.ok) return [];
   return res.json();
 }

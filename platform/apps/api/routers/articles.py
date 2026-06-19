@@ -84,24 +84,14 @@ def get_article(slug: str):
 @router.post("/generate", dependencies=[Depends(require_admin)])
 def trigger_article_generation(req: ArticleGenerateRequest):
     """Trigger AI article generation for a topic (admin only)."""
-    try:
-        from services.article_engine.tasks import generate_article_task
-        task = generate_article_task.delay(
-            topic=req.topic,
-            primary_keyword=req.primary_keyword,
-            book_slugs=req.book_slugs,
-            language=req.language,
-        )
-        return {"status": "queued", "task_id": task.id, "topic": req.topic}
-    except ImportError:
-        from services.article_engine.generator import generate_article_sync
-        result = generate_article_sync(
-            topic=req.topic,
-            primary_keyword=req.primary_keyword,
-            book_slugs=req.book_slugs,
-            language=req.language,
-        )
-        return {"status": "generated", "article_id": result.get("id"), "topic": req.topic}
+    from services.article_engine.generator import generate_article_sync
+    result = generate_article_sync(
+        topic=req.topic,
+        primary_keyword=req.primary_keyword,
+        book_slugs=req.book_slugs,
+        language=req.language,
+    )
+    return {"status": "generated", "article_id": result.get("id"), "topic": req.topic}
 
 
 @router.post("/{article_id}/approve", dependencies=[Depends(require_admin)])

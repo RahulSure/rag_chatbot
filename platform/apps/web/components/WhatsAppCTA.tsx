@@ -1,20 +1,8 @@
 "use client";
 
-import { MessageCircle } from "lucide-react";
-
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
+import { MessageCircle, Bell } from "lucide-react";
 
 export function WhatsAppCTA() {
-  const handleClick = () => {
-    const msg = encodeURIComponent(
-      "Namaste! I'd like to learn more about Sadgurudev Dr. Narayan Dutt Shrimali's teachings."
-    );
-    const url = WHATSAPP_NUMBER
-      ? `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`
-      : `https://wa.me/?text=${msg}`;
-    window.open(url, "_blank");
-  };
-
   return (
     <>
       {/* Section CTA */}
@@ -25,31 +13,41 @@ export function WhatsAppCTA() {
             <div className="w-16 h-16 rounded-full bg-green-600/20 flex items-center justify-center mx-auto mb-6">
               <MessageCircle size={32} className="text-green-400" />
             </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-medium mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              Coming Soon
+            </div>
             <h2 className="font-serif text-3xl text-foreground mb-4">
-              Continue the Journey on WhatsApp
+              Sadgurudev's Wisdom — Now on WhatsApp
             </h2>
             <p className="text-cosmic-300 mb-8 max-w-lg mx-auto">
-              Get personalized guidance on sadhana, receive daily wisdom, and connect with 
-              a community of seekers on WhatsApp.
+              We're building a WhatsApp bot that lets you ask questions from Sadgurudev's
+              teachings directly in your chat. No app download needed — just send a message
+              and receive divine wisdom instantly.
             </p>
-            <button onClick={handleClick} className="btn-gold inline-flex items-center gap-3 text-base px-8 py-4 rounded-xl">
-              <MessageCircle size={20} />
-              Continue on WhatsApp
-            </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <div className="inline-flex items-center gap-3 px-8 py-4 rounded-xl border border-green-500/30 bg-green-500/5 text-green-400 text-base font-medium cursor-default">
+                <MessageCircle size={20} />
+                WhatsApp Bot — Stay Tuned 🔜
+              </div>
+            </div>
+            <p className="text-cosmic-600 text-xs mt-6">
+              🙏 We'll announce the launch in our community. Subscribe below to be the first to know.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Floating button */}
-      <button
-        onClick={handleClick}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-green-600 shadow-lg 
-                   flex items-center justify-center text-white hover:bg-green-500 
-                   transition-all hover:scale-110 hover:shadow-xl"
-        aria-label="Contact on WhatsApp"
+      {/* Floating coming soon badge */}
+      <div
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full
+                   bg-green-900/80 border border-green-600/40 backdrop-blur-md shadow-lg
+                   text-green-400 text-xs font-medium"
       >
-        <MessageCircle size={24} />
-      </button>
+        <MessageCircle size={16} />
+        <span>WhatsApp — Coming Soon</span>
+        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+      </div>
     </>
   );
 }
