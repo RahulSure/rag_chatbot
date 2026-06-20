@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 from typing import AsyncGenerator
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from packages.shared.schemas import (
@@ -20,6 +20,7 @@ from packages.shared.schemas import (
     SourceNode,
 )
 from apps.api.deps import get_redis_optional, get_db
+from apps.api.middleware import query_rate_limiter
 
 router = APIRouter(prefix="/query", tags=["RAG"])
 
@@ -90,9 +91,10 @@ def _source_nodes_to_schema(source_nodes) -> list[SourceNode]:
     return result
 
 
-@router.post("", response_model=QueryResponse)
+@router.post("", response_model=QueryResponse, dependencies=[Depends(query_rate_limiter)])
 def query(req: QueryRequest):
-    """Ask a question — sync or streaming. Supports session memory."""
+    """Ask a question — sync or streaming. Supports session memory.
+    Rate limit: 10 questions per 30 minutes per IP, then 1-hour cooldown."""
     session_id = req.session_id or str(uuid.uuid4())
 
     if req.stream:
@@ -101,9 +103,10 @@ def query(req: QueryRequest):
     return _handle_sync(req, session_id)
 
 
-@router.post("/filtered", response_model=QueryResponse)
+@router.post("/filtered", response_model=QueryResponse, dependencies=[Depends(query_rate_limiter)])
 def filtered_query(req: FilteredQueryRequest):
-    """Query with optional filters: book, topic, language."""
+    """Query with optional filters: book, topic, language.
+    Rate limit: 10 questions per 30 minutes per IP, then 1-hour cooldown."""
     session_id = req.session_id or str(uuid.uuid4())
     return _handle_filtered(req, session_id)
 

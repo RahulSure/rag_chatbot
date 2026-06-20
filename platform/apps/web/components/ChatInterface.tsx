@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, User, Bot, BookOpen, Share2, Copy, Check } from "lucide-react";
+import { Send, User, Bot, BookOpen, Share2, Copy, Check, Clock } from "lucide-react";
 import { useStreamChat, ChatMessage } from "@/lib/useStream";
 import { SourceCard } from "./SourceCard";
 
@@ -20,6 +20,9 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { messages, isLoading, error, sendMessage, clearChat } = useStreamChat(sessionIdRef);
+
+  // True when the last assistant message was a rate-limit response
+  const isRateLimited = messages.length > 0 && messages[messages.length - 1]?.isRateLimit === true;
 
   // Init session id from localStorage
   useEffect(() => {
@@ -138,22 +141,24 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about tantra, mantra, sadhana... / पूछें..."
-            className="flex-1 px-4 py-3 rounded-xl bg-cosmic-900/60 border border-gold/20 
+            placeholder={isRateLimited ? "Please wait before asking more..." : "Ask about tantra, mantra, sadhana... / पूछें..."}
+            className="flex-1 px-4 py-3 rounded-xl bg-cosmic-900/60 border border-gold/20
                        text-foreground placeholder-cosmic-500 focus:outline-none focus:border-gold/50
-                       transition-all text-sm"
-            disabled={isLoading}
+                       transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading || isRateLimited}
           />
           <button
             type="submit"
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || !input.trim() || isRateLimited}
             className="btn-gold rounded-xl px-4 py-3 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Send size={16} />
           </button>
         </form>
         <p className="text-xs text-cosmic-600 mt-2 text-center">
-          Answers are grounded in Sadgurudev's published books.
+          {isRateLimited
+            ? "🕐 Limit reached — return in 1 hour for more wisdom."
+            : "Answers are grounded in Sadgurudev's published books."}
         </p>
       </div>
     </div>
@@ -190,7 +195,20 @@ function MessageBubble({
       </div>
 
       <div className={`max-w-[80%] space-y-3 ${isUser ? "items-end" : "items-start"} flex flex-col`}>
-        {/* Bubble */}
+        {/* Rate-limit notice — special amber card */}
+        {msg.isRateLimit ? (
+          <div className="px-5 py-4 rounded-2xl bg-amber-950/40 border border-amber-500/30 text-amber-200 text-sm space-y-2">
+            <div className="flex items-center gap-2 font-semibold text-amber-300">
+              <Clock size={14} />
+              <span>Question limit reached</span>
+            </div>
+            <p className="font-devanagari leading-relaxed">{msg.content}</p>
+            <p className="text-xs text-amber-400/70 mt-1">
+              Use this time to meditate on the answers you've received. 🙏
+            </p>
+          </div>
+        ) : (
+        /* Regular bubble */
         <div
           className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
             isUser
@@ -200,6 +218,7 @@ function MessageBubble({
         >
           <p className="whitespace-pre-wrap font-devanagari">{msg.content}</p>
         </div>
+        )}
 
         {/* Sources */}
         {!isUser && msg.sources && msg.sources.length > 0 && !msg.isStreaming && (

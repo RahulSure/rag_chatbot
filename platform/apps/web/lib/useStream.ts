@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { sendQuery, SourceNode } from "./api";
+import { sendQuery, RateLimitError, SourceNode } from "./api";
 
 export interface ChatMessage {
   id: string;
@@ -11,6 +11,7 @@ export interface ChatMessage {
   suggestedQuestions?: string[];
   isStreaming?: boolean;
   sessionId?: string;
+  isRateLimit?: boolean;  // true when this message is a rate-limit notice
 }
 
 export function useStreamChat(sessionIdRef: React.MutableRefObject<string | undefined>) {
@@ -57,19 +58,35 @@ export function useStreamChat(sessionIdRef: React.MutableRefObject<string | unde
           )
         );
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : "Unknown error";
-        setError(errMsg);
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantId
-              ? {
-                  ...m,
-                  content: "I apologize — there was an error processing your question. Please try again.",
-                  isStreaming: false,
-                }
-              : m
-          )
-        );
+        if (err instanceof RateLimitError) {
+          // Replace the blank assistant bubble with the rate-limit notice
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId
+                ? {
+                    ...m,
+                    content: err.message,
+                    isStreaming: false,
+                    isRateLimit: true,
+                  }
+                : m
+            )
+          );
+        } else {
+          const errMsg = err instanceof Error ? err.message : "Unknown error";
+          setError(errMsg);
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId
+                ? {
+                    ...m,
+                    content: "I apologize — there was an error processing your question. Please try again.",
+                    isStreaming: false,
+                  }
+                : m
+            )
+          );
+        }
       } finally {
         setIsLoading(false);
       }

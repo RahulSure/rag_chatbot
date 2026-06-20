@@ -85,6 +85,13 @@ export interface TrendingQuery {
 
 // ── Query ──────────────────────────────────────────────────────────────────
 
+export class RateLimitError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RateLimitError";
+  }
+}
+
 export async function sendQuery(
   question: string,
   topK = 12,
@@ -95,7 +102,20 @@ export async function sendQuery(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question, top_k: topK, stream: false, session_id: sessionId }),
   });
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) {
+    // Parse the FastAPI error detail if available
+    let detail: string | undefined;
+    try {
+      const body = await res.json();
+      detail = body?.detail;
+    } catch {
+      detail = await res.text();
+    }
+    if (res.status === 429) {
+      throw new RateLimitError(detail ?? "Too many questions. Please wait before asking again.");
+    }
+    throw new Error(detail ?? `Request failed: ${res.status}`);
+  }
   return res.json();
 }
 
