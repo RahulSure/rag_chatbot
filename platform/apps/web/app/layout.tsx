@@ -6,34 +6,37 @@ import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Shrimali AI — Spiritual Knowledge Platform",
-    template: "%s | Shrimali AI — Dr. Narayan Dutt Shrimali",
+    default: "Sadhak.ai — AI Spiritual Companion",
+    template: "%s | Sadhak.ai",
   },
   description:
-    "Explore the timeless teachings of Sadgurudev Dr. Narayan Dutt Shrimali on tantra, mantra, sadhana, kundalini, and jyotish. AI-powered spiritual knowledge platform.",
+    "Sadhak.ai — your AI-powered spiritual companion. Explore timeless teachings on tantra, mantra, sadhana, kundalini, and jyotish from Sadgurudev Dr. Narayan Dutt Shrimali.",
   keywords: [
+    "Sadhak AI",
+    "spiritual AI",
     "Dr Narayan Dutt Shrimali",
     "Sadgurudev",
     "tantra sadhana",
     "mantra siddhi",
     "kundalini awakening",
-    "spiritual platform",
+    "spiritual seeker",
     "Nikhileshwaranand",
     "Siddhashram",
     "jyotish",
     "vedic astrology",
+    "sadhak",
   ],
   authors: [{ name: "Dr. Narayan Dutt Shrimali" }],
   openGraph: {
     type: "website",
     locale: "en_IN",
-    siteName: "Shrimali AI Spiritual Platform",
-    title: "Shrimali AI — Spiritual Knowledge Platform",
-    description: "AI-powered wisdom from the teachings of Dr. Narayan Dutt Shrimali",
+    siteName: "Sadhak.ai",
+    title: "Sadhak.ai — AI Spiritual Companion",
+    description: "AI-powered wisdom for every spiritual seeker",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Shrimali AI — Spiritual Knowledge Platform",
+    title: "Sadhak.ai — AI Spiritual Companion",
   },
   robots: {
     index: true,
@@ -45,7 +48,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Shrimali AI",
+    title: "Sadhak.ai",
   },
 };
 
@@ -87,8 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               ))}
             </div>
             <p className="text-cosmic-700 text-xs">
-              © {new Date().getFullYear()} Shrimali AI Spiritual Platform. 
-              All teachings attributed to Dr. Narayan Dutt Shrimali.
+              © {new Date().getFullYear()} Sadhak.ai — All teachings attributed to Dr. Narayan Dutt Shrimali.
             </p>
           </div>
         </footer>

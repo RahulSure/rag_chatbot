@@ -48,9 +48,11 @@ export function Navbar() {
         <Link href="/" className="flex items-center gap-3">
           <span className="text-2xl">🕉</span>
           <div>
-            <div className="font-serif text-gold font-bold leading-tight text-sm">Shrimali AI</div>
+            <div className="font-serif text-gold font-bold leading-tight text-sm">
+              Sadhak<span className="text-gold/60">.ai</span>
+            </div>
             <div className="text-cosmic-500 text-xs leading-tight">
-              {lang === "hi" ? "आध्यात्मिक ज्ञान मंच" : "Spiritual Knowledge Platform"}
+              {lang === "hi" ? "साधक का आत्मज्ञान साथी" : "AI Spiritual Companion"}
             </div>
           </div>
         </Link>

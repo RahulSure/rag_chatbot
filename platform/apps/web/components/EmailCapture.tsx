@@ -41,8 +41,8 @@ export function EmailCapture() {
             Stay Connected with Sadgurudev's Wisdom
           </h2>
           <p className="text-cosmic-400 text-sm mb-6 max-w-md mx-auto">
-            Get daily teachings, new articles, and be the first to know when our
-            WhatsApp bot launches. No spam — only spiritual wisdom.
+            Join the Sadhak.ai community — daily teachings, new articles in Hindi &amp; English,
+            and early access to WhatsApp wisdom. No spam, only light.
           </p>
 
           {status === "success" ? (

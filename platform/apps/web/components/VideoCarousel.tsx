@@ -53,6 +53,7 @@ export function VideoCarousel() {
   const [query, setQuery] = useState("");
   const router = useRouter();
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const goTo = useCallback((i: number) => {
     setIndex(((i % SLIDES.length) + SLIDES.length) % SLIDES.length);
@@ -72,6 +73,18 @@ export function VideoCarousel() {
       }
     });
   }, [index]);
+
+  // Background mantra audio — plays when user unmutes, pauses when muted
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (muted) {
+      audio.pause();
+    } else {
+      audio.volume = 0.35; // gentle background level
+      audio.play().catch(() => {});
+    }
+  }, [muted]);
 
   useEffect(() => {
     let raf = 0;
@@ -108,6 +121,9 @@ export function VideoCarousel() {
 
   return (
     <section className="relative w-full px-4 sm:px-6 pt-10 md:pt-14 pb-16">
+      {/* Background mantra audio — Guru Avaahan by Sadgurudev */}
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+      <audio ref={audioRef} src="/videos/guru-avaahan-mantra.mp3" loop preload="none" />
       {/* CINEMATIC CAROUSEL — wide 16:9 centerpiece with guru context overlaid */}
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 20 }}
@@ -211,7 +227,8 @@ export function VideoCarousel() {
             <button
               type="button"
               onClick={() => setMuted((m) => !m)}
-              aria-label={muted ? "Unmute video" : "Mute video"}
+              aria-label={muted ? "Play mantra audio" : "Mute mantra audio"}
+              title={muted ? "▶ Play Guru Avaahan Mantra" : "⏸ Mute mantra"}
               className="absolute top-4 right-4 md:top-5 md:right-5 w-10 h-10 rounded-full bg-black/60 border border-gold/40 text-gold hover:bg-black/80 hover:border-gold/70 transition-all flex items-center justify-center backdrop-blur-md z-10"
             >
               {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}

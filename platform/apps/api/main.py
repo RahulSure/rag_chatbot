@@ -57,10 +57,10 @@ class UnicodeJSONResponse(JSONResponse):
 
 
 app = FastAPI(
-    title="Shrimali AI Spiritual Platform",
+    title="Sadhak.ai — AI Spiritual Companion",
     description=(
-        "The definitive AI-powered knowledge platform for the spiritual teachings "
-        "of Dr. Narayan Dutt Shrimali (Sadgurudev Nikhileshwaranand). "
+        "The definitive AI-powered knowledge platform for spiritual seekers. "
+        "Grounded in the teachings of Dr. Narayan Dutt Shrimali (Sadgurudev Nikhileshwaranand). "
         "Powered by LlamaIndex, MongoDB Atlas, and Krutrim LLM."
     ),
     version="2.0.0",
