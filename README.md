@@ -1,264 +1,218 @@
-# Saundarya RAG Chatbot
+# Sadhak.ai — AI Spiritual Companion
 
-A Retrieval-Augmented Generation (RAG) chatbot over the scanned Hindi spiritual text
-**"Saundarya"** by Sadgurudev Dr. Narayan Dutt Shrimali.
+> An AI-powered spiritual knowledge platform grounded in the teachings of **Sadgurudev Dr. Narayan Dutt Shrimali**. Built to serve every seeker — starting with Shrimali's 150+ books, expanding to all spiritual traditions.
 
-Built with:
-- **LlamaIndex** — orchestration, chunking, retrieval
-- **ChromaDB** — local persistent vector store
-- **HuggingFace** `paraphrase-multilingual-mpnet-base-v2` — Hindi-capable embeddings
-- **Krutrim `gpt-oss-120b`** — LLM via custom wrapper
-- **FastAPI** — REST API with streaming support
+**Stack:** FastAPI · LlamaIndex · MongoDB Atlas · Next.js 16 · Krutrim LLM · HuggingFace Embeddings
 
 ---
 
-## Prerequisites
+## 🚀 What's Been Built
 
-### System (macOS)
-```bash
-brew install tesseract tesseract-lang   # OCR with Hindi language pack
-brew install poppler                    # pdf2image dependency
-```
+### Core Platform
+| Feature | Status | Notes |
+|---|---|---|
+| RAG Chat (AI Q&A) | ✅ Live | Krutrim LLM + LlamaIndex + MongoDB Atlas Vector Search |
+| Semantic Search | ✅ Live | `/search` endpoint + frontend |
+| Teachings by Topic | ✅ Live | 10 topics: tantra, mantra, kundalini, jyotish, etc. |
+| Daily Wisdom | ✅ Live | Hindi/English, served from vector store |
+| Blog / Articles | ✅ Live | AI-generated, admin-approved, bilingual |
+| Books Library | ✅ Live | 2 books ingested (Saundarya, Mantra Rahasya) |
+| Admin Dashboard | ✅ Live | Article generation, book ingestion, analytics |
+| Analytics | ✅ Live | Trending queries, usage stats |
+| About Gurudev | ✅ Live | `/guru` page |
 
-### Python
-Python 3.10+ recommended.
+### Sprint 1 Features (Completed)
+| Feature | Details |
+|---|---|
+| **Suggested Follow-ups** | After every AI answer, 3 clickable follow-up question pills appear |
+| **WhatsApp "Coming Soon"** | Floating badge + section — no dead link, sets expectation |
+| **PWA Manifest** | App installable on Android/iOS via "Add to Home Screen" |
+| **Email Capture** | Homepage email form → saves to MongoDB `email_subscribers` |
+| **Hindi Language Toggle** | Navbar toggle EN ⇄ हिं — translates nav links, taglines, CTAs |
 
-```bash
-python -m venv env
-source env/bin/activate
-pip install -r requirements.txt
-```
-
----
-
-## Configuration
-
-Copy `.env.example` to `.env` and fill in your keys:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env`:
-
-```
-KRUTRIM_API_KEY=your_krutrim_api_key_here
-HF_TOKEN=your_huggingface_token_here       # optional but avoids rate limits
-```
-
-All other values have working defaults and do not need to be changed.
-
----
-
-## End-to-End Run Guide
-
-### Step 1 — Ingest documents into ChromaDB
-
-**Option A — Transcription file (recommended)**
-If you have a hand-transcribed single-file transcript, use this. It gives richer
-metadata (chapter number, chapter title) which improves search quality.
-
-```bash
-python -m ingestion.ingest --transcription data/processed/transcription.txt --force
-```
-
-**Option B — OCR from PDF**
-Requires Tesseract installed on the system. Runs OCR on each page.
-
-```bash
-python -m ingestion.ingest          # full OCR + embed
-python -m ingestion.ingest --skip-ocr   # skip OCR, use existing data/processed/*.txt
-python -m ingestion.ingest --force      # wipe and re-embed everything
-```
+### Sprint 2 Features (Completed)
+| Feature | Details |
+|---|---|
+| **Bilingual Articles** | Articles generated in Hindi OR English via `language` param |
+| **Hindi Article Prompt** | Full Devanagari prompt instructs Krutrim to write in Hindi |
+| **Language Filter on Blog** | 🌐 All / 🇬🇧 English / 🇮🇳 हिन्दी tabs on blog page |
+| **Language Badge on Cards** | Each article card shows amber हिन्दी or sky EN badge |
+| **Rate Limiting** | 10 questions / 30 min per IP → 1-hour cooldown. Amber card in chat UI |
+| **Rebrand → Sadhak.ai** | Platform renamed from "Shrimali AI" to "Sadhak.ai" |
+| **Guru Avaahan Mantra** | MP3 plays as background audio when user unmutes the carousel |
 
 ---
 
-### Step 2 — Verify the vector store
-
-```bash
-curl http://localhost:8000/health
-```
-
-Expected output:
-```json
-{
-  "status": "ok",
-  "model": "gpt-oss-120b",
-  "vector_store_docs": 56
-}
-```
-
-`vector_store_docs` should be > 0. If it is 0 re-run Step 1.
-
----
-
-### Step 3 — Start the API server
-
-```bash
-uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
-```
-
----
-
-### Step 4 — Query the chatbot
-
-Hindi question:
-```bash
-curl -s -X POST http://localhost:8000/query \
-  -H "Content-Type: application/json" \
-  -d '{"question": "सौंदर्य क्या है?", "top_k": 5}' \
-  | python -c "import sys,json; print(json.dumps(json.load(sys.stdin), ensure_ascii=False, indent=2))"
-```
-
-English question:
-```bash
-curl -s -X POST http://localhost:8000/query \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What is beauty according to Shrimali?", "top_k": 5}' \
-  | python -c "import sys,json; print(json.dumps(json.load(sys.stdin), ensure_ascii=False, indent=2))"
-```
-
-Streaming mode:
-```bash
-curl -X POST http://localhost:8000/query \
-  -H "Content-Type: application/json" \
-  -d '{"question": "सौंदर्य क्या है?", "stream": true}'
-```
-
-Every successful query is automatically saved to `responses.json` in the project root.
-
----
-
-## API Reference
-
-### `GET /health`
-```json
-{
-  "status": "ok",
-  "model": "gpt-oss-120b",
-  "vector_store_docs": 56
-}
-```
-
-### `POST /query`
-
-| Field      | Type    | Default | Description                        |
-|------------|---------|---------|------------------------------------|
-| `question` | string  | —       | Question in Hindi or English       |
-| `top_k`    | integer | 5       | Number of chunks to retrieve (1–20)|
-| `stream`   | boolean | false   | Stream tokens via SSE              |
-
-Response:
-```json
-{
-  "answer": "सौंदर्य वह गुण है जो सीधे हृदय में उतर कर...",
-  "sources": [
-    { "page": 5, "text_snippet": "वराहमिहिर ने कहा है..." }
-  ],
-  "model": "gpt-oss-120b"
-}
-```
-
-### `POST /ingest`
-Triggers the ingestion pipeline in the background.
-
-```bash
-curl -X POST http://localhost:8000/ingest \
-  -H "Content-Type: application/json" \
-  -d '{"skip_ocr": true, "force": false}'
-```
-
----
-
-## Running the Platform (Monorepo)
-
-The [platform/](platform/) directory contains the newer monorepo layout with a FastAPI backend ([platform/apps/api/](platform/apps/api/)) and a Next.js frontend ([platform/apps/web/](platform/apps/web/)).
-
-Run all commands from the **repo root** (`/Users/ananyaroy/sayantan/rag_chatbot`) unless otherwise noted.
-
-### Backend — FastAPI (`platform/apps/api`)
-
-1. Activate the Python venv and install backend dependencies:
-   ```bash
-   source env/bin/activate
-   pip install -r platform/apps/api/requirements.txt
-   ```
-
-2. Ensure `.env` exists at the repo root (see [Configuration](#configuration)). It is loaded by [platform/apps/api/main.py](platform/apps/api/main.py) via `load_dotenv()`.
-
-3. Start the API on port `8000`. The `apps.api.main` import path is resolved relative to the `platform/` directory, so `cd` in first:
-   ```bash
-   cd platform
-   uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-   Equivalently, you can run the module directly:
-   ```bash
-   cd platform && python -m apps.api.main
-   ```
-
-   > **Note:** Running `uvicorn ... --app-dir platform` from the repo root can fail with `ModuleNotFoundError: No module named 'apps'` depending on uvicorn's reload-worker behavior. Use `cd platform` instead.
-
-4. Verify it is up:
-   ```bash
-   curl http://localhost:8000/health
-   ```
-   Interactive docs: <http://localhost:8000/api/docs>
-
-### Frontend — Next.js (`platform/apps/web`)
-
-1. Install JS dependencies (uses Yarn — `yarn.lock` is committed):
-   ```bash
-   cd platform/apps/web
-   yarn install
-   ```
-
-2. The default API URL is set in [platform/apps/web/.env.local](platform/apps/web/.env.local):
-   ```
-   NEXT_PUBLIC_API_URL=http://localhost:8000
-   NEXT_PUBLIC_SITE_URL=http://localhost:3000
-   ```
-   Adjust if the backend runs on a different host/port.
-
-3. Start the dev server on port `3000`:
-   ```bash
-   yarn dev
-   ```
-   Open <http://localhost:3000>.
-
-4. Production build:
-   ```bash
-   yarn build && yarn start
-   ```
-
-### Running both together
-
-Open two terminals — one for the backend, one for the frontend — and keep them running. The frontend talks to the backend over `NEXT_PUBLIC_API_URL`, so start the backend first so the `/health` check succeeds before loading the UI.
-
----
-
-## Project Structure
+## 🏗️ Architecture
 
 ```
 rag_chatbot/
-├── data/
-│   ├── raw/                 # Source PDF (gitignored)
-│   └── processed/           # OCR output — one .txt per page (gitignored)
-├── llm/
-│   └── krutrim_llm.py       # Custom LlamaIndex LLM wrapper for Krutrim
-├── ingestion/
-│   ├── ocr_extractor.py     # PDF → per-page text (pytesseract)
-│   └── ingest.py            # Full ingestion pipeline
-├── rag/
-│   ├── embeddings.py        # HuggingFace multilingual embeddings
-│   ├── vector_store.py      # ChromaDB persistent client
-│   └── query_engine.py      # LlamaIndex retriever + query engine
-├── api/
-│   └── main.py              # FastAPI app
-├── chroma_db/               # Created at runtime by ChromaDB (gitignored)
-├── responses.json           # Query log — created at runtime (gitignored)
-├── .env                     # Your secrets (gitignored)
-├── .env.example             # Template — safe to commit
-└── requirements.txt
+├── platform/
+│   ├── apps/
+│   │   ├── api/                    # FastAPI backend
+│   │   │   ├── main.py             # App entry point, routers, CORS
+│   │   │   ├── middleware.py       # Logging, Prometheus, Rate Limiting
+│   │   │   ├── deps.py             # DB/Redis dependencies
+│   │   │   └── routers/
+│   │   │       ├── query.py        # RAG Q&A (rate-limited)
+│   │   │       ├── articles.py     # Blog CRUD + language filter
+│   │   │       ├── books.py        # Book library
+│   │   │       ├── wisdom.py       # Daily wisdom
+│   │   │       ├── analytics.py    # Trending queries, stats
+│   │   │       ├── admin.py        # Upload, ingest, manage
+│   │   │       └── subscribe.py    # Email capture
+│   │   └── web/                    # Next.js 16 App Router frontend
+│   │       ├── app/                # Pages (home, chat, blog, teachings, guru, search)
+│   │       ├── components/         # UI components
+│   │       └── lib/                # API client, useStream hook
+│   ├── services/
+│   │   ├── rag-service/            # LlamaIndex RAG engine, embeddings, vector store
+│   │   └── article_engine/         # AI article generator (sync, bypasses Celery locally)
+│   └── packages/
+│       ├── shared/schemas.py       # Pydantic models shared across services
+│       └── prompts/article_prompt.py  # EN + HI article generation prompts
+├── env/                            # Python venv (not committed)
+├── .env                            # Secrets (never committed)
+├── .env.example                    # Template for env setup
+├── start_backend.bat               # One-click backend launcher
+└── start_frontend.bat              # One-click frontend launcher
 ```
-# astro-rag
+
+---
+
+## ⚡ Running Locally
+
+### Prerequisites
+- Python 3.11 with venv at `env/`
+- Node.js 20+ (`C:\Program Files\nodejs\`)
+- MongoDB Atlas with vector search enabled
+- Krutrim API key
+
+### Setup
+```bash
+# 1. Clone
+git clone https://github.com/RahulSure/rag_chatbot.git
+cd rag_chatbot
+
+# 2. Copy env and fill values
+cp .env.example .env
+
+# 3. Create Python venv and install deps
+python -m venv env
+env\Scripts\activate
+pip install -r platform/apps/api/requirements.txt
+
+# 4. Install frontend deps
+cd platform/apps/web && npm install
+```
+
+### Start Servers
+
+**Windows — just double-click:**
+- `start_backend.bat` → FastAPI on :8000
+- `start_frontend.bat` → Next.js on :3000
+
+**Manual:**
+```bash
+# Backend
+cd platform
+python -m uvicorn apps.api.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Frontend (separate terminal)
+cd platform/apps/web
+npm run dev
+```
+
+### URLs
+| URL | Description |
+|---|---|
+| http://localhost:3000 | Sadhak.ai frontend |
+| http://localhost:8000/health | API health check |
+| http://localhost:8000/api/docs | Swagger UI |
+| http://localhost:3000/admin | Admin dashboard |
+
+### Required `.env` values
+```env
+KRUTRIM_API_KEY=your_key
+KRUTRIM_MODEL=gpt-oss-120b
+MONGODB_URI=mongodb+srv://...
+MONGODB_DB_NAME=dr-narayan-dutt
+MONGODB_COLLECTION=books
+HF_TOKEN=your_hf_token
+ADMIN_SECRET=your_admin_password
+```
+
+---
+
+## 📋 Next Plan — Production Roadmap
+
+### 🔴 This Week — Go Live
+
+| Task | Why |
+|---|---|
+| Deploy backend to Railway / Render | App is localhost-only right now |
+| Deploy frontend to Vercel | Set `NEXT_PUBLIC_API_URL` to production API URL |
+| Buy domain `sadhak.ai` or `sadhak.in` | Brand identity |
+| SSL (auto via Vercel / Railway) | Required for production |
+| `app/sitemap.ts` — dynamic sitemap | Google can't index articles without it |
+| `app/robots.txt` | Allow all crawlers |
+| `app/not-found.tsx` + `app/error.tsx` | Custom 404/500 pages |
+| Startup env validation | Crash early if secrets missing |
+
+### 🟡 Month 1 — Foundation for Growth
+
+| Task | Why |
+|---|---|
+| Ingest 5–10 more books | Biggest quality lever — smarter answers immediately |
+| Google OAuth (`next-auth`) | Foundation for bookmarks, history, paid tiers |
+| User sessions in MongoDB | Persist chat history across devices |
+| Sentry error monitoring | Know when production breaks |
+| GA4 analytics | Understand traffic, popular articles, drop-offs |
+| Cover images for articles | Cards look bare; use Unsplash API by topic |
+| Loading skeletons | Blog and chat feel blank while loading |
+| Redis (production) | Distributed rate limiting + session storage |
+
+### 🟢 Month 2 — Monetization
+
+| Task | Details |
+|---|---|
+| Razorpay subscriptions | Free: 10 q/day · Sadhak ₹199/mo: unlimited · Guru ₹499/mo: all features |
+| Pricing page `/pricing` | Tier comparison with CTA |
+| Upgrade modal | Shown when free limit hit → Razorpay checkout |
+| Per-user rate limiting | After auth: limit by user ID not just IP |
+| Webhook handler | `/webhook/razorpay` → update user tier on payment |
+
+### 🔵 Month 3+ — Scale & Community
+
+| Task | Details |
+|---|---|
+| WhatsApp bot | Meta Cloud API — message bot → get AI answer |
+| Sadhana tracker | Log daily practice, AI suggests next steps |
+| Bookmarks & collections | Save passages, AI answers, articles |
+| Audio answers (TTS) | Hindi voice for AI answers — commuter-friendly |
+| Mobile app | React Native shell over existing API |
+| All 150+ Shrimali books | The data moat — every book = better answers |
+| Multi-guru expansion | Add Osho, Ramana Maharshi, Yogananda, etc. |
+
+---
+
+## 💡 The Vision
+
+**Starting point:** Dr. Narayan Dutt Shrimali's 150+ books — the most documented spiritual science library in India.
+
+**End goal:** The definitive AI companion for every spiritual seeker (साधक) — not tied to one guru, one tradition, or one language.
+
+**The moat:** Data + compounding. Every book ingested makes answers smarter. Every question answered feeds trending analytics. Every article published grows SEO. The flywheel starts now.
+
+---
+
+## 🔐 Security
+
+- `.env` is **never committed** — use `.env.example` as template
+- `ADMIN_SECRET` gates all `/admin/*` and `/articles/generate` endpoints
+- Rate limiting: 10 questions / 30 min per IP, 1-hour ban on breach
+- CORS configured via `CORS_ORIGINS` env var (default `*`, restrict in production)
+
+---
+
+*Built with ❤️ for every seeker. ॐ परम तत्वाय नारायणाय गुरुभ्यो नमः*
