@@ -43,6 +43,14 @@ export default async function HomePage() {
               <div>
                 <span className="text-gold text-sm uppercase tracking-widest">Knowledge</span>
                 <h2 className="font-serif text-4xl text-foreground mt-2">Latest Articles</h2>
+                <div className="flex gap-3 mt-2">
+                  <Link href="/blog?lang=en" className="text-xs text-sky-400/80 hover:text-sky-300 transition-colors">
+                    🇬🇧 English
+                  </Link>
+                  <Link href="/blog?lang=hi" className="text-xs text-amber-400/80 hover:text-amber-300 transition-colors font-devanagari">
+                    🇮🇳 हिन्दी
+                  </Link>
+                </div>
               </div>
               <Link
                 href="/blog"

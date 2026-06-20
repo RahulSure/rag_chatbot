@@ -127,14 +127,19 @@ def generate_article_sync(
     Generate an article synchronously. Returns the saved article document dict.
     Used when Celery is not available (direct API call).
     """
-    from packages.prompts.article_prompt import ARTICLE_GENERATION_PROMPT
+    from packages.prompts.article_prompt import (
+        ARTICLE_GENERATION_PROMPT,
+        ARTICLE_GENERATION_PROMPT_HI,
+    )
     from apps.api.deps import get_db
 
     context, books_used = _retrieve_context(topic, book_slugs or [], top_k=8)
     related_keywords = ", ".join(TOPIC_KEYWORD_MAP.get(topic, [primary_keyword]))
     book_name = books_used[0] if books_used else "Saundarya"
 
-    prompt = ARTICLE_GENERATION_PROMPT.format(
+    # Select prompt based on language
+    prompt_template = ARTICLE_GENERATION_PROMPT_HI if language == "hi" else ARTICLE_GENERATION_PROMPT
+    prompt = prompt_template.format(
         topic=topic,
         primary_keyword=primary_keyword,
         context=context,

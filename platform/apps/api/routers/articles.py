@@ -38,6 +38,7 @@ def _doc_to_article(doc: dict) -> ArticleResponse:
         published_at=doc.get("published_at"),
         seo_score=doc.get("seo_score"),
         cover_image_url=doc.get("cover_image_url"),
+        language=doc.get("language", "en"),
     )
 
 
@@ -52,6 +53,7 @@ def _doc_to_list_item(doc: dict) -> ArticleListItem:
         status=doc.get("status", "draft"),
         published_at=doc.get("published_at"),
         cover_image_url=doc.get("cover_image_url"),
+        language=doc.get("language", "en"),
     )
 
 
@@ -59,14 +61,17 @@ def _doc_to_list_item(doc: dict) -> ArticleListItem:
 def list_articles(
     status: str = Query("published"),
     topic: str | None = Query(None),
+    language: str | None = Query(None, description="Filter by language: en | hi"),
     limit: int = Query(20, ge=1, le=100),
     skip: int = Query(0, ge=0),
 ):
-    """List articles. Public endpoint returns published only."""
+    """List articles with optional topic and language filters. Public endpoint returns published only."""
     db = get_db()
     query: dict = {"status": status}
     if topic:
         query["topic"] = topic
+    if language:
+        query["language"] = language
     docs = list(db["articles"].find(query, {"body_mdx": 0}).sort("published_at", -1).skip(skip).limit(limit))
     return [_doc_to_list_item(d) for d in docs]
 

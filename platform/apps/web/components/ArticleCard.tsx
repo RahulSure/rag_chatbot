@@ -13,7 +13,19 @@ export function ArticleCard({ article }: { article: ArticleListItem }) {
           className="w-full h-40 object-cover rounded-lg mb-4 opacity-70 group-hover:opacity-90 transition-opacity"
         />
       )}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        {/* Language badge */}
+        {article.language && (
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full font-medium border ${
+              article.language === "hi"
+                ? "text-amber-300 bg-amber-400/10 border-amber-400/20"
+                : "text-sky-300 bg-sky-400/10 border-sky-400/20"
+            }`}
+          >
+            {article.language === "hi" ? "🇮🇳 हिन्दी" : "🇬🇧 EN"}
+          </span>
+        )}
         {article.tags.slice(0, 2).map((tag) => (
           <span
             key={tag}

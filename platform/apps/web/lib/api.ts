@@ -30,6 +30,7 @@ export interface ArticleListItem {
   status: string;
   published_at?: string;
   cover_image_url?: string;
+  language?: string;  // "en" | "hi"
 }
 
 export interface Article extends ArticleListItem {
@@ -167,10 +168,12 @@ export async function getBooks(): Promise<BookMeta[]> {
 export async function getArticles(
   topic?: string,
   limit = 20,
-  skip = 0
+  skip = 0,
+  language?: string,
 ): Promise<ArticleListItem[]> {
   const params = new URLSearchParams({ status: "published", limit: String(limit), skip: String(skip) });
   if (topic) params.set("topic", topic);
+  if (language) params.set("language", language);
   const res = await fetch(`${API_BASE}/articles?${params}`, { cache: "no-store" });
   if (!res.ok) return [];
   return res.json();

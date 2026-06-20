@@ -100,6 +100,7 @@ class ArticleResponse(BaseModel):
     published_at: Optional[datetime] = None
     seo_score: Optional[float] = None
     cover_image_url: Optional[str] = None
+    language: str = "en"  # en | hi
 
 
 class ArticleListItem(BaseModel):
@@ -112,6 +113,7 @@ class ArticleListItem(BaseModel):
     status: str
     published_at: Optional[datetime] = None
     cover_image_url: Optional[str] = None
+    language: str = "en"  # en | hi
 
 
 class ArticleGenerateRequest(BaseModel):
