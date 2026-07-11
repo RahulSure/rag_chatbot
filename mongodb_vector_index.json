@@ -21,6 +21,18 @@
     {
       "type": "filter",
       "path": "metadata.section_type"
+    },
+    {
+      "type": "filter",
+      "path": "metadata.book_slug"
+    },
+    {
+      "type": "filter",
+      "path": "metadata.topic"
+    },
+    {
+      "type": "filter",
+      "path": "metadata.language"
     }
   ]
 }

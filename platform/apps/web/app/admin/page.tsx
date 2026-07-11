@@ -188,7 +188,7 @@ export default function AdminPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-8 border-b border-gold/10">
+        <div className="flex gap-1 mb-8 border-b border-gold/10 overflow-x-auto">
           {[
             { id: "overview", label: "Overview", icon: Database },
             { id: "articles", label: "Articles", icon: FileText },
@@ -198,7 +198,7 @@ export default function AdminPage() {
             <button
               key={id}
               onClick={() => setActiveTab(id as typeof activeTab)}
-              className={`flex items-center gap-2 px-5 py-3 text-sm transition-all border-b-2 -mb-px ${
+              className={`flex shrink-0 items-center gap-2 px-4 sm:px-5 py-3 text-sm whitespace-nowrap transition-all border-b-2 -mb-px ${
                 activeTab === id
                   ? "border-gold text-gold"
                   : "border-transparent text-cosmic-400 hover:text-foreground"

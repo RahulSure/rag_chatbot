@@ -70,11 +70,12 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
 )
 
+_cors_origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_cors_origins,
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-Admin-Secret"],
 )
 app.add_middleware(StructuredLoggingMiddleware)
 

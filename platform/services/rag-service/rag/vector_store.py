@@ -12,8 +12,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 MONGODB_URI        = os.getenv("MONGODB_URI", "")
-MONGODB_DB_NAME    = os.getenv("MONGODB_DB_NAME", "saundarya")
-MONGODB_COLLECTION = os.getenv("MONGODB_COLLECTION", "embeddings")
+MONGODB_DB_NAME    = os.getenv("MONGODB_DB_NAME", "dr-narayan-dutt")
+MONGODB_COLLECTION = os.getenv("MONGODB_COLLECTION", "books")
 MONGODB_INDEX_NAME = os.getenv("MONGODB_INDEX_NAME", "vector_index")
 
 
@@ -39,7 +39,11 @@ def get_vector_store():
     )
 
 
+def get_collection():
+    """Returns the raw pymongo collection of book chunks."""
+    return _get_mongo_client()[MONGODB_DB_NAME][MONGODB_COLLECTION]
+
+
 def collection_count() -> int:
     """Returns the number of documents currently stored in the collection."""
-    client = _get_mongo_client()
-    return client[MONGODB_DB_NAME][MONGODB_COLLECTION].count_documents({})
+    return get_collection().count_documents({})

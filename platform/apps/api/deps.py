@@ -5,6 +5,7 @@ Shared dependencies for FastAPI routes: Redis client, MongoDB client, auth.
 from __future__ import annotations
 
 import os
+import secrets
 from functools import lru_cache
 
 from dotenv import load_dotenv
@@ -14,6 +15,8 @@ load_dotenv()
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 ADMIN_SECRET = os.getenv("ADMIN_SECRET", "")
+DB_NAME = os.getenv("MONGODB_DB_NAME", "dr-narayan-dutt")
+COLLECTION_NAME = os.getenv("MONGODB_COLLECTION", "books")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -22,6 +25,11 @@ ADMIN_SECRET = os.getenv("ADMIN_SECRET", "")
 
 @lru_cache(maxsize=1)
 def get_redis():
+    # Dev/CI affordance: run session memory in-process without a Redis server.
+    # Never enable REDIS_FAKE in production (state is per-process, not shared).
+    if os.getenv("REDIS_FAKE") == "1":
+        import fakeredis
+        return fakeredis.FakeRedis(decode_responses=True)
     import redis
     return redis.from_url(REDIS_URL, decode_responses=True)
 
@@ -51,8 +59,12 @@ def get_mongo_client():
 
 def get_db():
     client = get_mongo_client()
-    db_name = os.getenv("MONGODB_DB_NAME", "saundarya")
-    return client[db_name]
+    return client[DB_NAME]
+
+
+def get_collection():
+    """Returns the vector/book chunk collection (env MONGODB_COLLECTION)."""
+    return get_db()[COLLECTION_NAME]
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -65,7 +77,7 @@ def require_admin(x_admin_secret: str = Header(default="")):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Admin access not configured",
         )
-    if x_admin_secret != ADMIN_SECRET:
+    if not secrets.compare_digest(x_admin_secret, ADMIN_SECRET):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid admin secret",

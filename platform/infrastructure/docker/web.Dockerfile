@@ -1,16 +1,10 @@
 FROM node:20-alpine AS base
 
-# Install dependencies stage
-FROM base AS deps
-WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci --only=production
-
-# Builder stage
+# Builder stage (project uses Yarn — yarn.lock is committed)
 FROM base AS builder
 WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 COPY . .
 
 ARG NEXT_PUBLIC_API_URL=http://localhost:8000
@@ -18,7 +12,7 @@ ARG NEXT_PUBLIC_SITE_URL=https://shrimali.ai
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 
-RUN npm run build
+RUN yarn build
 
 # Production runner
 FROM base AS runner

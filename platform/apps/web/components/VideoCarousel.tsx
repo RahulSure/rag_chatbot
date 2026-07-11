@@ -15,6 +15,7 @@ import {
 
 type Slide = {
   src: string;
+  poster: string;
   caption: string;
   captionEn: string;
 };
@@ -22,16 +23,19 @@ type Slide = {
 const SLIDES: Slide[] = [
   {
     src: "/videos/teaching-1.mp4",
+    poster: "/videos/teaching-1.jpg",
     caption: "साधना की शक्ति",
     captionEn: "The Power of Sadhana",
   },
   {
     src: "/videos/teaching-2.mp4",
+    poster: "/videos/teaching-2.jpg",
     caption: "मंत्र सिद्धि",
     captionEn: "Awakening Mantra Siddhi",
   },
   {
     src: "/videos/teaching-3.mp4",
+    poster: "/videos/teaching-3.jpg",
     caption: "तंत्र का मार्ग",
     captionEn: "The Path of Tantra",
   },
@@ -51,7 +55,13 @@ export function VideoCarousel() {
   const [muted, setMuted] = useState(true);
   const [progress, setProgress] = useState(0);
   const [query, setQuery] = useState("");
+  // Which slides have been requested to load their video (lazy). Only the
+  // active slide (once the carousel is on-screen) ever gets a src, so inactive
+  // videos are never downloaded until navigated to.
+  const [loaded, setLoaded] = useState<Set<number>>(() => new Set());
+  const [visible, setVisible] = useState(false);
   const router = useRouter();
+  const sectionRef = useRef<HTMLElement | null>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
   const goTo = useCallback((i: number) => {
@@ -60,20 +70,39 @@ export function VideoCarousel() {
   const next = useCallback(() => goTo(index + 1), [index, goTo]);
   const prev = useCallback(() => goTo(index - 1), [index, goTo]);
 
+  // Only load / play videos while the carousel is actually on screen.
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { rootMargin: "200px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  // Mark the active slide as loaded once the carousel is visible.
+  useEffect(() => {
+    if (!visible) return;
+    setLoaded((prev) => (prev.has(index) ? prev : new Set(prev).add(index)));
+  }, [visible, index]);
+
   useEffect(() => {
     videoRefs.current.forEach((v, i) => {
       if (!v) return;
-      if (i === index) {
+      if (i === index && visible) {
         v.currentTime = 0;
         v.play().catch(() => {});
       } else {
         v.pause();
-        v.currentTime = 0;
+        if (i !== index) v.currentTime = 0;
       }
     });
-  }, [index]);
+  }, [index, visible, loaded]);
 
   useEffect(() => {
+    if (!visible) return;
     let raf = 0;
     const start = performance.now();
     const tick = (now: number) => {
@@ -84,7 +113,7 @@ export function VideoCarousel() {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [index, next]);
+  }, [index, next, visible]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -107,7 +136,7 @@ export function VideoCarousel() {
   const active = SLIDES[index];
 
   return (
-    <section className="relative w-full px-4 sm:px-6 pt-10 md:pt-14 pb-16">
+    <section ref={sectionRef} className="relative w-full px-4 sm:px-6 pt-10 md:pt-14 pb-16">
       {/* CINEMATIC CAROUSEL — wide 16:9 centerpiece with guru context overlaid */}
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 20 }}
@@ -134,18 +163,21 @@ export function VideoCarousel() {
             className="relative rounded-[1.65rem] overflow-hidden bg-black"
             style={{ aspectRatio: "16 / 9" }}
           >
-            {/* Videos */}
+            {/* Videos — src is only attached to slides that have been activated
+                while on-screen, so inactive videos are never downloaded. A poster
+                paints instantly in the meantime. */}
             {SLIDES.map((slide, i) => (
               <video
                 key={slide.src}
                 ref={(el) => {
                   videoRefs.current[i] = el;
                 }}
-                src={slide.src}
+                src={loaded.has(i) ? slide.src : undefined}
+                poster={slide.poster}
                 muted={muted}
                 playsInline
                 loop
-                preload={i === 0 ? "auto" : "metadata"}
+                preload={loaded.has(i) ? "auto" : "none"}
                 className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
                   i === index ? "opacity-100" : "opacity-0 pointer-events-none"
                 }`}

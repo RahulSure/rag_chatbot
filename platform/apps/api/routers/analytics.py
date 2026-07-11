@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Query
 
 from packages.shared.schemas import TrendingQuery
-from apps.api.deps import get_db, get_redis_optional
+from apps.api.deps import get_db, get_collection, get_redis_optional
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
@@ -51,7 +51,7 @@ def get_platform_stats():
         total_articles = db["articles"].count_documents({})
         published_articles = db["articles"].count_documents({"status": "published"})
         draft_articles = db["articles"].count_documents({"status": "draft"})
-        vector_docs = db["embeddings"].count_documents({})
+        vector_docs = get_collection().count_documents({})
 
         return {
             "queries": {

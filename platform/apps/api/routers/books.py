@@ -7,7 +7,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from packages.shared.schemas import BookMeta, TopicResponse
-from apps.api.deps import get_db
+from apps.api.deps import get_db, get_collection
 
 router = APIRouter(tags=["Knowledge Base"])
 
@@ -61,7 +61,7 @@ def list_books():
             }},
             {"$match": {"_id": {"$ne": None}}},
         ]
-        results = list(db["embeddings"].aggregate(pipeline))
+        results = list(get_collection().aggregate(pipeline))
         books = []
         for r in results:
             books.append(BookMeta(
@@ -95,7 +95,7 @@ def list_topics():
             {"$group": {"_id": "$metadata.topic", "chunk_count": {"$sum": 1}}},
             {"$match": {"_id": {"$ne": None}}},
         ]
-        counts = {r["_id"]: r["chunk_count"] for r in db["embeddings"].aggregate(pipeline)}
+        counts = {r["_id"]: r["chunk_count"] for r in get_collection().aggregate(pipeline)}
         article_counts = {}
         for art in db["articles"].find({"status": "published"}, {"topic": 1}):
             t = art.get("topic", "")

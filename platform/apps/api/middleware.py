@@ -16,20 +16,64 @@ from starlette.middleware.base import BaseHTTPMiddleware
 logger = logging.getLogger("shrimali.api")
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Prometheus metrics (module-level singletons; no-op if prometheus_client absent)
+# ──────────────────────────────────────────────────────────────────────────────
+
+try:
+    from prometheus_client import Counter, Histogram
+
+    REQUEST_COUNT = Counter(
+        "shrimali_http_requests_total",
+        "Total HTTP request count",
+        ["method", "route", "status"],
+    )
+    REQUEST_LATENCY = Histogram(
+        "shrimali_http_request_duration_seconds",
+        "HTTP request latency",
+        ["method", "route"],
+    )
+    QUERY_COUNT = Counter(
+        "shrimali_rag_queries_total",
+        "Total RAG queries processed",
+        ["language"],
+    )
+    ARTICLE_GEN_COUNT = Counter(
+        "shrimali_articles_generated_total",
+        "Total articles generated",
+        ["topic", "status"],
+    )
+    _PROM_AVAILABLE = True
+except ImportError:
+    REQUEST_COUNT = REQUEST_LATENCY = QUERY_COUNT = ARTICLE_GEN_COUNT = None
+    _PROM_AVAILABLE = False
+
+
+def _route_template(request: Request) -> str:
+    """Templated path (e.g. /articles/{slug}) to keep metric cardinality bounded."""
+    route = request.scope.get("route")
+    return getattr(route, "path", None) or "unmatched"
+
+
 class StructuredLoggingMiddleware(BaseHTTPMiddleware):
-    """Logs each request as structured JSON."""
+    """Logs each request as structured JSON and records Prometheus metrics."""
 
     async def dispatch(self, request: Request, call_next):
         start = time.monotonic()
         response: Response = await call_next(request)
-        duration_ms = (time.monotonic() - start) * 1000
+        duration_s = time.monotonic() - start
+
+        route = _route_template(request)
+        if _PROM_AVAILABLE and route != "/metrics":
+            REQUEST_COUNT.labels(request.method, route, response.status_code).inc()
+            REQUEST_LATENCY.labels(request.method, route).observe(duration_s)
 
         log = {
             "ts": datetime.utcnow().isoformat(),
             "method": request.method,
             "path": request.url.path,
             "status": response.status_code,
-            "duration_ms": round(duration_ms, 1),
+            "duration_ms": round(duration_s * 1000, 1),
             "ip": request.client.host if request.client else None,
         }
         logger.info(json.dumps(log, ensure_ascii=False))
@@ -46,41 +90,12 @@ def setup_logging():
 
 
 def add_metrics_endpoint(app):
-    """Add Prometheus /metrics endpoint if prometheus_client is available."""
-    try:
-        from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
-        from prometheus_client import multiprocess, CollectorRegistry
-        from fastapi.responses import Response as FastAPIResponse
+    """Expose Prometheus /metrics if prometheus_client is available."""
+    if not _PROM_AVAILABLE:
+        return
+    from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+    from fastapi.responses import Response as FastAPIResponse
 
-        REQUEST_COUNT = Counter(
-            "shrimali_http_requests_total",
-            "Total HTTP request count",
-            ["method", "path", "status"],
-        )
-        REQUEST_LATENCY = Histogram(
-            "shrimali_http_request_duration_seconds",
-            "HTTP request latency",
-            ["method", "path"],
-        )
-        QUERY_COUNT = Counter(
-            "shrimali_rag_queries_total",
-            "Total RAG queries processed",
-            ["language"],
-        )
-        ARTICLE_GEN_COUNT = Counter(
-            "shrimali_articles_generated_total",
-            "Total articles generated",
-            ["topic", "status"],
-        )
-
-        @app.get("/metrics", include_in_schema=False)
-        def metrics():
-            return FastAPIResponse(
-                content=generate_latest(),
-                media_type=CONTENT_TYPE_LATEST,
-            )
-
-        return REQUEST_COUNT, REQUEST_LATENCY, QUERY_COUNT, ARTICLE_GEN_COUNT
-
-    except ImportError:
-        return None, None, None, None
+    @app.get("/metrics", include_in_schema=False)
+    def metrics():
+        return FastAPIResponse(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)

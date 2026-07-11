@@ -34,7 +34,7 @@ export default async function ChatPage({ searchParams }: Props) {
         </div>
 
         {/* Chat container */}
-        <div className="cosmic-card min-h-[600px] flex flex-col">
+        <div className="cosmic-card flex flex-col">
           <Suspense fallback={<div className="p-8 text-center text-cosmic-500">Loading AI Guru...</div>}>
             <ChatInterface initialQuestion={q} />
           </Suspense>

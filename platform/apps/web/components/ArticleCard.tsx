@@ -10,6 +10,8 @@ export function ArticleCard({ article }: { article: ArticleListItem }) {
         <img
           src={article.cover_image_url}
           alt={article.title}
+          loading="lazy"
+          decoding="async"
           className="w-full h-40 object-cover rounded-lg mb-4 opacity-70 group-hover:opacity-90 transition-opacity"
         />
       )}

@@ -17,7 +17,7 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
   const [input, setInput] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const sessionIdRef = useRef<string | undefined>(undefined);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { messages, isLoading, error, sendMessage, clearChat } = useStreamChat(sessionIdRef);
 
@@ -40,9 +40,12 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
     }
   }, [initialQuestion]); // eslint-disable-line
 
-  // Auto scroll
+  // Keep the latest message in view — but scroll ONLY the messages container,
+  // never the window (scrollIntoView would jump the whole page on mount).
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length === 0) return;
+    const el = messagesRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,11 +70,14 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[80vh]">
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-6 p-4 pb-2">
+    <div className="flex flex-col">
+      {/* Messages — grows with content, scrolls internally once tall */}
+      <div
+        ref={messagesRef}
+        className="overflow-y-auto max-h-[62vh] min-h-[240px] space-y-6 p-4 pb-2"
+      >
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center py-16">
+          <div className="flex flex-col items-center justify-center min-h-[240px] text-center py-10">
             <div className="text-6xl mb-4">🪔</div>
             <h3 className="font-serif text-2xl text-gold mb-2">Ask the AI Guru</h3>
             <p className="text-cosmic-400 max-w-md mb-8">
@@ -127,8 +133,6 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
             {error}
           </div>
         )}
-
-        <div ref={bottomRef} />
       </div>
 
       {/* Input */}

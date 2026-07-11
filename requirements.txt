@@ -1,6 +1,12 @@
+# Root dev/ingestion requirements for the RAG chatbot platform.
+# For the API service, prefer platform/apps/api/requirements.txt (pinned, includes
+# redis / celery / prometheus). This file covers local ingestion + running the API.
+
+# FastAPI + server
 fastapi
 uvicorn[standard]
 python-dotenv
+python-multipart
 
 # LlamaIndex core + integrations
 llama-index
@@ -15,9 +21,12 @@ sentence-transformers
 # Vector store
 pymongo
 
-# OCR pipeline
+# Redis (session memory)
+redis
+
+# OCR pipeline (EasyOCR — no system tesseract needed)
+easyocr
 pymupdf
-pytesseract
 Pillow
 
 # HTTP clients for Krutrim API

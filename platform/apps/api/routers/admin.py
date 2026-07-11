@@ -13,7 +13,7 @@ from pathlib import Path
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 
 from packages.shared.schemas import IngestRequest, IngestResponse, VectorStoreHealth
-from apps.api.deps import get_db, require_admin
+from apps.api.deps import get_db, get_collection, require_admin
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -84,6 +84,8 @@ async def upload_book(
             language=language,
             tags=[t.strip() for t in tags.split(",")],
         )
+        from rag.router import invalidate_registry
+        invalidate_registry()
 
     background_tasks.add_task(_run_ingestion)
 
@@ -112,6 +114,8 @@ def trigger_ingestion(req: IngestRequest, background_tasks: BackgroundTasks):
             language=req.language,
             tags=req.tags,
         )
+        from rag.router import invalidate_registry
+        invalidate_registry()
 
     background_tasks.add_task(_run)
     return IngestResponse(
@@ -124,9 +128,7 @@ def trigger_ingestion(req: IngestRequest, background_tasks: BackgroundTasks):
 def delete_book_vectors(book_slug: str):
     """Remove all vectors for a specific book from MongoDB."""
     try:
-        db = get_db()
-        collection_name = os.getenv("MONGODB_COLLECTION", "embeddings")
-        result = db[collection_name].delete_many({"metadata.book_slug": book_slug})
+        result = get_collection().delete_many({"metadata.book_slug": book_slug})
         return {
             "status": "deleted",
             "book_slug": book_slug,
@@ -140,7 +142,6 @@ def delete_book_vectors(book_slug: str):
 def admin_list_books():
     """List all books in vector store with chunk counts (admin view)."""
     try:
-        db = get_db()
         pipeline = [
             {"$group": {
                 "_id": "$metadata.book_slug",
@@ -148,7 +149,8 @@ def admin_list_books():
                 "language": {"$first": "$metadata.language"},
                 "chunk_count": {"$sum": 1},
             }},
+            {"$match": {"_id": {"$ne": None}}},
         ]
-        return list(db["embeddings"].aggregate(pipeline))
+        return list(get_collection().aggregate(pipeline))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -97,18 +97,6 @@ export async function sendQuery(
   return res.json();
 }
 
-export function createStreamingQuery(
-  question: string,
-  topK = 5,
-  sessionId?: string
-): EventSource | null {
-  if (typeof window === "undefined") return null;
-  const body = JSON.stringify({ question, top_k: topK, stream: true, session_id: sessionId });
-
-  const url = `${API_BASE}/query`;
-  return null; // SSE is handled via fetch + ReadableStream below
-}
-
 export async function* streamQuery(
   question: string,
   topK = 12,
@@ -137,7 +125,13 @@ export async function* streamQuery(
       if (!line.startsWith("data: ")) continue;
       // Do NOT trim: tokens carry significant leading/trailing whitespace.
       const raw = line.slice(6);
-      if (raw === "[DONE]" || raw.startsWith("[SESSION:") || raw.startsWith("[ERROR]")) {
+      // Control frames: routing metadata, session id, completion, error.
+      if (
+        raw.startsWith("[META:") ||
+        raw === "[DONE]" ||
+        raw.startsWith("[SESSION:") ||
+        raw.startsWith("[ERROR]")
+      ) {
         if (raw.startsWith("[ERROR]")) throw new Error(raw);
         continue;
       }

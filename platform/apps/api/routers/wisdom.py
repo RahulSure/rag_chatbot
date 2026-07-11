@@ -12,7 +12,7 @@ from datetime import date
 from fastapi import APIRouter, Query
 
 from packages.shared.schemas import DailyWisdom, SearchResult
-from apps.api.deps import get_db, get_redis_optional
+from apps.api.deps import get_collection, get_redis_optional
 
 router = APIRouter(tags=["Discovery"])
 
@@ -37,13 +37,13 @@ def get_daily_wisdom():
             return DailyWisdom(**json.loads(cached))
 
     try:
-        db = get_db()
-        total = db["embeddings"].count_documents({})
+        coll = get_collection()
+        total = coll.count_documents({})
         if total == 0:
             return _fallback_wisdom(today)
 
         seed = int(hashlib.md5(today.encode()).hexdigest(), 16) % total
-        docs = list(db["embeddings"].find({}, {
+        docs = list(coll.find({}, {
             "text": 1, "metadata.page": 1, "metadata.book": 1,
             "metadata.chapter_title": 1, "metadata.language": 1,
         }).skip(seed).limit(1))

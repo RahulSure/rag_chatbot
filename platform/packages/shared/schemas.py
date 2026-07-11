@@ -18,6 +18,7 @@ class QueryRequest(BaseModel):
     top_k: int = Field(12, ge=1, le=20)
     stream: bool = Field(False)
     session_id: Optional[str] = Field(None, description="For session memory")
+    book_slug: Optional[str] = Field(None, description="Optional manual book pin")
 
 
 class FilteredQueryRequest(BaseModel):
@@ -43,6 +44,8 @@ class QueryResponse(BaseModel):
     sources: list[SourceNode]
     model: str
     session_id: Optional[str] = None
+    routed_books: Optional[list[str]] = None
+    standalone_question: Optional[str] = None
 
 
 # ──────────────────────────────────────────────────────────────────────────────

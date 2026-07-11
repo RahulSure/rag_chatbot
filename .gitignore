@@ -46,7 +46,7 @@ coverage/
 .env.local
 .env*.local
 
-# Vector store (local ChromaDB — no longer used)
+# Legacy local vector store (removed; production uses MongoDB Atlas)
 chroma_db/
 
 # OCR output (regenerated from PDF)
@@ -72,3 +72,9 @@ responses.json
 *.mp4
 data/
 public/videos/
+
+# …but the web app's compressed hero videos + posters are small (~1.6 MB total)
+# and ship with the repo so the frontend is deployable from a clean clone.
+!platform/apps/web/public/videos/
+!platform/apps/web/public/videos/*.mp4
+!platform/apps/web/public/videos/*.jpg
