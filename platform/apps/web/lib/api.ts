@@ -2,7 +2,16 @@
  * Typed API client for the Shrimali AI FastAPI backend.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// The browser reaches the API same-origin through nginx (NEXT_PUBLIC_API_URL=/api),
+// while server-side rendering inside the container talks to it directly over the
+// Docker network (API_INTERNAL_URL=http://api:8000) — a relative path can't be
+// fetched server-side.
+const API_BASE =
+  typeof window === "undefined"
+    ? process.env.API_INTERNAL_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "http://localhost:8000"
+    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export interface SourceNode {
   page?: number;

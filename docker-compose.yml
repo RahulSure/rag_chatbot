@@ -1,0 +1,77 @@
+# Simple single-host stack: nginx → { Next.js web, FastAPI api } + redis.
+# Bring it up with:  docker compose up -d --build
+# Public entrypoint is nginx on :80 — web and api are not published directly.
+
+services:
+  # ── FastAPI backend ────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: platform/infrastructure/docker/api.Dockerfile
+    container_name: sadhak-api
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+      # Load the embedding model from the path baked into the image (see api.Dockerfile).
+      # Overrides EMBEDDING_MODEL in .env so it works offline (HF_HUB_OFFLINE=1).
+      - EMBEDDING_MODEL=/opt/hf-models/embed
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    expose:
+      - "8000"
+
+  # ── Next.js frontend ───────────────────────────────────────────────────────
+  web:
+    build:
+      context: platform/apps/web
+      dockerfile: ../../infrastructure/docker/web.Dockerfile
+      args:
+        # Baked into the client bundle. Relative /api → same-origin → nginx.
+        NEXT_PUBLIC_API_URL: /api
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost}
+    container_name: sadhak-web
+    environment:
+      # Server-side rendering talks to the API directly over the Docker network.
+      - API_INTERNAL_URL=http://api:8000
+      - NEXT_PUBLIC_API_URL=/api
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost}
+    depends_on:
+      - api
+    restart: unless-stopped
+    expose:
+      - "3000"
+
+  # ── nginx reverse proxy (public entrypoint) ────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: sadhak-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web
+      - api
+    restart: unless-stopped
+
+  # ── Redis (sessions, chat memory, analytics) ───────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: sadhak-redis
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  redis_data:

@@ -12,6 +12,9 @@ interface Props {
   searchParams: Promise<{ topic?: string; page?: string }>;
 }
 
+// Rendered per-request against the live API (the API isn't reachable at build time).
+export const dynamic = "force-dynamic";
+
 export default async function BlogPage({ searchParams }: Props) {
   const { topic, page: pageStr } = await searchParams;
   const page = parseInt(pageStr || "1", 10);

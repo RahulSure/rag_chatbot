@@ -7,6 +7,9 @@ export const metadata = {
   description: "Spiritual books of Sadgurudev Dr. Narayan Dutt Shrimali, searchable via the AI Guru.",
 };
 
+// Rendered per-request against the live API (the API isn't reachable at build time).
+export const dynamic = "force-dynamic";
+
 export default async function BooksPage() {
   const books = await getBooks().catch(() => []);
 

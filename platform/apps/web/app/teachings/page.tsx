@@ -9,6 +9,9 @@ export const metadata: Metadata = {
     "Explore Dr. Narayan Dutt Shrimali's teachings across all spiritual disciplines — tantra, mantra, sadhana, kundalini, jyotish, yantra and more.",
 };
 
+// Rendered per-request against the live API (the API isn't reachable at build time).
+export const dynamic = "force-dynamic";
+
 export default async function TeachingsPage() {
   const topics = await getTopics().catch(() => []);
 

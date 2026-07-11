@@ -7,6 +7,9 @@ import { getArticles, getBooks, getTrendingQueries } from "@/lib/api";
 import Link from "next/link";
 import { ArrowRight, BookOpen } from "lucide-react";
 
+// Rendered per-request against the live API (the API isn't reachable at build time).
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const [articles, books, trending] = await Promise.all([
     getArticles(undefined, 3).catch(() => []),

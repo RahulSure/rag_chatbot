@@ -1,0 +1,11 @@
+# Keep the api build context lean (context is the repo root).
+.git
+.venv
+venv
+__pycache__
+*.pyc
+node_modules
+platform/apps/web/node_modules
+platform/apps/web/.next
+data/archive
+*.log
