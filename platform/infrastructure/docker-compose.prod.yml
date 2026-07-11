@@ -1,0 +1,32 @@
+# Production override for a single-VM deploy behind nginx.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# What this changes vs the base compose:
+#   - Builds the web image with the PUBLIC, browser-reachable API URL as a BUILD
+#     ARG (Next.js bakes NEXT_PUBLIC_* at build time — a runtime env var does not
+#     work). Set PUBLIC_BASE_URL in .env, e.g. http://64.227.161.169 (or your
+#     domain). The browser then calls <PUBLIC_BASE_URL>/api/* which nginx proxies
+#     to the api container.
+#   - Binds api/web/redis to 127.0.0.1 only, so nothing is reachable from the
+#     internet except through nginx (docker-published ports otherwise bypass ufw).
+#   - Drops the redis host port entirely (only other containers need it).
+
+services:
+  api:
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  web:
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: "${PUBLIC_BASE_URL}/api"
+        NEXT_PUBLIC_SITE_URL: "${PUBLIC_BASE_URL}"
+    environment:
+      - NEXT_PUBLIC_API_URL=${PUBLIC_BASE_URL}/api
+      - NEXT_PUBLIC_SITE_URL=${PUBLIC_BASE_URL}
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  redis:
+    ports: []
