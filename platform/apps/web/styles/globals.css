@@ -4,67 +4,61 @@
 
 /*
  * Design tokens — RGB channels so Tailwind opacity modifiers work.
- * "Dawn" (light) is the default; "Night" (dark) is applied with html.dark,
- * set by ThemeProvider (system preference unless the visitor chose one).
+ * Light is "ash" (a low-chroma stone), dark is "kajal" (lamp-black); the accent
+ * is tulsi green. The home page sets its own chapter colours on top of these.
  */
 :root {
   color-scheme: light;
 
-  --background: 250 246 238;
-  --foreground: 35 26 18;
+  --background: 236 235 231;
+  --foreground: 20 18 16;
 
-  --accent: 154 84 8;          /* deep amber — AA on ivory */
-  --accent-strong: 122 66 5;   /* emphasis / hover */
-  --accent-soft: 196 129 38;   /* decorative only */
-  --shadow: 60 40 20;
+  --accent: 23 97 74;          /* tulsi, dark enough for text on ash */
+  --accent-strong: 15 70 53;
+  --accent-soft: 31 122 90;
+  --shadow: 20 18 16;
 
-  --cosmic-50: 31 22 13;
-  --cosmic-100: 44 34 24;
-  --cosmic-200: 58 46 35;
-  --cosmic-300: 78 65 53;
-  --cosmic-400: 96 82 69;
-  --cosmic-500: 110 95 81;
-  --cosmic-600: 120 105 90;
-  --cosmic-700: 201 189 173;
-  --cosmic-800: 230 220 205;
-  --cosmic-900: 240 232 218;
-  --cosmic-950: 247 241 230;
+  --cosmic-50: 20 18 16;
+  --cosmic-100: 32 30 27;
+  --cosmic-200: 46 43 40;
+  --cosmic-300: 64 60 56;
+  --cosmic-400: 82 77 72;
+  --cosmic-500: 98 92 86;
+  --cosmic-600: 110 104 97;
+  --cosmic-700: 196 192 186;
+  --cosmic-800: 214 211 206;
+  --cosmic-900: 226 224 220;
+  --cosmic-950: 244 243 240;
 
-  --card-bg: rgb(255 255 255 / 0.72);
-  --card-border: rgb(var(--accent) / 0.2);
-  --btn-bg: rgb(var(--accent));
-  --btn-fg: #fffaf0;
-  --page-glow: radial-gradient(ellipse 90% 55% at 50% -10%, rgb(255 190 110 / 0.32), transparent 65%);
+  --btn-bg: #1f7a5a;
+  --btn-fg: #ffffff;
 }
 
 html.dark {
   color-scheme: dark;
 
-  --background: 10 10 15;
-  --foreground: 244 240 232;
+  --background: 22 20 18;
+  --foreground: 255 255 255;
 
-  --accent: 201 168 76;
-  --accent-strong: 226 201 126;
-  --accent-soft: 157 122 47;
+  --accent: 79 182 140;        /* tulsi, light enough for text on kajal */
+  --accent-strong: 120 205 168;
+  --accent-soft: 31 122 90;
   --shadow: 0 0 0;
 
-  --cosmic-50: 244 240 232;
-  --cosmic-100: 236 229 214;
-  --cosmic-200: 220 207 182;
-  --cosmic-300: 202 184 150;
-  --cosmic-400: 184 163 126;
-  --cosmic-500: 164 141 106;
-  --cosmic-600: 146 123 90;
-  --cosmic-700: 96 75 45;
-  --cosmic-800: 52 39 21;
-  --cosmic-900: 26 18 8;
-  --cosmic-950: 10 10 15;
+  --cosmic-50: 255 255 255;
+  --cosmic-100: 240 238 235;
+  --cosmic-200: 222 219 214;
+  --cosmic-300: 200 196 190;
+  --cosmic-400: 181 174 166;
+  --cosmic-500: 162 155 147;
+  --cosmic-600: 145 138 130;
+  --cosmic-700: 90 85 80;
+  --cosmic-800: 50 47 43;
+  --cosmic-900: 34 31 28;
+  --cosmic-950: 26 24 21;
 
-  --card-bg: rgb(20 15 35 / 0.7);
-  --card-border: rgb(var(--accent) / 0.2);
-  --btn-bg: linear-gradient(135deg, rgb(var(--accent)), rgb(var(--accent-strong)));
-  --btn-fg: #0a0a0f;
-  --page-glow: radial-gradient(ellipse at top, #1a0a2e 0%, transparent 60%);
+  --btn-bg: #1f7a5a;
+  --btn-fg: #ffffff;
 }
 
 * {
@@ -77,25 +71,18 @@ html,
 body {
   background-color: rgb(var(--background));
   color: rgb(var(--foreground));
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-sans), var(--font-devanagari), system-ui, sans-serif;
   overflow-x: hidden;
-  scroll-behavior: smooth;
-}
-
-body {
-  background-image: var(--page-glow);
-  background-repeat: no-repeat;
-  background-attachment: fixed;
 }
 
 ::selection {
   background: rgb(var(--accent) / 0.25);
 }
 
-/* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-sans), var(--font-devanagari), system-ui, sans-serif;
   color: rgb(var(--foreground));
+  letter-spacing: -0.02em;
 }
 
 .devanagari {
@@ -113,75 +100,62 @@ textarea:focus-visible {
   box-shadow: 0 0 0 3px rgb(var(--accent) / 0.35);
 }
 
-/* Card */
+/* Surface: one tone step from the page — no outline, no shadow at rest */
 .cosmic-card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  box-shadow: 0 1px 2px rgb(var(--shadow) / 0.06);
-  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  background: rgb(var(--cosmic-900));
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
-
 .cosmic-card:hover {
-  border-color: rgb(var(--accent) / 0.45);
-  box-shadow: 0 10px 30px rgb(var(--shadow) / 0.12);
-  transform: translateY(-2px);
+  background: rgb(var(--cosmic-800));
 }
 
-/* Primary button */
+/* Primary button: flat, one fill, square corners */
 .btn-gold {
   background: var(--btn-bg);
   color: var(--btn-fg);
-  font-weight: 600;
+  font-weight: 500;
   padding: 12px 28px;
-  border-radius: 10px;
   border: none;
   cursor: pointer;
-  transition: filter 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.16s ease, filter 0.16s ease;
 }
-
 .btn-gold:hover {
-  filter: brightness(1.08);
-  box-shadow: 0 6px 20px rgb(var(--accent) / 0.35);
+  filter: brightness(1.1);
   transform: translateY(-1px);
 }
 
-/* Secondary button */
+/* Secondary button: solid 2px border */
 .btn-ghost {
   background: transparent;
-  border: 1px solid rgb(var(--accent) / 0.45);
-  color: rgb(var(--accent));
+  border: 2px solid rgb(var(--foreground));
+  color: rgb(var(--foreground));
   padding: 10px 24px;
-  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.16s ease, background-color 0.16s ease;
 }
-
 .btn-ghost:hover {
-  background: rgb(var(--accent) / 0.1);
-  border-color: rgb(var(--accent));
+  background: rgb(var(--cosmic-900));
+  transform: translateY(-1px);
 }
 
-/* Divider */
+/* Separation by space, not by a line */
 .gold-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgb(var(--accent) / 0.45), transparent);
+  height: 0;
   margin: 2rem 0;
 }
 
 /* Markdown content */
 .prose-spiritual h2 {
-  @apply font-serif text-2xl text-gold-light mt-8 mb-4;
+  @apply text-2xl font-bold text-foreground mt-8 mb-4;
 }
 .prose-spiritual h3 {
-  @apply font-serif text-xl text-foreground mt-6 mb-3;
+  @apply text-xl font-medium text-foreground mt-6 mb-3;
 }
 .prose-spiritual p {
-  @apply text-cosmic-200 leading-relaxed mb-4;
+  @apply text-foreground leading-relaxed mb-4;
 }
 .prose-spiritual blockquote {
-  @apply border-l-4 border-gold pl-4 italic text-gold-light my-6;
+  @apply pl-4 my-6 bg-cosmic-900 py-3 pr-4;
 }
 .prose-spiritual strong {
   @apply text-foreground font-semibold;
@@ -190,8 +164,7 @@ textarea:focus-visible {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: rgb(var(--background)); }
-::-webkit-scrollbar-thumb { background: rgb(var(--accent) / 0.3); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgb(var(--accent) / 0.55); }
+::-webkit-scrollbar-thumb { background: rgb(var(--cosmic-700)); }
 
 /* Chat streaming cursor */
 @keyframes blink {
@@ -202,34 +175,6 @@ textarea:focus-visible {
   content: '▋';
   animation: blink 1s step-end infinite;
   color: rgb(var(--accent));
-}
-
-/*
- * Legacy decorative classes used by the video section. They keep their names
- * but are intentionally quiet now — no shimmer, no glow animation.
- */
-.title-magical {
-  font-family: var(--font-serif), Georgia, serif;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: #fff;
-}
-
-.mantra-glow {
-  font-family: var(--font-sans), var(--font-devanagari), sans-serif;
-  color: #f4e4a8;
-}
-
-.text-elegant {
-  font-family: var(--font-serif), Georgia, serif;
-  font-style: italic;
-  letter-spacing: 0.01em;
-}
-
-.text-mystical-caps {
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-weight: 500;
 }
 
 /* Respect users who ask for less motion */

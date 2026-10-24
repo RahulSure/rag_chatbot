@@ -48,7 +48,7 @@ export function NorthIndianChart({ chart, lang }: { chart: BirthChart; lang: Lan
 
   return (
     <svg viewBox="-4 -4 408 408" role="img" aria-label="North Indian birth chart" className="mx-auto w-full max-w-md">
-      <rect x="0" y="0" width="400" height="400" className="fill-cosmic-950 stroke-gold/50" strokeWidth="2" />
+      <rect x="0" y="0" width="400" height="400" fill="none" className="fill-cosmic-950 stroke-gold/50" strokeWidth="2" />
       {HOUSES.map((pts, i) => {
         const house = chart.houses[i];
         const [cx, cy] = centroid(pts);
@@ -60,6 +60,7 @@ export function NorthIndianChart({ chart, lang }: { chart: BirthChart; lang: Lan
           <g key={i}>
             <polygon
               points={pts.map((p) => P[p].join(",")).join(" ")}
+              fill="none" /* the class sets the real fill; never default to black */
               className={`stroke-gold/50 ${i === 0 ? "fill-gold/10" : "fill-transparent"}`}
               strokeWidth="1.5"
             />

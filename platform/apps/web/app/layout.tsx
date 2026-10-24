@@ -1,14 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Noto_Sans_Devanagari, Playfair_Display } from "next/font/google";
+import { Jost, Noto_Sans_Devanagari } from "next/font/google";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { WhatsAppBadge } from "@/components/WhatsAppCTA";
 import { ThemeProvider, themeInitScript } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/lib/i18n";
 import "@/styles/globals.css";
 
-const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
-const serif = Playfair_Display({ subsets: ["latin"], variable: "--font-serif", display: "swap" });
+// One family in three weights for display and text (taste-skill direction "Colour chapters").
+const jost = Jost({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-sans", display: "swap" });
 const devanagari = Noto_Sans_Devanagari({
   subsets: ["devanagari"],
   variable: "--font-devanagari",
@@ -68,7 +67,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     // The theme script toggles the "dark" class before paint, so hydration must tolerate it.
-    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${serif.variable} ${devanagari.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${jost.variable} ${devanagari.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
@@ -83,11 +82,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               Skip to content
             </a>
             <Navbar />
-            <main id="main" className="pt-16">
+            <main id="main">
               {children}
             </main>
             <Footer />
-            <WhatsAppBadge />
           </LanguageProvider>
         </ThemeProvider>
       </body>

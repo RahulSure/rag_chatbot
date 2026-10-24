@@ -46,16 +46,13 @@ const config: Config = {
         },
       },
       fontFamily: {
-        serif: ["var(--font-serif)", "Georgia", "serif"],
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
-        // Latin falls through to Inter, Devanagari glyphs to Noto Sans Devanagari.
+        serif: ["var(--font-sans)", "var(--font-devanagari)", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "var(--font-devanagari)", "system-ui", "sans-serif"],
+        // Latin is set in Jost; Devanagari glyphs fall through to Noto Sans Devanagari.
         devanagari: ["var(--font-sans)", "var(--font-devanagari)", "system-ui", "sans-serif"],
-        // Legacy aliases — the decorative faces were dropped for a calmer look.
-        cinzel: ["var(--font-serif)", "Georgia", "serif"],
-        cormorant: ["var(--font-serif)", "Georgia", "serif"],
-      },
-      backgroundImage: {
-        "gold-gradient": "linear-gradient(135deg, rgb(var(--accent)) 0%, rgb(var(--accent-strong)) 100%)",
+        // Legacy aliases — every face is now Jost.
+        cinzel: ["var(--font-sans)", "system-ui", "sans-serif"],
+        cormorant: ["var(--font-sans)", "system-ui", "sans-serif"],
       },
       animation: {
         "float": "float 6s ease-in-out infinite",
