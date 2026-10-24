@@ -60,6 +60,7 @@ SOURCES:
 
 USER'S QUESTION: {question}
 
+Write the whole answer in {language} (mantras stay in Devanagari exactly as in the source).
 Your answer:"""
 
 RETRY_NOTE = """
@@ -121,6 +122,30 @@ def _window(full: str, matched_chunk: str) -> str:
     return full[start : start + ARTICLE_CHARS]
 
 
+# Words too common in titles to identify a topic ("mantra", "sadhana", question words …).
+_STOPWORDS = {
+    "का", "की", "के", "को", "और", "में", "से", "है", "हैं", "क्या", "कैसे", "करें", "करे", "बताइए", "बताओ",
+    "बताएं", "मंत्र", "मन्त्र", "साधना", "विधि", "प्रयोग", "लिए", "कोई", "मुझे", "दीजिए",
+    "mantra", "mantras", "sadhana", "sadhna", "method", "vidhi", "for", "and", "the", "how", "what", "is", "of",
+    "to", "give", "me", "with", "a", "an", "in", "do", "i", "my", "please", "tell", "about", "procedure",
+}
+TITLE_MATCHES = 2  # articles added by title keyword, on top of vector results
+
+
+def _title_matches(question: str, exclude: set[str]) -> list[dict]:
+    """Articles whose title names the question's topic (e.g. "सरस्वती") — meaning search alone misses some."""
+    words = {w for w in re.findall(r"[\wऀ-ॿ]+", question.lower()) if len(w) >= 3 and w not in _STOPWORDS}
+    if not words:
+        return []
+    from rag.vector_store import MONGODB_DB_NAME, _get_mongo_client
+
+    coll = _get_mongo_client()[MONGODB_DB_NAME][WEB_ARTICLES]
+    query = {"$or": [{"title": {"$regex": re.escape(w), "$options": "i"}} for w in words]}
+    docs = [d for d in coll.find(query).limit(50) if d["_id"] not in exclude]
+    docs.sort(key=lambda d: sum(w in d["title"].lower() for w in words), reverse=True)
+    return docs[:TITLE_MATCHES]
+
+
 def gather_sources(question: str, top_k: int = 12) -> list[Source]:
     nodes = _retriever(top_k).retrieve(question)
 
@@ -129,7 +154,9 @@ def gather_sources(question: str, top_k: int = 12) -> list[Source]:
         md = nws.node.metadata or {}
         key = md.get("source_url") or f"{md.get('book_slug')}:{md.get('page')}"
         groups.setdefault(key, []).append(nws)
-    selected = list(groups.items())[:MAX_SOURCES]
+
+    title_hits = _title_matches(question, exclude=set(groups))
+    selected = list(groups.items())[: MAX_SOURCES - len(title_hits)]
 
     web_keys = [k for k, g in selected if (g[0].node.metadata or {}).get("source_type") == "web"]
     articles = _full_articles(web_keys)
@@ -145,7 +172,12 @@ def gather_sources(question: str, top_k: int = 12) -> list[Source]:
         else:
             sources.append(Source(md.get("chapter_title") or md.get("book") or "", "\n".join(chunks), False,
                                   md.get("book"), md.get("page"), md.get("topic"), None, chunks[0][:300]))
-    return sources
+    # Title matches go first: the question names their topic directly.
+    title_sources = [
+        Source(d["title"], _window(d["text"], ""), True, d.get("site_name"), None, None, d["_id"], d["text"][:300])
+        for d in title_hits
+    ]
+    return title_sources + sources
 
 
 def _format_sources(sources: list[Source]) -> str:
@@ -235,9 +267,23 @@ def _complete(prompt: str, temperature: float) -> str:
     return _MARKDOWN.sub("", text)  # the chat renders plain text
 
 
+def answer_language(question: str) -> str:
+    """The model drifts to the (mostly Hindi) sources' language, so decide it here."""
+    letters = [c for c in question if c.isalpha()]
+    devanagari = sum(1 for c in letters if "ऀ" <= c <= "ॿ")
+    if letters and devanagari / len(letters) > 0.3:
+        return "Hindi (Devanagari script)"
+    return "English — or, if the question is Hindi written in Roman letters, Hinglish in Roman letters"
+
+
 def answer_question(question: str, history: str = "", top_k: int = 12) -> tuple[str, list[Source]]:
     sources = gather_sources(question, top_k)
-    prompt = PROMPT.format(history=history or "(none)", sources=_format_sources(sources), question=question)
+    prompt = PROMPT.format(
+        history=history or "(none)",
+        sources=_format_sources(sources),
+        question=question,
+        language=answer_language(question),
+    )
 
     answer = _complete(prompt, ANSWER_TEMPERATURE)
     bad = unverified_mantras(answer, sources)
