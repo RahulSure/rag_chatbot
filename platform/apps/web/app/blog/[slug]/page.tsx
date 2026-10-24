@@ -60,7 +60,7 @@ export default async function ArticlePage({ params }: Props) {
     },
     publisher: {
       "@type": "Organization",
-      name: "Shrimali AI Spiritual Platform",
+      name: "Sadhak.ai",
     },
     datePublished: article.published_at,
     keywords: article.tags.join(", "),
@@ -82,9 +82,6 @@ export default async function ArticlePage({ params }: Props) {
 
   return (
     <div className="min-h-screen py-12 px-6 relative">
-      {/* Comfortable reading overlay — dims the galaxy stars for the article only */}
-      <div className="fixed inset-0 bg-[#0d0b14]/80 backdrop-blur-[2px] pointer-events-none z-0" />
-
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -96,13 +93,13 @@ export default async function ArticlePage({ params }: Props) {
         />
       )}
 
-      <article className="max-w-3xl mx-auto relative z-10 bg-[#100e1a]/70 backdrop-blur-md rounded-2xl px-8 py-10 border border-gold/10 shadow-2xl">
+      <article className="max-w-3xl mx-auto relative z-10 bg-cosmic-950/80 backdrop-blur-md rounded-2xl px-6 sm:px-8 py-10 border border-gold/15 shadow-cosmic">
         {/* Back */}
         <Link
           href="/blog"
           className="inline-flex items-center gap-2 text-cosmic-400 hover:text-gold text-sm mb-8 transition-colors"
         >
-          <ArrowLeft size={14} /> Back to Blog
+          <ArrowLeft size={14} /> Back to Articles
         </Link>
 
         {/* Meta */}
@@ -130,7 +127,7 @@ export default async function ArticlePage({ params }: Props) {
             <div className="flex items-center gap-1.5">
               <Clock size={14} />
               <time dateTime={article.published_at}>
-                {new Date(article.published_at).toLocaleDateString("en-IN", {
+                {new Date(article.published_at).toLocaleDateString(article.language === "hi" ? "hi-IN" : "en-GB", {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
@@ -139,7 +136,7 @@ export default async function ArticlePage({ params }: Props) {
             </div>
           )}
           {article.source_books.length > 0 && (
-            <span className="ml-auto text-xs text-gold/50">
+            <span className="ml-auto text-xs text-cosmic-500">
               Source: {article.source_books.join(", ")}
             </span>
           )}
@@ -180,13 +177,13 @@ export default async function ArticlePage({ params }: Props) {
             Ask a Question About This Topic
           </h3>
           <p className="text-cosmic-400 text-sm mb-5">
-            Get AI-powered answers from Sadgurudev's actual books.
+            Get answers grounded in the published texts, with sources shown.
           </p>
           <Link
             href={`/chat?q=${encodeURIComponent(`Tell me more about ${article.topic}`)}`}
             className="btn-gold inline-flex items-center gap-2 text-sm"
           >
-            Ask the AI Guru
+            Ask Sadhak
           </Link>
         </div>
       </article>

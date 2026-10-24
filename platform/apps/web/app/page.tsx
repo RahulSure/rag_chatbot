@@ -1,11 +1,14 @@
 import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
+import { HeroSection } from "@/components/HeroSection";
 import { DailyWisdomSection } from "@/components/DailyWisdom";
 import { TopicsGrid } from "@/components/TopicsGrid";
 import { ArticleCard } from "@/components/ArticleCard";
 import { VideoCarousel } from "@/components/VideoCarousel";
 import { EmailCapture } from "@/components/EmailCapture";
+import { WhatsAppSection } from "@/components/WhatsAppCTA";
+import { T } from "@/lib/i18n";
 import { getArticles, getBooks, getTrendingQueries } from "@/lib/api";
 import Link from "next/link";
 import { ArrowRight, BookOpen } from "lucide-react";
@@ -19,47 +22,45 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Hero video carousel — primary attraction */}
-      <VideoCarousel />
+      <HeroSection />
 
-      {/* Daily Wisdom */}
       <Suspense fallback={<div className="h-48" />}>
         <DailyWisdomSection />
       </Suspense>
 
-      {/* Email Capture */}
-      <EmailCapture />
-
-      {/* Topics Grid */}
       <Suspense fallback={<div className="h-48" />}>
         <TopicsGrid />
       </Suspense>
 
       {/* Latest Articles */}
       {articles.length > 0 && (
-        <section className="py-20 px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-end justify-between mb-10">
+        <section className="px-6 py-20">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-10 flex items-end justify-between">
               <div>
-                <span className="text-gold text-sm uppercase tracking-widest">Knowledge</span>
-                <h2 className="font-serif text-4xl text-foreground mt-2">Latest Articles</h2>
-                <div className="flex gap-3 mt-2">
-                  <Link href="/blog?lang=en" className="text-xs text-sky-400/80 hover:text-sky-300 transition-colors">
-                    🇬🇧 English
+                <span className="text-sm uppercase tracking-widest text-gold">
+                  <T k="home.articlesEyebrow" />
+                </span>
+                <h2 className="mt-2 font-serif text-4xl text-foreground">
+                  <T k="home.articlesTitle" />
+                </h2>
+                <div className="mt-2 flex gap-3 text-xs">
+                  <Link href="/blog?lang=en" className="text-cosmic-400 transition-colors hover:text-gold">
+                    English
                   </Link>
-                  <Link href="/blog?lang=hi" className="text-xs text-amber-400/80 hover:text-amber-300 transition-colors font-devanagari">
-                    🇮🇳 हिन्दी
+                  <Link href="/blog?lang=hi" className="font-devanagari text-cosmic-400 transition-colors hover:text-gold">
+                    हिन्दी
                   </Link>
                 </div>
               </div>
               <Link
                 href="/blog"
-                className="flex items-center gap-2 text-gold text-sm hover:text-gold-light transition-colors"
+                className="flex items-center gap-2 text-sm text-gold transition-colors hover:text-gold-light"
               >
-                View all <ArrowRight size={14} />
+                <T k="home.viewAll" /> <ArrowRight size={14} aria-hidden="true" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {articles.map((article) => (
                 <ArticleCard key={article.id} article={article} />
               ))}
@@ -68,50 +69,23 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Books */}
-      {books.length > 0 && (
-        <section className="py-20 px-6 bg-cosmic-950/30">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <span className="text-gold text-sm uppercase tracking-widest">Library</span>
-              <h2 className="font-serif text-4xl text-foreground mt-2">Books by Sadgurudev</h2>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {books.map((book) => (
-                <div key={book.slug} className="cosmic-card p-6 text-center">
-                  <div className="w-14 h-14 rounded-full bg-gold/10 flex items-center justify-center mx-auto mb-4">
-                    <BookOpen size={24} className="text-gold" />
-                  </div>
-                  <h3 className="font-serif text-foreground font-semibold mb-1">{book.name}</h3>
-                  <p className="text-cosmic-500 text-xs mb-2">{book.author}</p>
-                  {book.description && (
-                    <p className="text-cosmic-400 text-xs line-clamp-2">{book.description}</p>
-                  )}
-                  <div className="mt-3 text-xs text-gold/50">
-                    {book.chunk_count > 0 ? `${book.chunk_count} passages` : book.language.toUpperCase()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Popular Questions */}
       {trending.length > 0 && (
-        <section className="py-20 px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <span className="text-gold text-sm uppercase tracking-widest">Popular</span>
-            <h2 className="font-serif text-4xl text-foreground mt-2 mb-10">
-              Questions Seekers Ask
+        <section className="bg-cosmic-950/60 px-6 py-20">
+          <div className="mx-auto max-w-4xl text-center">
+            <span className="text-sm uppercase tracking-widest text-gold">
+              <T k="home.popularEyebrow" />
+            </span>
+            <h2 className="mb-10 mt-2 font-serif text-4xl text-foreground">
+              <T k="home.popularTitle" />
             </h2>
             <div className="flex flex-wrap justify-center gap-3">
               {trending.map((q) => (
                 <Link
                   key={q.query}
                   href={`/chat?q=${encodeURIComponent(q.query)}`}
-                  className="px-5 py-3 rounded-2xl border border-gold/20 bg-gold/5 text-cosmic-200 
-                             text-sm hover:border-gold/50 hover:text-foreground transition-all font-devanagari"
+                  className="rounded-2xl border border-gold/25 bg-gold/5 px-5 py-3 text-sm text-cosmic-200
+                             font-devanagari transition-colors hover:border-gold/60 hover:text-foreground"
                 >
                   {q.query}
                 </Link>
@@ -121,27 +95,69 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* About teaser */}
-      <section className="py-20 px-6 bg-cosmic-950/30">
-        <div className="max-w-4xl mx-auto cosmic-card p-12 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent rounded-2xl" />
+      {/* Library */}
+      {books.length > 0 && (
+        <section className="px-6 py-20">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-12 text-center">
+              <span className="text-sm uppercase tracking-widest text-gold">
+                <T k="home.libraryEyebrow" />
+              </span>
+              <h2 className="mt-2 font-serif text-4xl text-foreground">
+                <T k="home.libraryTitle" />
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+              {books.map((book) => (
+                <div key={book.slug} className="cosmic-card p-6 text-center">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gold/10">
+                    <BookOpen size={24} className="text-gold" aria-hidden="true" />
+                  </div>
+                  <h3 className="mb-1 font-serif font-semibold text-foreground">{book.name}</h3>
+                  <p className="mb-2 text-xs text-cosmic-500">{book.author}</p>
+                  {book.description && <p className="line-clamp-2 text-xs text-cosmic-400">{book.description}</p>}
+                  <div className="mt-3 text-xs text-cosmic-500">
+                    {book.chunk_count > 0 ? (
+                      <>
+                        {book.chunk_count} <T k="home.passages" />
+                      </>
+                    ) : (
+                      book.language.toUpperCase()
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Optional media */}
+      <VideoCarousel />
+
+      {/* Featured teacher */}
+      <section className="bg-cosmic-950/60 px-6 py-20">
+        <div className="cosmic-card relative mx-auto max-w-4xl overflow-hidden p-10 text-center md:p-12">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent" />
           <div className="relative">
-            <div className="text-5xl mb-6">📿</div>
-            <h2 className="font-serif text-4xl text-foreground mb-4">
-              Sadgurudev <span className="text-gold">Dr. Narayan Dutt Shrimali</span>
+            <span className="text-sm uppercase tracking-widest text-gold">
+              <T k="home.teacherEyebrow" />
+            </span>
+            <h2 className="mb-4 mt-2 font-serif text-3xl text-foreground md:text-4xl">
+              <T k="home.teacherName" />
             </h2>
-            <p className="text-cosmic-300 text-lg leading-relaxed mb-8 max-w-2xl mx-auto">
-              Born on April 21, 1935, Sadgurudev was a Guru of the highest proficiency 
-              in mantra, tantra, astrology, and ancient Indian sciences. He authored 
-              more than 150 books and dedicated his life to reviving the sacred wisdom 
-              of India for all seekers.
+            <p className="mx-auto mb-8 max-w-2xl text-lg leading-relaxed text-cosmic-300">
+              <T k="home.teacherBody" />
             </p>
             <Link href="/guru" className="btn-ghost inline-flex items-center gap-2">
-              Read His Life Story <ArrowRight size={16} />
+              <T k="home.teacherCta" /> <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
         </div>
       </section>
+
+      <EmailCapture />
+      <WhatsAppSection />
     </>
   );
 }

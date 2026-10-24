@@ -38,9 +38,11 @@ export default function GuruPage() {
       <section className="py-20 px-6 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gold/5 to-transparent pointer-events-none" />
         <div className="relative max-w-4xl mx-auto">
-          <div className="text-6xl mb-6">📿</div>
-          <div className="inline-block px-4 py-1.5 rounded-full border border-gold/30 text-gold text-sm mb-6">
-            ॐ परम तत्वाय नारायणाय गुरुभ्यो नमः
+          <span className="mb-4 inline-block text-sm uppercase tracking-widest text-gold">Featured teacher</span>
+          <div className="mb-6 block">
+            <span className="inline-block rounded-full border border-gold/30 px-4 py-1.5 font-devanagari text-sm text-cosmic-300">
+              ॐ परम तत्वाय नारायणाय गुरुभ्यो नमः
+            </span>
           </div>
           <h1 className="font-serif text-5xl md:text-6xl text-foreground mb-4">
             Sadgurudev<br />
@@ -127,7 +129,7 @@ export default function GuruPage() {
                 {book}
               </span>
             ))}
-            <span className="px-4 py-2 rounded-full border border-gold/10 text-cosmic-500 text-sm">
+            <span className="px-4 py-2 rounded-full border border-gold/15 text-cosmic-500 text-sm">
               + 140 more books
             </span>
           </div>
@@ -146,11 +148,11 @@ export default function GuruPage() {
             Explore His Teachings
           </h2>
           <p className="text-cosmic-400 mb-8">
-            Ask our AI system questions about Sadgurudev's teachings — grounded 
-            in his actual published texts.
+            Ask Sadhak about his teachings — answers are grounded in his
+            published texts, with the source passages shown.
           </p>
           <Link href="/chat" className="btn-gold inline-flex items-center gap-2">
-            Ask the AI Guru <ArrowRight size={16} />
+            Ask Sadhak <ArrowRight size={16} />
           </Link>
         </div>
       </section>

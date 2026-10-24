@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 import { getArticles, getTopics } from "@/lib/api";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://shrimali.ai";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [

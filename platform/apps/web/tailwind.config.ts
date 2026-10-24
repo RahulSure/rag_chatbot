@@ -1,5 +1,11 @@
 import type { Config } from "tailwindcss";
 
+// Colours are CSS-variable driven (see styles/globals.css) so every existing
+// utility (text-gold, bg-cosmic-900/60, border-gold/20 …) follows the active
+// theme. Each variable holds space-separated RGB channels so Tailwind's
+// opacity modifiers keep working.
+const token = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
+
 const config: Config = {
   darkMode: "class",
   content: [
@@ -10,25 +16,28 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#0a0a0f",
-        foreground: "#f4f0e8",
+        background: token("background"),
+        foreground: token("foreground"),
         gold: {
-          DEFAULT: "#c9a84c",
-          light: "#e2c97e",
-          dark: "#9d7a2f",
+          DEFAULT: token("accent"),
+          light: token("accent-strong"),
+          dark: token("accent-soft"),
         },
+        // Neutral ramp. In the dark theme 50 is the lightest and 950 the
+        // darkest; the light theme inverts it, so "text-cosmic-300" is always
+        // readable body text and "bg-cosmic-900" is always a surface.
         cosmic: {
-          50: "#f4f0e8",
-          100: "#e8e0d0",
-          200: "#d4c5a9",
-          300: "#bfa882",
-          400: "#a88a5c",
-          500: "#8a6e3f",
-          600: "#6d5430",
-          700: "#503c22",
-          800: "#342715",
-          900: "#1a1208",
-          950: "#0a0a0f",
+          50: token("cosmic-50"),
+          100: token("cosmic-100"),
+          200: token("cosmic-200"),
+          300: token("cosmic-300"),
+          400: token("cosmic-400"),
+          500: token("cosmic-500"),
+          600: token("cosmic-600"),
+          700: token("cosmic-700"),
+          800: token("cosmic-800"),
+          900: token("cosmic-900"),
+          950: token("cosmic-950"),
         },
         saffron: {
           DEFAULT: "#FF9933",
@@ -37,21 +46,19 @@ const config: Config = {
         },
       },
       fontFamily: {
-        serif: ["Playfair Display", "Georgia", "serif"],
-        sans: ["Inter", "system-ui", "sans-serif"],
-        devanagari: ["Noto Sans Devanagari", "Arial", "sans-serif"],
-        cinzel: ["Cinzel Decorative", "Cinzel", "Playfair Display", "serif"],
-        cormorant: ["Cormorant Garamond", "Playfair Display", "serif"],
+        serif: ["var(--font-serif)", "Georgia", "serif"],
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        // Latin falls through to Inter, Devanagari glyphs to Noto Sans Devanagari.
+        devanagari: ["var(--font-sans)", "var(--font-devanagari)", "system-ui", "sans-serif"],
+        // Legacy aliases — the decorative faces were dropped for a calmer look.
+        cinzel: ["var(--font-serif)", "Georgia", "serif"],
+        cormorant: ["var(--font-serif)", "Georgia", "serif"],
       },
       backgroundImage: {
-        "cosmic-gradient": "radial-gradient(ellipse at top, #1a0a2e 0%, #0a0a0f 60%)",
-        "gold-gradient": "linear-gradient(135deg, #c9a84c 0%, #e2c97e 50%, #9d7a2f 100%)",
-        "card-gradient": "linear-gradient(145deg, rgba(201,168,76,0.08) 0%, rgba(10,10,15,0.8) 100%)",
+        "gold-gradient": "linear-gradient(135deg, rgb(var(--accent)) 0%, rgb(var(--accent-strong)) 100%)",
       },
       animation: {
         "float": "float 6s ease-in-out infinite",
-        "glow": "glow 2s ease-in-out infinite alternate",
-        "shimmer": "shimmer 2s linear infinite",
         "fade-up": "fadeUp 0.6s ease-out",
       },
       keyframes: {
@@ -59,23 +66,15 @@ const config: Config = {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%": { transform: "translateY(-10px)" },
         },
-        glow: {
-          from: { boxShadow: "0 0 10px rgba(201,168,76,0.2)" },
-          to: { boxShadow: "0 0 30px rgba(201,168,76,0.6)" },
-        },
-        shimmer: {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
-        },
         fadeUp: {
           from: { opacity: "0", transform: "translateY(20px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
       },
       boxShadow: {
-        "gold": "0 0 20px rgba(201,168,76,0.3)",
-        "gold-lg": "0 0 40px rgba(201,168,76,0.5)",
-        "cosmic": "0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(201,168,76,0.1)",
+        "gold": "0 0 0 4px rgb(var(--accent) / 0.15)",
+        "gold-lg": "0 0 0 6px rgb(var(--accent) / 0.2)",
+        "cosmic": "0 8px 32px rgb(var(--shadow) / 0.18)",
       },
     },
   },

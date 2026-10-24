@@ -3,140 +3,84 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Search, MessageCircle, Sparkles } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
+import { useT, type Key } from "@/lib/i18n";
 
-const SUGGESTED = [
-  "कुंडलिनी जागरण क्या है?",
-  "What is mantra siddhi?",
-  "सौन्दर्य साधना कैसे करें?",
-  "Explain the power of tantra",
-];
+const CHIPS: Key[] = ["hero.chip1", "hero.chip2", "hero.chip3", "hero.chip4"];
 
 export function HeroSection() {
+  const t = useT();
   const [query, setQuery] = useState("");
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
-    router.push(`/chat?q=${encodeURIComponent(query)}`);
-  };
-
-  const handleSuggestion = (s: string) => {
-    router.push(`/chat?q=${encodeURIComponent(s)}`);
+  const ask = (q: string) => {
+    if (!q.trim()) return;
+    router.push(`/chat?q=${encodeURIComponent(q.trim())}`);
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden cosmic-bg stars-bg">
-      {/* Decorative rings */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[600px] h-[600px] rounded-full border border-gold/10 animate-pulse" />
-        <div className="absolute w-[800px] h-[800px] rounded-full border border-gold/5" />
-        <div className="absolute w-[1000px] h-[1000px] rounded-full border border-gold/5" />
-      </div>
-
-      {/* Om symbol glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-gold/5 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gold/30 bg-gold/5 text-gold text-sm mb-8">
-            <Sparkles size={14} />
-            <span>AI-Powered Spiritual Knowledge Platform</span>
+    <section className="relative overflow-hidden px-4 pb-16 pt-16 sm:px-6 md:pb-24 md:pt-24">
+      <div className="relative z-10 mx-auto max-w-3xl text-center">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 text-sm text-gold">
+            <Sparkles size={14} aria-hidden="true" />
+            <span>{t("hero.badge")}</span>
           </div>
 
-          {/* Title */}
-          <h1 className="font-serif text-5xl md:text-7xl font-bold mb-4 leading-tight">
-            <span className="text-gold">Sadgurudev</span>
+          <h1 className="mb-5 font-serif text-4xl font-semibold leading-tight text-foreground sm:text-5xl md:text-6xl">
+            {t("hero.title1")}
             <br />
-            <span className="text-foreground">Dr. Narayan Dutt</span>
-            <br />
-            <span className="text-foreground">Shrimali</span>
+            <span className="text-gold">{t("hero.title2")}</span>
           </h1>
 
-          <p className="text-cosmic-200 text-lg md:text-xl mb-4 font-devanagari">
-            ॐ परम तत्वाय नारायणाय गुरुभ्यो नमः
-          </p>
+          <p className="mx-auto mb-10 max-w-xl text-base text-cosmic-300 md:text-lg">{t("hero.lead")}</p>
 
-          <p className="text-cosmic-300 text-base md:text-lg mb-12 max-w-2xl mx-auto">
-            Explore the timeless wisdom of Sadgurudev — tantra, mantra, sadhana, 
-            jyotish, and kundalini — through our AI-powered knowledge engine.
-          </p>
-
-          {/* Search form */}
-          <form onSubmit={handleSubmit} className="relative max-w-2xl mx-auto mb-8">
-            <div className="relative flex items-center">
-              <div className="absolute left-5 text-gold opacity-70">
-                <MessageCircle size={20} />
-              </div>
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ask the AI Guru... / गुरुदेव से पूछें..."
-                className="w-full pl-14 pr-32 py-5 rounded-2xl bg-cosmic-900/80 border border-gold/30 
-                           text-foreground placeholder-cosmic-400 text-base focus:outline-none 
-                           focus:border-gold/60 focus:shadow-gold transition-all backdrop-blur-md"
-              />
-              <button
-                type="submit"
-                className="absolute right-3 btn-gold rounded-xl px-6 py-2.5 text-sm flex items-center gap-2"
-              >
-                <Search size={16} />
-                Ask
-              </button>
-            </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              ask(query);
+            }}
+            role="search"
+            className="relative mx-auto mb-6 max-w-2xl"
+          >
+            <label htmlFor="hero-ask" className="sr-only">
+              {t("hero.placeholder")}
+            </label>
+            <input
+              id="hero-ask"
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t("hero.placeholder")}
+              className="w-full rounded-2xl border border-gold/30 bg-cosmic-950/80 py-4 pl-5 pr-28 text-base text-foreground
+                         shadow-cosmic placeholder-cosmic-500 backdrop-blur-md transition-all focus:border-gold/70 focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="btn-gold absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-2 rounded-xl px-5 py-2.5 text-sm"
+            >
+              <Search size={16} aria-hidden="true" />
+              {t("hero.ask")}
+            </button>
           </form>
 
-          {/* Suggested questions */}
-          <div className="flex flex-wrap justify-center gap-2 mb-16">
-            {SUGGESTED.map((s) => (
+          <div className="mb-8 flex flex-wrap justify-center gap-2">
+            {CHIPS.map((k) => (
               <button
-                key={s}
-                onClick={() => handleSuggestion(s)}
-                className="px-4 py-2 rounded-full border border-gold/20 bg-gold/5 text-cosmic-200 
-                           text-sm hover:border-gold/50 hover:text-foreground transition-all font-devanagari"
+                key={k}
+                type="button"
+                onClick={() => ask(t(k))}
+                className="rounded-full border border-gold/25 bg-gold/5 px-4 py-2 text-sm text-cosmic-200
+                           font-devanagari transition-colors hover:border-gold/60 hover:text-foreground"
               >
-                {s}
+                {t(k)}
               </button>
             ))}
           </div>
-        </motion.div>
 
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="flex justify-center gap-12 text-center"
-        >
-          {[
-            { value: "150+", label: "Books & Teachings" },
-            { value: "10", label: "Spiritual Topics" },
-            { value: "AI", label: "Powered Guru" },
-          ].map((stat) => (
-            <div key={stat.label}>
-              <div className="font-serif text-3xl font-bold text-gold">{stat.value}</div>
-              <div className="text-cosmic-400 text-sm mt-1">{stat.label}</div>
-            </div>
-          ))}
+          <p className="text-xs text-cosmic-500">{t("hero.grounded")}</p>
         </motion.div>
       </div>
-
-      {/* Scroll indicator */}
-      <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gold/40"
-        animate={{ y: [0, 8, 0] }}
-        transition={{ repeat: Infinity, duration: 2 }}
-      >
-        <div className="w-px h-12 bg-gradient-to-b from-transparent to-gold/40" />
-        <span className="text-xs">Scroll to explore</span>
-      </motion.div>
     </section>
   );
 }

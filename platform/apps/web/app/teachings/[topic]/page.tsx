@@ -70,7 +70,7 @@ export default async function TopicPage({ params }: Props) {
 
         {/* Header */}
         <div className="flex items-center gap-6 mb-12">
-          <div className="text-6xl">{topicMeta.icon || "🕉"}</div>
+          <div className="text-6xl" aria-hidden="true">{topicMeta.icon || "✦"}</div>
           <div>
             <h1 className="font-serif text-5xl text-foreground mb-2">{topicMeta.label}</h1>
             <p className="text-gold font-devanagari text-xl">{topicMeta.label_hi}</p>
@@ -98,7 +98,7 @@ export default async function TopicPage({ params }: Props) {
             {passages.length > 0 && (
               <div>
                 <h2 className="font-serif text-2xl text-foreground mb-6">
-                  From Sadgurudev&apos;s Books
+                  From the books
                 </h2>
                 <div className="space-y-4">
                   {passages.map((p, i) => (
@@ -106,7 +106,7 @@ export default async function TopicPage({ params }: Props) {
                       <p className="text-cosmic-200 text-sm leading-relaxed font-devanagari mb-3">
                         &ldquo;{p.text_snippet}&rdquo;
                       </p>
-                      <div className="text-xs text-gold/50">
+                      <div className="text-xs text-cosmic-500">
                         {p.book && <span>{p.book}</span>}
                         {p.page && <span className="ml-2">— Page {p.page}</span>}
                         {p.chapter && <span className="ml-2">— {p.chapter}</span>}
@@ -123,14 +123,14 @@ export default async function TopicPage({ params }: Props) {
             <div className="cosmic-card p-6">
               <h3 className="font-serif text-lg text-foreground mb-4">Ask About {topicMeta.label}</h3>
               <p className="text-cosmic-400 text-sm mb-5">
-                Get AI-powered answers on {topicMeta.label.toLowerCase()} from Sadgurudev's teachings.
+                Get answers on {topicMeta.label.toLowerCase()} grounded in the published teachings.
               </p>
               <Link
-                href={`/chat?q=${encodeURIComponent(`Explain ${topicMeta.label} according to Sadgurudev's teachings`)}`}
+                href={`/chat?q=${encodeURIComponent(`Explain ${topicMeta.label}`)}`}
                 className="btn-gold w-full flex items-center justify-center gap-2 text-sm py-3 rounded-xl"
               >
                 <MessageCircle size={14} />
-                Ask AI Guru
+                Ask Sadhak
               </Link>
             </div>
 

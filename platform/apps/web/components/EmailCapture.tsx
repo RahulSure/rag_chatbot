@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { Bell, Loader2, CheckCircle } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export function EmailCapture() {
+  const t = useT();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -22,59 +24,59 @@ export function EmailCapture() {
       });
       const data = await res.json();
       setStatus("success");
-      setMessage(data.message || "You're on the list! 🙏");
+      setMessage(data.message || t("email.success"));
     } catch {
       setStatus("error");
-      setMessage("Something went wrong. Please try again.");
+      setMessage(t("email.error"));
     }
   };
 
   return (
-    <section className="py-16 px-6">
-      <div className="max-w-2xl mx-auto cosmic-card p-10 text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent rounded-2xl" />
+    <section className="px-6 py-16">
+      <div className="cosmic-card relative mx-auto max-w-2xl overflow-hidden p-8 text-center sm:p-10">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent" />
         <div className="relative">
-          <div className="w-12 h-12 rounded-full bg-gold/15 flex items-center justify-center mx-auto mb-5">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gold/15">
             <Bell size={22} className="text-gold" />
           </div>
-          <h2 className="font-serif text-2xl text-foreground mb-2">
-            Stay Connected with Sadgurudev's Wisdom
-          </h2>
-          <p className="text-cosmic-400 text-sm mb-6 max-w-md mx-auto">
-            Join the Sadhak.ai community — daily teachings, new articles in Hindi &amp; English,
-            and early access to WhatsApp wisdom. No spam, only light.
-          </p>
+          <h2 className="mb-2 font-serif text-2xl text-foreground">{t("email.title")}</h2>
+          <p className="mx-auto mb-6 max-w-md text-sm text-cosmic-400">{t("email.body")}</p>
 
           {status === "success" ? (
-            <div className="flex items-center justify-center gap-2 text-green-400 font-medium">
+            <div role="status" className="flex items-center justify-center gap-2 font-medium text-green-700 dark:text-green-400">
               <CheckCircle size={18} />
               <span>{message}</span>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex gap-3 max-w-sm mx-auto">
+            <form onSubmit={handleSubmit} className="mx-auto flex max-w-sm flex-col gap-3 sm:flex-row">
+              <label htmlFor="email-capture" className="sr-only">
+                Email
+              </label>
               <input
+                id="email-capture"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
+                placeholder={t("email.placeholder")}
                 required
-                className="flex-1 px-4 py-2.5 rounded-xl bg-cosmic-900/60 border border-gold/20
-                           text-foreground placeholder-cosmic-500 focus:outline-none focus:border-gold/50
-                           transition-all text-sm"
+                className="flex-1 rounded-xl border border-gold/25 bg-cosmic-900/60 px-4 py-2.5 text-sm text-foreground
+                           placeholder-cosmic-500 transition-all focus:border-gold/60 focus:outline-none"
               />
               <button
                 type="submit"
                 disabled={status === "loading"}
-                className="btn-gold px-5 py-2.5 rounded-xl text-sm disabled:opacity-50 flex items-center gap-2"
+                className="btn-gold flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm disabled:opacity-50"
               >
                 {status === "loading" ? <Loader2 size={14} className="animate-spin" /> : null}
-                Notify Me
+                {t("email.cta")}
               </button>
             </form>
           )}
 
           {status === "error" && (
-            <p className="text-red-400 text-xs mt-3">{message}</p>
+            <p role="alert" className="mt-3 text-xs text-red-700 dark:text-red-400">
+              {message}
+            </p>
           )}
         </div>
       </div>

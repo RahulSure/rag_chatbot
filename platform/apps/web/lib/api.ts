@@ -1,5 +1,5 @@
 /**
- * Typed API client for the Shrimali AI FastAPI backend.
+ * Typed API client for the Sadhak.ai FastAPI backend.
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";

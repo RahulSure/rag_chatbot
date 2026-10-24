@@ -1,53 +1,56 @@
 "use client";
 
-import { MessageCircle, Bell } from "lucide-react";
+import { MessageCircle } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
-export function WhatsAppCTA() {
+/** Home-page "coming soon" section. */
+export function WhatsAppSection() {
+  const t = useT();
+
   return (
-    <>
-      {/* Section CTA */}
-      <section className="py-20 px-6">
-        <div className="max-w-3xl mx-auto cosmic-card p-12 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-green-900/10 rounded-2xl" />
-          <div className="relative">
-            <div className="w-16 h-16 rounded-full bg-green-600/20 flex items-center justify-center mx-auto mb-6">
-              <MessageCircle size={32} className="text-green-400" />
-            </div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-medium mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              Coming Soon
-            </div>
-            <h2 className="font-serif text-3xl text-foreground mb-4">
-              Sadgurudev's Wisdom — Now on WhatsApp
-            </h2>
-            <p className="text-cosmic-300 mb-8 max-w-lg mx-auto">
-              We're building a WhatsApp bot that lets you ask questions from Sadgurudev's
-              teachings directly in your chat. No app download needed — just send a message
-              and receive divine wisdom instantly.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <div className="inline-flex items-center gap-3 px-8 py-4 rounded-xl border border-green-500/30 bg-green-500/5 text-green-400 text-base font-medium cursor-default">
-                <MessageCircle size={20} />
-                WhatsApp Bot — Stay Tuned 🔜
-              </div>
-            </div>
-            <p className="text-cosmic-600 text-xs mt-6">
-              🙏 We'll announce the launch in our community. Subscribe below to be the first to know.
-            </p>
+    <section className="px-6 py-20">
+      <div className="cosmic-card relative mx-auto max-w-3xl overflow-hidden p-10 text-center md:p-12">
+        <div className="pointer-events-none absolute inset-0 bg-green-600/5" />
+        <div className="relative">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-green-600/15">
+            <MessageCircle size={28} className="text-green-700 dark:text-green-400" />
           </div>
+          <div
+            className="mb-4 inline-flex items-center gap-2 rounded-full border border-green-600/30 bg-green-600/10 px-3 py-1
+                       text-xs font-medium text-green-800 dark:text-green-400"
+          >
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-600 dark:bg-green-400" />
+            {t("wa.soon")}
+          </div>
+          <h2 className="mb-3 font-serif text-3xl text-foreground">{t("wa.title")}</h2>
+          <p className="mx-auto mb-6 max-w-lg text-cosmic-300">{t("wa.body")}</p>
+          <div
+            className="inline-flex cursor-default items-center gap-3 rounded-xl border border-green-600/30 bg-green-600/5 px-6 py-3
+                       text-sm font-medium text-green-800 dark:text-green-400"
+          >
+            <MessageCircle size={18} />
+            {t("wa.stay")}
+          </div>
+          <p className="mt-5 text-xs text-cosmic-500">{t("wa.note")}</p>
         </div>
-      </section>
-
-      {/* Floating coming soon badge */}
-      <div
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full
-                   bg-green-900/80 border border-green-600/40 backdrop-blur-md shadow-lg
-                   text-green-400 text-xs font-medium"
-      >
-        <MessageCircle size={16} />
-        <span>WhatsApp — Coming Soon</span>
-        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
       </div>
-    </>
+    </section>
+  );
+}
+
+/** Small floating badge — desktop only so it never covers the chat input on phones. */
+export function WhatsAppBadge() {
+  const t = useT();
+
+  return (
+    <div
+      className="fixed bottom-6 right-6 z-40 hidden items-center gap-2 rounded-full border border-green-600/30
+                 bg-background/90 px-4 py-2.5 text-xs font-medium text-green-800 shadow-cosmic backdrop-blur-md
+                 dark:text-green-400 md:flex"
+    >
+      <MessageCircle size={14} />
+      <span>{t("wa.badge")}</span>
+      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-600 dark:bg-green-400" />
+    </div>
   );
 }

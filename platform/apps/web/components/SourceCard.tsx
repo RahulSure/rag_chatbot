@@ -1,27 +1,25 @@
 "use client";
 
-import { BookOpen, FileText } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { SourceNode } from "@/lib/api";
 
 export function SourceCard({ source }: { source: SourceNode }) {
   return (
-    <div className="px-3 py-2 rounded-lg bg-cosmic-950/50 border border-gold/10 text-xs">
-      <div className="flex items-center gap-2 mb-1 text-gold/70">
-        <BookOpen size={10} />
+    <div className="rounded-lg border border-gold/15 bg-cosmic-950/70 px-3 py-2 text-xs">
+      <div className="mb-1 flex items-center gap-2 text-gold">
+        <BookOpen size={11} aria-hidden="true" />
         <span className="font-medium">
-          {source.book || "Saundarya"}
-          {source.page ? ` — Page ${source.page}` : ""}
+          {source.book || "Source"}
+          {source.page ? ` — p. ${source.page}` : ""}
           {source.chapter ? ` — ${source.chapter}` : ""}
         </span>
         {source.topic && (
-          <span className="ml-auto px-2 py-0.5 rounded-full bg-gold/10 text-gold/60 text-[10px]">
+          <span className="ml-auto rounded-full bg-gold/10 px-2 py-0.5 text-[10px] text-cosmic-400">
             {source.topic}
           </span>
         )}
       </div>
-      <p className="text-cosmic-400 leading-relaxed line-clamp-3 font-devanagari">
-        {source.text_snippet}
-      </p>
+      <p className="line-clamp-3 font-devanagari leading-relaxed text-cosmic-400">{source.text_snippet}</p>
     </div>
   );
 }
