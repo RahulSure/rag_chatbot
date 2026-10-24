@@ -90,13 +90,13 @@ def remove_site(slug: str) -> int:
 def ingest_site(slug: str, dry_run: bool = False) -> None:
     documents, page_count = load_site_documents(slug)
     if not documents:
-        print(f"[ingest_web:{slug}] no crawled pages in {DATA_DIR / slug} — run the crawler first")
+        print(f"[ingest_web:{slug}] no crawled pages in {DATA_DIR / slug} - run the crawler first")
         return
     nodes = chunk_documents(documents)
     for node in nodes:  # chunk nodes inherit the exclusions from their document
         node.excluded_embed_metadata_keys = _HIDDEN_FROM_EMBED
         node.excluded_llm_metadata_keys = _HIDDEN_FROM_LLM
-    print(f"[ingest_web:{slug}] {page_count} pages → {len(documents)} unique → {len(nodes)} chunks")
+    print(f"[ingest_web:{slug}] {page_count} pages -> {len(documents)} unique -> {len(nodes)} chunks")
     if dry_run:
         return
 

@@ -244,7 +244,7 @@ def crawl(slugs: list[str] | None = None, max_pages: int | None = None) -> dict[
     sources = [SOURCES_BY_SLUG[s] for s in slugs] if slugs else WEB_SOURCES
     for s in sources:
         if s.get("skip_reason"):
-            print(f"[crawl:{s['slug']}] skipped — {s['skip_reason']}")
+            print(f"[crawl:{s['slug']}] skipped - {s['skip_reason']}")
     sources = [s for s in sources if not s.get("skip_reason")]
     results: dict[str, dict] = {}
 
