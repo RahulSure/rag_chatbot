@@ -241,3 +241,98 @@ export async function getTrendingQueries(limit = 10): Promise<TrendingQuery[]> {
   if (!res.ok) return [];
   return res.json();
 }
+
+// ── Astrology ──────────────────────────────────────────────────────────────
+
+export interface Place {
+  name: string;
+  region: string;
+  country: string;
+  latitude: number;
+  longitude: number;
+  tz: string;
+  population: number;
+}
+
+export interface BirthDetails {
+  name?: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:MM, local clock time at the birthplace
+  timeUnknown?: boolean;
+  place: Place;
+}
+
+export interface ChartPosition {
+  longitude: number;
+  sign: string;
+  sign_hi: string;
+  degree_in_sign: number;
+  nakshatra_index: number;
+  nakshatra_hi: string;
+  pada: number;
+}
+
+export interface ChartPlanet extends ChartPosition {
+  name: string;
+  name_hi: string;
+  nakshatra: string;
+  house: number;
+  retrograde: boolean;
+}
+
+export interface DashaPeriod {
+  lord: string;
+  lord_hi: string;
+  start: string;
+  end: string;
+}
+
+export interface BirthChart {
+  input: { date: string; time: string; tz: string; place?: string; latitude: number; longitude: number };
+  ascendant: ChartPosition;
+  moon_sign: { sign: string; sign_hi: string };
+  birth_nakshatra: { name: string; name_hi: string; pada: number };
+  planets: ChartPlanet[];
+  houses: { house: number; sign: string; sign_hi: string; planets: string[] }[];
+  dasha: { mahadasha: DashaPeriod | null; antardasha: DashaPeriod | null; sequence: DashaPeriod[] };
+  sade_sati: { sade_sati: boolean; phase: string | null; house_from_moon: number; kantaka_sani: boolean; ashtama_sani: boolean };
+}
+
+export interface Panchang {
+  tithi: { name: string; paksha: string; number: number };
+  nakshatra: { name: string; name_hi?: string; pada: number };
+  yoga: { name: string };
+  karana: { name: string };
+  vara: string;
+  date: string;
+}
+
+export async function searchPlaces(q: string, limit = 8): Promise<Place[]> {
+  const res = await fetch(`${API_BASE}/astro/places?${new URLSearchParams({ q, limit: String(limit) })}`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function getBirthChart(details: BirthDetails): Promise<BirthChart> {
+  const res = await fetch(`${API_BASE}/astro/chart`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      date: details.date,
+      time: details.timeUnknown ? "12:00" : details.time,
+      latitude: details.place.latitude,
+      longitude: details.place.longitude,
+      tz: details.place.tz,
+      place: details.place.name,
+    }),
+  });
+  if (!res.ok) throw new Error(`Chart request failed: ${res.status}`);
+  return res.json();
+}
+
+export async function getPanchang(place: Place): Promise<Panchang | null> {
+  const params = new URLSearchParams({ lat: String(place.latitude), lon: String(place.longitude), tz: place.tz });
+  const res = await fetch(`${API_BASE}/astro/panchang?${params}`);
+  if (!res.ok) return null;
+  return res.json();
+}

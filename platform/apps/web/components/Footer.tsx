@@ -7,6 +7,7 @@ import { useT, type Key } from "@/lib/i18n";
 const LINKS: { href: string; label: Key }[] = [
   { href: "/", label: "nav.home" },
   { href: "/chat", label: "nav.chat" },
+  { href: "/kundli", label: "nav.kundli" },
   { href: "/teachings", label: "nav.explore" },
   { href: "/blog", label: "nav.articles" },
   { href: "/books", label: "nav.library" },
