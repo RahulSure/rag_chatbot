@@ -143,30 +143,50 @@ def _generate_follow_ups(question: str, answer: str) -> list[str]:
     return []
 
 
+def _show_web_sources() -> bool:
+    # Source cards credit the original article and let readers check a mantra.
+    # Set SHOW_WEB_SOURCES=false to hide them (e.g. once site owners have agreed).
+    return os.getenv("SHOW_WEB_SOURCES", "true").lower() not in ("0", "false", "no")
+
+
+def _answer_sources_to_schema(sources) -> list[SourceNode]:
+    show_web = _show_web_sources()
+    return [
+        SourceNode(
+            page=s.page,
+            book=s.book,
+            chapter=s.title or None,
+            topic=s.topic,
+            text_snippet=s.snippet.strip() + ("..." if len(s.snippet) >= 300 else ""),
+            url=s.url,
+        )
+        for s in sources
+        if show_web or not s.is_web
+    ]
+
+
 def _handle_sync(req: QueryRequest, session_id: str) -> QueryResponse:
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "services" / "rag-service"))
 
-    from rag.query_engine import get_query_engine
+    from rag.answer import answer_question
 
     history = _get_session_history(session_id)
 
     try:
-        engine = get_query_engine(similarity_top_k=req.top_k)
-        question_with_history = f"{history}\n\nUser: {req.question}" if history else req.question
-        response = engine.query(question_with_history)
+        # Whole-article context + mantra verification (see rag/answer.py).
+        answer, sources = answer_question(req.question, history=history, top_k=req.top_k)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
-    answer = str(response)
     _save_session_turn(session_id, req.question, answer)
     _log_query(req.question, session_id)
     suggested = _generate_follow_ups(req.question, answer)
 
     return QueryResponse(
         answer=answer,
-        sources=_source_nodes_to_schema(response.source_nodes),
+        sources=_answer_sources_to_schema(sources),
         model=os.getenv("KRUTRIM_MODEL", "gpt-oss-120b"),
         session_id=session_id,
         suggested_questions=suggested,

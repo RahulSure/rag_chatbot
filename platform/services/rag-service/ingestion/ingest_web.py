@@ -95,14 +95,61 @@ def _collection():
     return _get_mongo_client()[MONGODB_DB_NAME][MONGODB_COLLECTION]
 
 
+def _articles_collection():
+    from rag.answer import WEB_ARTICLES
+    from rag.vector_store import MONGODB_DB_NAME, _get_mongo_client
+
+    return _get_mongo_client()[MONGODB_DB_NAME][WEB_ARTICLES]
+
+
 def remove_site(slug: str) -> int:
+    _articles_collection().delete_many({"site": slug})
     return _collection().delete_many({"metadata.source_site": slug}).deleted_count
 
 
-def ingest_site(slug: str, dry_run: bool = False) -> None:
+def store_articles(slug: str, documents) -> int:
+    """Full article text keyed by URL, so answers can quote a whole article instead of fragments."""
+    from pymongo import ReplaceOne
+
+    ops = [
+        ReplaceOne(
+            {"_id": d.metadata["source_url"]},
+            {
+                "_id": d.metadata["source_url"],
+                "site": slug,
+                "site_name": d.metadata["book"],
+                "title": d.metadata["chapter_title"],
+                "language": d.metadata["language"],
+                "text": d.text,
+            },
+            upsert=True,
+        )
+        for d in documents
+    ]
+    if ops:
+        _articles_collection().bulk_write(ops, ordered=False)
+    return len(ops)
+
+
+def sync_titles(slug: str) -> int:
+    """Copy each stored article's title onto its chunks (cheap; no re-embedding)."""
+    from pymongo import UpdateMany
+
+    ops = [
+        UpdateMany({"metadata.source_url": a["_id"]}, {"$set": {"metadata.chapter_title": a["title"]}})
+        for a in _articles_collection().find({"site": slug}, {"title": 1})
+    ]
+    return _collection().bulk_write(ops, ordered=False).modified_count if ops else 0
+
+
+def ingest_site(slug: str, dry_run: bool = False, articles_only: bool = False) -> None:
     documents, page_count = load_site_documents(slug)
     if not documents:
         print(f"[ingest_web:{slug}] no crawled pages in {DATA_DIR / slug} - run the crawler first")
+        return
+    if articles_only:
+        stored = store_articles(slug, documents)
+        print(f"[ingest_web:{slug}] stored {stored} full articles, updated titles on {sync_titles(slug)} chunks")
         return
     nodes = chunk_documents(documents)
     for node in nodes:  # chunk nodes inherit the exclusions from their document
@@ -124,7 +171,7 @@ def ingest_site(slug: str, dry_run: bool = False) -> None:
     if removed:
         print(f"[ingest_web:{slug}] removed {removed} previous chunks")
     VectorStoreIndex(nodes, storage_context=StorageContext.from_defaults(vector_store=get_vector_store()), show_progress=True)
-    print(f"[ingest_web:{slug}] stored {len(nodes)} chunks")
+    print(f"[ingest_web:{slug}] stored {len(nodes)} chunks and {store_articles(slug, documents)} full articles")
 
 
 def main() -> None:
@@ -132,6 +179,7 @@ def main() -> None:
     parser.add_argument("--sites", nargs="*", choices=list(SOURCES_BY_SLUG), help="Default: every crawled site")
     parser.add_argument("--dry-run", action="store_true", help="Count pages and chunks without writing")
     parser.add_argument("--remove", metavar="SITE", choices=list(SOURCES_BY_SLUG), help="Delete a site's chunks and exit")
+    parser.add_argument("--articles-only", action="store_true", help="Only (re)store full articles; no embedding")
     args = parser.parse_args()
 
     if args.remove:
@@ -140,7 +188,7 @@ def main() -> None:
 
     slugs = args.sites or sorted(p.name for p in DATA_DIR.iterdir() if p.is_dir() and p.name in SOURCES_BY_SLUG)
     for slug in slugs:
-        ingest_site(slug, dry_run=args.dry_run)
+        ingest_site(slug, dry_run=args.dry_run, articles_only=args.articles_only)
 
 
 if __name__ == "__main__":
