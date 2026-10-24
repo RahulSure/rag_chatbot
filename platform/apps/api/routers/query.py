@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 import uuid
 from datetime import datetime
 from typing import AsyncGenerator
@@ -28,33 +29,60 @@ SESSION_TTL = 3600  # 1 hour
 MAX_HISTORY = 10
 
 
-def _get_session_history(session_id: str | None) -> str:
+HISTORY_ANSWER_CHARS = 600  # enough for the companion to remember what it suggested
+
+# Used when Redis is unavailable (local dev): per-process, so not shared across workers.
+_LOCAL_SESSIONS: dict[str, tuple[float, list[dict]]] = {}
+
+
+def _load_turns(session_id: str | None) -> list[dict]:
     if not session_id:
-        return ""
+        return []
     r = get_redis_optional()
-    if not r:
-        return ""
-    raw = r.get(f"session:{session_id}")
-    if not raw:
-        return ""
-    history = json.loads(raw)
+    if r:
+        raw = r.get(f"session:{session_id}")
+        return json.loads(raw) if raw else []
+    saved_at, turns = _LOCAL_SESSIONS.get(session_id, (0.0, []))
+    return turns if time.time() - saved_at < SESSION_TTL else []
+
+
+def _store_turns(session_id: str, turns: list[dict]) -> None:
+    turns = turns[-MAX_HISTORY:]
+    r = get_redis_optional()
+    if r:
+        r.setex(f"session:{session_id}", SESSION_TTL, json.dumps(turns, ensure_ascii=False))
+        return
+    now = time.time()
+    _LOCAL_SESSIONS[session_id] = (now, turns)
+    if len(_LOCAL_SESSIONS) > 5000:  # drop expired sessions so memory stays bounded
+        for sid in [s for s, (t, _) in _LOCAL_SESSIONS.items() if now - t >= SESSION_TTL]:
+            del _LOCAL_SESSIONS[sid]
+
+
+def _get_session_history(session_id: str | None) -> str:
     lines = []
-    for turn in history[-MAX_HISTORY:]:
+    for turn in _load_turns(session_id):
+        answer = turn["a"]
         lines.append(f"User: {turn['q']}")
-        lines.append(f"Assistant: {turn['a'][:200]}...")
+        lines.append(f"Assistant: {answer[:HISTORY_ANSWER_CHARS]}{'...' if len(answer) > HISTORY_ANSWER_CHARS else ''}")
     return "\n".join(lines)
 
 
-def _save_session_turn(session_id: str, question: str, answer: str):
-    r = get_redis_optional()
-    if not r:
-        return
-    key = f"session:{session_id}"
-    raw = r.get(key) or "[]"
-    history = json.loads(raw)
-    history.append({"q": question, "a": answer, "ts": datetime.utcnow().isoformat()})
-    history = history[-MAX_HISTORY:]
-    r.setex(key, SESSION_TTL, json.dumps(history, ensure_ascii=False))
+def _pending_request(session_id: str | None) -> str | None:
+    """The user's earlier request, if the companion's last reply was a clarifying question."""
+    turns = _load_turns(session_id)
+    if turns and turns[-1].get("clarify"):
+        return turns[-1].get("request") or turns[-1]["q"]
+    return None
+
+
+def _save_session_turn(session_id: str, question: str, answer: str, clarify: bool = False, request: str | None = None):
+    turns = _load_turns(session_id)
+    turn = {"q": question, "a": answer, "ts": datetime.utcnow().isoformat()}
+    if clarify:
+        turn.update(clarify=True, request=request or question)
+    turns.append(turn)
+    _store_turns(session_id, turns)
 
 
 def _log_query(question: str, session_id: str | None, language: str = "auto"):
@@ -173,16 +201,20 @@ def _handle_sync(req: QueryRequest, session_id: str) -> QueryResponse:
     from rag.answer import answer_question
 
     history = _get_session_history(session_id)
+    pending = _pending_request(session_id)
 
     try:
-        # Whole-article context + mantra verification (see rag/answer.py).
-        answer, sources = answer_question(req.question, history=history, top_k=req.top_k)
+        # Whole-article context + mantra verification (see rag/answer.py). The companion may
+        # instead ask clarifying questions; the original request is then kept for the next turn.
+        answer, sources, asked = answer_question(
+            req.question, history=history, top_k=req.top_k, pending_request=pending
+        )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
-    _save_session_turn(session_id, req.question, answer)
+    _save_session_turn(session_id, req.question, answer, clarify=asked, request=pending or req.question)
     _log_query(req.question, session_id)
-    suggested = _generate_follow_ups(req.question, answer)
+    suggested = [] if asked else _generate_follow_ups(req.question, answer)
 
     return QueryResponse(
         answer=answer,

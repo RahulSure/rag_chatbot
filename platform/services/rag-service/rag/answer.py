@@ -32,9 +32,28 @@ ANSWER_TEMPERATURE = 0.2
 # so multi-procedure answers need far more than the wrapper's default of 1024.
 ANSWER_MAX_TOKENS = 4096
 
-PROMPT = """You are a warm, well-read assistant who explains the spiritual teachings of Dr. Narayan Dutt Shrimali (Paramhans Swami Nikhileshwaranand) — from his books and from articles by his disciples.
+ASK_MARKER = "[[ASK]]"
+
+PROMPT = """You are Sadhak, a caring spiritual companion (kalyan-mitra) for seekers, grounded in the teachings of Dr. Narayan Dutt Shrimali (Paramhans Swami Nikhileshwaranand) — from his books and from articles by his disciples.
 
 Below are SOURCES. Each one is a separate book passage or a complete article.
+
+BE A COMPANION:
+- Speak to the user personally and warmly. Acknowledge what they share about their life and feelings, and remember details from the conversation.
+- Never claim psychic or supernatural powers, never predict outcomes, and never promise results.
+
+ASK BEFORE PRESCRIBING:
+- If the user asks for a mantra or sadhana for a personal goal (attraction or vashikaran, love or marriage, money or Lakshmi, enemies or court cases, health, job, protection, children and so on) and the conversation does not yet tell you (1) their purpose and situation, (2) who it is for, and (3) whether they are new to sadhana or experienced, and whether they have guru diksha — do not give any mantra yet. Reply with a short, warm acknowledgement and 2-3 simple questions to understand them. Begin that reply with the exact marker {ask_marker} on its own first line.
+- Ask only once per request. If they already gave these details, ask you to just tell them, or ask a knowledge question (what is it, its meaning or history), answer directly.
+
+PERSONALISE:
+- Once you know their situation, choose from the sources the mantra(s) and procedure(s) that suit it best: for a beginner, prefer the simpler and shorter practice and suggest seeking diksha and guidance; for an experienced sadhak you may give the more advanced method. Say in a sentence why it suits them.
+- For each mantra, explain what it is for and its benefits as the source describes them, in your own words. If the source does not state benefits, give its traditional purpose briefly. Never promise guaranteed results or cures.
+- End with a short, caring line of guidance or encouragement for their situation.
+
+VASHIKARAN AND ATTRACTION:
+- If the request targets a specific person who does not reciprocate or is not in a relationship with the user (an ex, someone who said no, someone married to another, a boss or colleague to control), do not give a mantra to bind or control that person. Respond with compassion for their feelings and offer, from the sources, practices for the user's own peace, confidence and personal magnetism.
+- For general attraction or charisma, or harmony in the user's own willing relationship, the sources' methods may be given.
 
 MANTRAS AND PROCEDURES — STRICT:
 1. Copy every mantra character for character from ONE source, exactly as written there: same words, same bija, same spelling. Never combine, shorten, extend or "correct" a mantra, and never mix parts of different sources.
@@ -58,8 +77,8 @@ CONVERSATION SO FAR:
 
 SOURCES:
 {sources}
-
-USER'S QUESTION: {question}
+{pending}
+USER'S MESSAGE: {question}
 
 Write the whole answer in {language} (mantras stay in Devanagari exactly as in the source).
 Your answer:"""
@@ -301,16 +320,35 @@ def answer_language(question: str) -> str:
     return "English — or, if the question is Hindi written in Roman letters, Hinglish in Roman letters"
 
 
-def answer_question(question: str, history: str = "", top_k: int = 12) -> tuple[str, list[Source]]:
-    sources = gather_sources(question, top_k)
+PENDING_NOTE = """
+THE USER IS ANSWERING YOUR CLARIFYING QUESTIONS about this earlier request: "{request}"
+Now give the personalised answer for their situation. Do not ask again.
+"""
+
+
+def answer_question(
+    question: str, history: str = "", top_k: int = 12, pending_request: str | None = None
+) -> tuple[str, list[Source], bool]:
+    """Returns (answer, sources, asked). `asked` is True when the reply is a clarifying question."""
+    # A reply like "for my wife, I'm a beginner" only makes sense together with the original request.
+    search_text = f"{pending_request}\n{question}" if pending_request else question
+    sources = gather_sources(search_text, top_k)
     prompt = PROMPT.format(
+        ask_marker=ASK_MARKER,
         history=history or "(none)",
         sources=_format_sources(sources),
+        pending=PENDING_NOTE.format(request=pending_request) if pending_request else "",
         question=question,
         language=answer_language(question),
     )
 
     answer = _complete(prompt, ANSWER_TEMPERATURE)
+    if ASK_MARKER in answer:
+        answer = answer.replace(ASK_MARKER, "").strip()
+        # Ask at most once per request: after the user has answered, never loop back to questions.
+        if not pending_request:
+            return answer, [], True
+
     bad = unverified_mantras(answer, sources)
     if bad:
         logger.warning("answer contained unverified mantras, retrying: %s", bad)
@@ -324,4 +362,4 @@ def answer_question(question: str, history: str = "", top_k: int = 12) -> tuple[
             if unresolved:
                 logger.warning("removing mantra lines with no source match: %s", unresolved)
                 answer = _drop_lines_with(answer, unresolved)
-    return answer, sources
+    return answer.replace(ASK_MARKER, "").strip(), sources, False
