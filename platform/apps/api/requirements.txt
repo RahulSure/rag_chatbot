@@ -17,6 +17,13 @@ sentence-transformers>=3.3.0
 # MongoDB
 pymongo>=4.10.0
 
+# Web corpus: crawling, extraction, spelling-proof keyword matching
+requests>=2.32.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+trafilatura>=1.12.0
+indic-transliteration>=2.3.0
+
 # Redis
 redis>=5.2.0
 

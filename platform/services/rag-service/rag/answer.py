@@ -24,8 +24,8 @@ load_dotenv()
 
 logger = logging.getLogger("sadhak.answer")
 
-MAX_SOURCES = 4          # distinct articles / book passages handed to the model
-ARTICLE_CHARS = 7000     # per web article; longer ones are windowed around the match
+MAX_SOURCES = 5          # distinct articles / book passages handed to the model
+ARTICLE_CHARS = 6000     # per web article; longer ones are windowed around the match
 WEB_ARTICLES = "web_articles"
 ANSWER_TEMPERATURE = 0.2
 # gpt-oss is a reasoning model: hidden reasoning tokens count against max_tokens,
@@ -44,6 +44,7 @@ BE A COMPANION:
 
 ASK BEFORE PRESCRIBING:
 - If the user asks for a mantra or sadhana for a personal goal (attraction or vashikaran, love or marriage, money or Lakshmi, enemies or court cases, health, job, protection, children and so on) and the conversation does not yet tell you (1) their purpose and situation, (2) who it is for, and (3) whether they are new to sadhana or experienced, and whether they have guru diksha — do not give any mantra yet. Reply with a short, warm acknowledgement and 2-3 simple questions to understand them. Begin that reply with the exact marker {ask_marker} on its own first line.
+- Use everything the user already told you earlier in the conversation (for whom, their experience, diksha). Ask only about what is still unknown — often just one question.
 - Ask only once per request. If they already gave these details, ask you to just tell them, or ask a knowledge question (what is it, its meaning or history), answer directly.
 
 PERSONALISE:
@@ -142,32 +143,153 @@ def _window(full: str, matched_chunk: str) -> str:
     return full[start : start + ARTICLE_CHARS]
 
 
-# Words too common in titles to identify a topic ("mantra", "sadhana", question words …).
-_STOPWORDS = {
-    "का", "की", "के", "को", "और", "में", "से", "है", "हैं", "क्या", "कैसे", "करें", "करे", "बताइए", "बताओ",
-    "बताएं", "मंत्र", "मन्त्र", "साधना", "विधि", "प्रयोग", "लिए", "कोई", "मुझे", "दीजिए",
-    "mantra", "mantras", "sadhana", "sadhna", "method", "vidhi", "for", "and", "the", "how", "what", "is", "of",
-    "to", "give", "me", "with", "a", "an", "in", "do", "i", "my", "please", "tell", "about", "procedure",
-}
-TITLE_MATCHES = 2  # articles added by title keyword, on top of vector results
+# ── Spelling-proof keyword matching ─────────────────────────────────────────
+#
+# Titles and questions spell the same word many ways: soundarya / saundarya / सौंदर्य / सौन्दर्य,
+# laxmi / लक्ष्मी. Each word is reduced to a consonant "skeleton" (Devanagari is transliterated
+# to Roman first), so all of those become the same key ("sndry", "lkshm").
+
+def _skeleton(word: str) -> str:
+    if re.search(r"[ऀ-ॿ]", word):
+        from indic_transliteration import sanscript
+
+        word = sanscript.transliterate(word, sanscript.DEVANAGARI, sanscript.ITRANS)
+        # anusvara and nasal consonants all read as "n"; visarga is dropped
+        word = word.replace("M", "n").replace(".N", "n").replace("~N", "n").replace("JN", "n").replace("H", "")
+    word = word.lower().replace("x", "ksh").replace("w", "v").replace("z", "j").replace("q", "k")
+    word = re.sub(r"[aeiou]", "", re.sub(r"[^a-z]", "", word))
+    return re.sub(r"(.)\1+", r"\1", word)
 
 
-def _title_matches(question: str, exclude: set[str]) -> list[dict]:
-    """Articles whose title names the question's topic (e.g. "सरस्वती") — meaning search alone misses some."""
-    words = {w for w in re.findall(r"[\wऀ-ॿ]+", question.lower()) if len(w) >= 3 and w not in _STOPWORDS}
-    if not words:
-        return []
+def _skeletons(text: str) -> set[str]:
+    return {sk for w in re.findall(r"[\wऀ-ॿ]+", text) if len(sk := _skeleton(w)) >= 3}
+
+
+# Words too common to identify a topic: "mantra", "sadhana", question words, and the
+# conversational words people use in follow-ups ("I'm a beginner, how many days …").
+_STOPWORDS = (
+    "का की के को और में से है हैं क्या कैसे करें करे बताइए बताओ बताएं मंत्र मन्त्र साधना विधि प्रयोग लिए "
+    "कोई मुझे दीजिए चाहिए जानकारी मैं हूँ हूं नया नई नए साधक अपने अपना अपनी दिन कितने कितना समय शुरू "
+    "अनुभवी पहले बाद अभी सकता सकती लाभ फायदे फायदा अच्छा सबसे "
+    "mantra mantras sadhana sadhna method vidhi for and the how what with please tell about procedure "
+    "give want need chant chanting which there this that from myself self beginner beginners new experienced "
+    "sadhak days day many much should could would time times long start started help life problem more "
+    "also does doing done before after now yet still been have has had will can into your their them "
+    "best good better benefit benefits"
+)
+_STOP_SKELETONS = _skeletons(_STOPWORDS)
+GENERIC_TITLE_DF = 100  # a word in more titles than this ("diksha", "gurukripa") identifies no topic
+_WANTS_MANTRA = re.compile(r"(?i)mantra|मंत्र|मन्त्र|sadhana|sadhna|साधना|vidhi|विधि|प्रयोग|jaap|jap\b|जप")
+
+TITLE_MATCHES = 2      # articles added because their title names the topic
+BOOK_MATCHES = 2       # book passages added when the question names a book's topic
+WIDE_TOP_K = 40        # wider vector search, so a book passage is not crowded out by web chunks
+
+
+@lru_cache(maxsize=1)
+def _generic_skeletons() -> frozenset[str]:
+    from collections import Counter
+
+    df = Counter(sk for _, sks, _ in _title_index() for sk in sks)
+    return frozenset(sk for sk, n in df.items() if n > GENERIC_TITLE_DF)
+
+
+def _query_skeletons(question: str) -> set[str]:
+    return _skeletons(question) - _STOP_SKELETONS - _generic_skeletons()
+
+
+def _word_hit(query_sk: str, words: set[str]) -> bool:
+    # exact, or a longer word built on it ("सौन्दर्यवती" -> "sndryvt" contains "sndry")
+    return any(w == query_sk or (len(query_sk) >= 4 and w.startswith(query_sk)) for w in words)
+
+
+@lru_cache(maxsize=1)
+def _title_index() -> tuple:
     from rag.vector_store import MONGODB_DB_NAME, _get_mongo_client
 
     coll = _get_mongo_client()[MONGODB_DB_NAME][WEB_ARTICLES]
-    query = {"$or": [{"title": {"$regex": re.escape(w), "$options": "i"}} for w in words]}
-    docs = [d for d in coll.find(query).limit(50) if d["_id"] not in exclude]
-    docs.sort(key=lambda d: sum(w in d["title"].lower() for w in words), reverse=True)
-    return docs[:TITLE_MATCHES]
+    return tuple(
+        (d["_id"], _skeletons(d["title"]), d.get("mantra_count", 0))
+        for d in coll.find({}, {"title": 1, "mantra_count": 1})
+    )
+
+
+def _title_matches(question: str, exclude: set[str], wants_mantra: bool) -> list[dict]:
+    """Articles whose title names the question's topic — meaning search alone misses some."""
+    query_sks = _query_skeletons(question)
+    if not query_sks:
+        return []
+    scored = []
+    for url, title_sks, mantras in _title_index():
+        hits = sum(_word_hit(q, title_sks) for q in query_sks)
+        if hits and url not in exclude:
+            scored.append((hits, mantras > 0 if wants_mantra else 0, mantras, url))
+    scored.sort(reverse=True)
+    best = [url for *_, url in scored[:TITLE_MATCHES]]
+    docs = _full_articles(best)
+    return [docs[u] for u in best if u in docs]
+
+
+@lru_cache(maxsize=1)
+def _book_index() -> tuple:
+    """(book_slug, book name, name skeletons) for every ingested book."""
+    from rag.vector_store import MONGODB_COLLECTION, MONGODB_DB_NAME, _get_mongo_client
+
+    coll = _get_mongo_client()[MONGODB_DB_NAME][MONGODB_COLLECTION]
+    rows = coll.aggregate([
+        {"$match": {"metadata.source_type": {"$ne": "web"}}},
+        {"$group": {"_id": "$metadata.book_slug", "name": {"$first": "$metadata.book"}}},
+    ])
+    return tuple((r["_id"], r["name"] or "", _skeletons(f"{r['name']} {r['_id']}")) for r in rows if r["_id"])
+
+
+def _book_matches(question: str, wants_mantra: bool) -> list[Source]:
+    """When the question names a book's topic (e.g. "soundarya"), search inside that book directly."""
+    query_sks = _query_skeletons(question)
+    slugs = [slug for slug, _, name_sks in _book_index() if any(_word_hit(q, name_sks) for q in query_sks)]
+    if not slugs:
+        return []
+
+    import numpy as np
+    from rag.embeddings import get_embedding_model
+    from rag.vector_store import MONGODB_COLLECTION, MONGODB_DB_NAME, _get_mongo_client
+
+    coll = _get_mongo_client()[MONGODB_DB_NAME][MONGODB_COLLECTION]
+    chunks = list(coll.find({"metadata.book_slug": {"$in": slugs}}, {"embedding": 1, "text": 1, "metadata": 1}))
+    if not chunks:
+        return []
+    query = np.asarray(get_embedding_model().get_query_embedding(question))
+    vectors = np.asarray([c["embedding"] for c in chunks])
+    scores = vectors @ query / (np.linalg.norm(vectors, axis=1) * np.linalg.norm(query) + 1e-9)
+    order = [int(i) for i in np.argsort(-scores)]
+    if wants_mantra:
+        # Lead with the best passage that actually contains a mantra, not one that only discusses it.
+        with_mantra = next((i for i in order if mantra_spans(chunks[i]["text"])), None)
+        if with_mantra is not None:
+            order = [with_mantra] + [i for i in order if i != with_mantra]
+
+    pages: dict[str, list[dict]] = {}
+    for i in order:
+        md = chunks[i]["metadata"]
+        pages.setdefault(f"{md.get('book_slug')}:{md.get('page')}", []).append(chunks[i])
+        if len(pages) > BOOK_MATCHES:
+            break
+    sources = []
+    for key, group in list(pages.items())[:BOOK_MATCHES]:
+        md = group[0]["metadata"]
+        text = "\n".join(c["text"] for c in group)
+        sources.append(Source(md.get("chapter_title") or md.get("book") or "", text, False,
+                              md.get("book"), md.get("page"), md.get("topic"), None, text[:300]))
+    return sources
+
+
+def _source_key(s: Source) -> str:
+    return s.url or f"{s.book}:{s.page}"
 
 
 def gather_sources(question: str, top_k: int = 12) -> list[Source]:
-    nodes = _retriever(top_k).retrieve(question)
+    wants_mantra = bool(_WANTS_MANTRA.search(question))
+    nodes = _retriever(max(top_k, WIDE_TOP_K)).retrieve(question)
 
     groups: dict[str, list] = {}  # insertion order = best score first
     for nws in nodes:
@@ -175,29 +297,42 @@ def gather_sources(question: str, top_k: int = 12) -> list[Source]:
         key = md.get("source_url") or f"{md.get('book_slug')}:{md.get('page')}"
         groups.setdefault(key, []).append(nws)
 
-    title_hits = _title_matches(question, exclude=set(groups))
-    selected = list(groups.items())[: MAX_SOURCES - len(title_hits)]
+    book_sources = _book_matches(question, wants_mantra)
+    title_hits = _title_matches(question, exclude=set(groups) | {_source_key(s) for s in book_sources},
+                                wants_mantra=wants_mantra)
+    title_sources = [
+        Source(d["title"], _window(d["text"], ""), True, d.get("site_name"), None, None, d["_id"], d["text"][:300])
+        for d in title_hits
+    ]
+
+    # Vector results fill the remaining slots; keep the best book passage among them if there is one.
+    ordered = list(groups.items())
+    if not book_sources:
+        book_groups = [g for g in ordered if (g[1][0].node.metadata or {}).get("source_type") != "web"]
+        if book_groups:
+            ordered.remove(book_groups[0])
+            ordered.insert(0, book_groups[0])
+    taken = {_source_key(s) for s in book_sources + title_sources}
+    remaining = MAX_SOURCES - len(book_sources) - len(title_sources)
+    selected = [(k, g) for k, g in ordered if k not in taken][: max(0, remaining)]
 
     web_keys = [k for k, g in selected if (g[0].node.metadata or {}).get("source_type") == "web"]
     articles = _full_articles(web_keys)
 
-    sources: list[Source] = []
+    vector_sources: list[Source] = []
     for key, group in selected:
         md = group[0].node.metadata or {}
         chunks = [g.node.get_content() for g in group]
         if md.get("source_type") == "web":
             article = articles.get(key)
             text = _window(article["text"], chunks[0]) if article else "\n".join(chunks)
-            sources.append(Source(md.get("chapter_title") or "", text, True, md.get("book"), None, md.get("topic"), key, chunks[0][:300]))
+            vector_sources.append(Source(md.get("chapter_title") or "", text, True, md.get("book"), None,
+                                         md.get("topic"), key, chunks[0][:300]))
         else:
-            sources.append(Source(md.get("chapter_title") or md.get("book") or "", "\n".join(chunks), False,
-                                  md.get("book"), md.get("page"), md.get("topic"), None, chunks[0][:300]))
-    # Title matches go first: the question names their topic directly.
-    title_sources = [
-        Source(d["title"], _window(d["text"], ""), True, d.get("site_name"), None, None, d["_id"], d["text"][:300])
-        for d in title_hits
-    ]
-    return title_sources + sources
+            vector_sources.append(Source(md.get("chapter_title") or md.get("book") or "", "\n".join(chunks), False,
+                                         md.get("book"), md.get("page"), md.get("topic"), None, chunks[0][:300]))
+    # The question names the book's or article's topic directly, so those come first.
+    return book_sources + title_sources + vector_sources
 
 
 def _format_sources(sources: list[Source]) -> str:
@@ -320,18 +455,46 @@ def answer_language(question: str) -> str:
     return "English — or, if the question is Hindi written in Roman letters, Hinglish in Roman letters"
 
 
+def _looks_like_questions(answer: str) -> bool:
+    """The model sometimes asks its clarifying questions but forgets the marker."""
+    asks = sum(1 for line in answer.splitlines() if line.strip().endswith(("?", "？")))
+    return asks >= 2 and not mantra_spans(answer)
+
+
 PENDING_NOTE = """
 THE USER IS ANSWERING YOUR CLARIFYING QUESTIONS about this earlier request: "{request}"
 Now give the personalised answer for their situation. Do not ask again.
 """
 
 
+def _names_a_topic(text: str) -> bool:
+    """Does the message name something we have articles or a book about (a deity, a sadhana …)?"""
+    query_sks = _query_skeletons(text)
+    if not query_sks:
+        return False
+    if any(_word_hit(q, sks) for _, sks, _ in _title_index() for q in query_sks):
+        return True
+    return any(_word_hit(q, sks) for _, _, sks in _book_index() for q in query_sks)
+
+
 def answer_question(
-    question: str, history: str = "", top_k: int = 12, pending_request: str | None = None
+    question: str,
+    history: str = "",
+    top_k: int = 12,
+    pending_request: str | None = None,
+    previous_questions: list[str] | None = None,
 ) -> tuple[str, list[Source], bool]:
-    """Returns (answer, sources, asked). `asked` is True when the reply is a clarifying question."""
-    # A reply like "for my wife, I'm a beginner" only makes sense together with the original request.
-    search_text = f"{pending_request}\n{question}" if pending_request else question
+    """Returns (answer, sources, asked). `asked` is True when the reply is a clarifying question.
+
+    `previous_questions` are the session's earlier user messages, oldest first.
+    """
+    # A reply like "for my wife, I'm a beginner" only makes sense together with the original request;
+    # likewise a follow-up that names no topic of its own ("how many days?") continues the most
+    # recent earlier question that did name one.
+    context = pending_request
+    if not context and previous_questions and not _names_a_topic(question):
+        context = next((q for q in reversed(previous_questions) if _names_a_topic(q)), None)
+    search_text = f"{context}\n{question}" if context else question
     sources = gather_sources(search_text, top_k)
     prompt = PROMPT.format(
         ask_marker=ASK_MARKER,
@@ -343,7 +506,7 @@ def answer_question(
     )
 
     answer = _complete(prompt, ANSWER_TEMPERATURE)
-    if ASK_MARKER in answer:
+    if ASK_MARKER in answer or _looks_like_questions(answer):
         answer = answer.replace(ASK_MARKER, "").strip()
         # Ask at most once per request: after the user has answered, never loop back to questions.
         if not pending_request:

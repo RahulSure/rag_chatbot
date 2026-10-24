@@ -110,6 +110,7 @@ def remove_site(slug: str) -> int:
 def store_articles(slug: str, documents) -> int:
     """Full article text keyed by URL, so answers can quote a whole article instead of fragments."""
     from pymongo import ReplaceOne
+    from rag.answer import mantra_spans
 
     ops = [
         ReplaceOne(
@@ -121,6 +122,7 @@ def store_articles(slug: str, documents) -> int:
                 "title": d.metadata["chapter_title"],
                 "language": d.metadata["language"],
                 "text": d.text,
+                "mantra_count": len(mantra_spans(d.text)),  # lets mantra questions prefer articles with one
             },
             upsert=True,
         )

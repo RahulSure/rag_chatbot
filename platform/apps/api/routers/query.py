@@ -202,12 +202,17 @@ def _handle_sync(req: QueryRequest, session_id: str) -> QueryResponse:
 
     history = _get_session_history(session_id)
     pending = _pending_request(session_id)
+    turns = _load_turns(session_id)
 
     try:
         # Whole-article context + mantra verification (see rag/answer.py). The companion may
         # instead ask clarifying questions; the original request is then kept for the next turn.
         answer, sources, asked = answer_question(
-            req.question, history=history, top_k=req.top_k, pending_request=pending
+            req.question,
+            history=history,
+            top_k=req.top_k,
+            pending_request=pending,
+            previous_questions=[t["q"] for t in turns],
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
