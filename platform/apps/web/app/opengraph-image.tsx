@@ -24,7 +24,7 @@ export default function OpengraphImage() {
         </div>
         <div style={{ fontSize: 40, marginTop: 20, color: "#4e4136" }}>Your AI spiritual companion</div>
         <div style={{ fontSize: 28, marginTop: 36, color: "#6e5f51" }}>
-          Mantra · Meditation · Sadhana — answers with sources
+          Mantra · Meditation · Sadhana
         </div>
       </div>
     ),

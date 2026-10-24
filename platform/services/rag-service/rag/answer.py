@@ -48,6 +48,7 @@ EXPLANATION AND STYLE:
 - Reply in the SAME language as the USER'S QUESTION, not the language of the sources. Mantras always stay in Devanagari exactly as in the source; in an English answer you may add a transliteration after the Devanagari mantra.
 - Plain text only: no markdown symbols such as ** or #. Use short headings on their own line and numbered steps (1. 2. 3.).
 - Never mention website names or URLs. For book passages you may mention the book and page briefly in parentheses.
+- Never refer to the sources themselves: no "Source 2", no "as given in the source", "the article says" or "the website". Present the teaching directly.
 - If no source is relevant at all, answer briefly from general knowledge of the tradition, without claiming it comes from the books.
 - If the topic involves tantra, sadhana or attraction practices, end with ONE sentence that such practices should be done under a qualified guru's guidance.
 - For vashikaran, mohan, uchchatan, maran or similar influence rituals, and for parad (mercury) sadhana or alchemy, add ONE short warning line that these must be done only under a qualified, experienced guru. Never give steps for heating, processing or consuming mercury — it is highly toxic; explain the significance instead.
@@ -256,7 +257,31 @@ def _repair_mantras(answer: str, bad: list[str], sources: list[Source]) -> tuple
 
 # ── Entry point ─────────────────────────────────────────────────────────────
 
+_EMPHASIS = re.compile(r"\*{1,2}([^*\n]+?)\*{1,2}")
 _MARKDOWN = re.compile(r"\*\*|__|^#{1,6}\s*", re.M)
+_BULLET = re.compile(r"^\s*\*\s+", re.M)
+# "(Source 4)", "(स्रोत 2, 3)", or a trailing "— Source 1" label: the prompt's numbering must
+# not reach the reader. Mid-sentence mentions are left alone (removing them breaks the sentence;
+# the prompt forbids them anyway).
+_SOURCE_REFS = re.compile(
+    r"\s*\((?:source|स्रोत)\s*\d+(?:\s*(?:,|and|&)\s*\d+)*\)|\s*[-–—:]?\s*\b(?:source|स्रोत)\s+\d+\s*$",
+    re.I | re.M,
+)
+
+
+_AS_GIVEN = re.compile(r"\s*\(as (?:given|written|stated)(?: in the (?:source|article|text))?\)", re.I)
+_RULE_LINE = re.compile(r"^\s*(?:-{3,}|\*{3,}|_{3,})\s*$\n?", re.M)
+
+
+def _clean(text: str) -> str:
+    """The chat renders plain text, and answers should not point at their sources."""
+    text = _RULE_LINE.sub("", text)
+    text = _EMPHASIS.sub(r"\1", text)
+    text = _BULLET.sub("- ", text)
+    text = _MARKDOWN.sub("", text)
+    text = _AS_GIVEN.sub("", text)
+    text = _SOURCE_REFS.sub("", text)
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
 
 
 def _complete(prompt: str, temperature: float) -> str:
@@ -264,7 +289,7 @@ def _complete(prompt: str, temperature: float) -> str:
     if not text:  # reasoning used up the budget — try once more with room to spare
         logger.warning("empty completion, retrying with a larger token budget")
         text = _llm().complete(prompt, temperature=temperature, max_tokens=ANSWER_MAX_TOKENS * 2).text.strip()
-    return _MARKDOWN.sub("", text)  # the chat renders plain text
+    return _clean(text)
 
 
 def answer_language(question: str) -> str:

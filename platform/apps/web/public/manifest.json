@@ -1,7 +1,7 @@
 {
   "name": "Sadhak.ai — Your AI spiritual companion",
   "short_name": "Sadhak.ai",
-  "description": "Ask about mantra, meditation, tantra, kundalini and sadhana. Answers grounded in published teachings, with sources shown.",
+  "description": "Ask about mantra, meditation, tantra, kundalini and sadhana. Answers grounded in published teachings.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#faf6ee",

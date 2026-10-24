@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: "%s | Sadhak.ai",
   },
   description:
-    "Sadhak.ai is an AI companion for spiritual seekers. Ask about mantra, meditation, tantra, kundalini and sadhana — answers are grounded in published teachings, with sources shown.",
+    "Sadhak.ai is an AI companion for spiritual seekers. Ask about mantra, meditation, tantra, kundalini and sadhana — answers are grounded in published teachings.",
   keywords: [
     "Sadhak AI",
     "spiritual AI",

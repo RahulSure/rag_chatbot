@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, User, Sparkles, BookOpen, Share2, Copy, Check, Clock } from "lucide-react";
+import { Send, User, Sparkles, Share2, Copy, Check, Clock } from "lucide-react";
 import { useStreamChat, ChatMessage } from "@/lib/useStream";
 import { useT, type Key } from "@/lib/i18n";
-import { SourceCard } from "./SourceCard";
+import { SourceList } from "./SourceList";
 
 const STARTERS: Key[] = ["chat.follow1", "chat.follow2", "chat.follow3", "chat.follow4"];
 
@@ -219,19 +219,6 @@ function MessageBubble({
           </div>
         )}
 
-        {/* Sources */}
-        {!isUser && msg.sources && msg.sources.length > 0 && !msg.isStreaming && (
-          <div className="w-full space-y-2">
-            <div className="flex items-center gap-1 text-xs text-cosmic-500">
-              <BookOpen size={10} aria-hidden="true" />
-              <span>{t("chat.sources")}</span>
-            </div>
-            {msg.sources.slice(0, 3).map((src, i) => (
-              <SourceCard key={i} source={src} />
-            ))}
-          </div>
-        )}
-
         {/* Suggested follow-ups */}
         {!isUser && !msg.isStreaming && msg.suggestedQuestions && msg.suggestedQuestions.length > 0 && (
           <div className="w-full space-y-2">
@@ -271,6 +258,11 @@ function MessageBubble({
               {t("chat.share")}
             </button>
           </div>
+        )}
+
+        {/* Sources — collapsed and low-key, one entry per site or book */}
+        {!isUser && msg.sources && msg.sources.length > 0 && !msg.isStreaming && (
+          <SourceList sources={msg.sources} label={t("chat.sources")} />
         )}
       </div>
     </motion.div>

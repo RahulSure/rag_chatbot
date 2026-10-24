@@ -6,7 +6,7 @@ import { T } from "@/lib/i18n";
 export const metadata: Metadata = {
   title: "Ask Sadhak — AI Chat on Mantra, Meditation & Sadhana",
   description:
-    "Ask questions about mantra, meditation, tantra, kundalini and sadhana. Get AI answers grounded in published texts, with the source passages shown.",
+    "Ask questions about mantra, meditation, tantra, kundalini and sadhana. Get AI answers grounded in published teachings.",
 };
 
 interface Props {

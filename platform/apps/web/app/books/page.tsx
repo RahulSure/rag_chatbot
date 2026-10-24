@@ -18,7 +18,7 @@ export default async function BooksPage() {
           <span className="text-sm uppercase tracking-widest text-gold">Library</span>
           <h1 className="mb-4 mt-2 font-serif text-5xl text-foreground">Books behind the answers</h1>
           <p className="mx-auto max-w-xl text-lg text-cosmic-400">
-            Every answer in Sadhak.ai is drawn from these published texts, and the source passage is shown with it.
+            Sadhak.ai draws its answers from these published books.
           </p>
         </div>
 

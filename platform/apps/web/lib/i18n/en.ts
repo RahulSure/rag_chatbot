@@ -21,7 +21,7 @@ export const en = {
   "hero.title1": "A calm companion for",
   "hero.title2": "your inner practice",
   "hero.lead":
-    "Ask about mantra, meditation, tantra, kundalini and sadhana. Answers are drawn from published texts, with the source shown every time.",
+    "Ask about mantra, meditation, tantra, kundalini and sadhana. Answers are grounded in the teachings and published texts of the tradition.",
   "hero.placeholder": "Ask anything about practice, mantra, meditation…",
   "hero.ask": "Ask",
   "hero.chip1": "What is mantra siddhi?",
@@ -67,7 +67,7 @@ export const en = {
   "wa.badge": "WhatsApp — coming soon",
 
   "chat.title": "Ask Sadhak",
-  "chat.lead": "Ask in English or Hindi. Every answer shows the passages it came from.",
+  "chat.lead": "Ask in English or Hindi — about mantras, sadhanas, meditation and more.",
   "chat.emptyTitle": "What's on your mind?",
   "chat.emptyBody": "Ask about mantra, meditation, tantra, kundalini, sadhana and more.",
   "chat.follow1": "Tell me more about this",
@@ -79,7 +79,7 @@ export const en = {
   "chat.placeholderLimited": "Please wait before asking more…",
   "chat.hint": "Answers are grounded in published books.",
   "chat.hintLimited": "Limit reached — please return in 1 hour.",
-  "chat.sources": "Source passages",
+  "chat.sources": "Sources",
   "chat.alsoAsk": "You might also ask",
   "chat.copy": "Copy",
   "chat.copied": "Copied",

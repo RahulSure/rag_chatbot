@@ -149,7 +149,7 @@ export default function GuruPage() {
           </h2>
           <p className="text-cosmic-400 mb-8">
             Ask Sadhak about his teachings — answers are grounded in his
-            published texts, with the source passages shown.
+            published texts.
           </p>
           <Link href="/chat" className="btn-gold inline-flex items-center gap-2">
             Ask Sadhak <ArrowRight size={16} />

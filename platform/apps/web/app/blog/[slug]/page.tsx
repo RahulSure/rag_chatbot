@@ -177,7 +177,7 @@ export default async function ArticlePage({ params }: Props) {
             Ask a Question About This Topic
           </h3>
           <p className="text-cosmic-400 text-sm mb-5">
-            Get answers grounded in the published texts, with sources shown.
+            Get answers grounded in the published teachings.
           </p>
           <Link
             href={`/chat?q=${encodeURIComponent(`Tell me more about ${article.topic}`)}`}
