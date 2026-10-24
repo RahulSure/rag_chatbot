@@ -4,7 +4,7 @@ Shared Pydantic schemas used across apps/api and services.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date as date_type, datetime, time as time_type
 from typing import Optional
 from pydantic import BaseModel, Field
 
@@ -180,6 +180,19 @@ class IngestRequest(BaseModel):
 class IngestResponse(BaseModel):
     status: str
     message: str
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Astrology
+# ──────────────────────────────────────────────────────────────────────────────
+
+class BirthDetails(BaseModel):
+    date: date_type = Field(..., description="Birth date at the birthplace (YYYY-MM-DD)")
+    time: time_type = Field(..., description="Local clock time of birth (HH:MM)")
+    latitude: float = Field(..., ge=-90, le=90)
+    longitude: float = Field(..., ge=-180, le=180)
+    tz: str = Field(..., description="IANA time zone of the birthplace, e.g. Asia/Kolkata")
+    place: Optional[str] = None
 
 
 class VectorStoreHealth(BaseModel):
