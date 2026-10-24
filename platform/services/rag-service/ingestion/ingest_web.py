@@ -40,6 +40,18 @@ def _title_from_url(url: str) -> str:
     return slug.title() if slug else url
 
 
+def _fallback_title(page: dict) -> str:
+    """URL slug, or the article's first line when the slug is Blogger's meaningless "blog-post_NN"."""
+    from_url = _title_from_url(page["url"])
+    if not re.match(r"^blog post", from_url, re.I):
+        return from_url
+    for line in page["text"].splitlines():
+        line = line.strip()
+        if 3 <= len(line) <= 120:
+            return line
+    return from_url
+
+
 def load_site_documents(slug: str):
     """Load one site's pages as LlamaIndex Documents, skipping duplicate texts."""
     from llama_index.core import Document
@@ -55,7 +67,7 @@ def load_site_documents(slug: str):
         if page["content_hash"] in seen_hashes:
             continue
         seen_hashes.add(page["content_hash"])
-        title = page["title"] if page["title"] and page["title"] not in generic_titles else _title_from_url(page["url"])
+        title = page["title"] if page["title"] and page["title"] not in generic_titles else _fallback_title(page)
         doc = Document(
             text=page["text"],
             metadata={
