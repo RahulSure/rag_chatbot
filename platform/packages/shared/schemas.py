@@ -36,6 +36,7 @@ class SourceNode(BaseModel):
     chapter: Optional[str] = None
     topic: Optional[str] = None
     text_snippet: str
+    url: Optional[str] = None  # set for web-article sources
 
 
 class QueryResponse(BaseModel):

@@ -86,6 +86,7 @@ def _source_nodes_to_schema(source_nodes) -> list[SourceNode]:
                 chapter=metadata.get("chapter_title"),
                 topic=metadata.get("topic"),
                 text_snippet=snippet,
+                url=metadata.get("source_url"),
             )
         )
     return result

@@ -10,6 +10,7 @@ export interface SourceNode {
   chapter?: string;
   topic?: string;
   text_snippet: string;
+  url?: string; // web-article sources link back to the original page
 }
 
 export interface QueryResponse {
