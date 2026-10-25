@@ -18,10 +18,15 @@ export function BirthForm({
   initial,
   busy,
   onSubmit,
+  idPrefix = "birth",
+  submitLabel,
 }: {
   initial?: BirthDetails | null;
   busy: boolean;
   onSubmit: (details: BirthDetails) => void;
+  /** keeps field ids unique when two forms share a page */
+  idPrefix?: string;
+  submitLabel?: string;
 }) {
   const t = useT();
   const [name, setName] = useState(initial?.name ?? "");
@@ -55,19 +60,19 @@ export function BirthForm({
   return (
     <form onSubmit={submit} className="space-y-5 rounded-2xl border border-line bg-surface p-6 shadow-cosmic sm:p-8">
       <div>
-        <label htmlFor="birth-name" className={labelClass}>{t("kundli.name")}</label>
-        <input id="birth-name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+        <label htmlFor={`${idPrefix}-name`} className={labelClass}>{t("kundli.name")}</label>
+        <input id={`${idPrefix}-name`} value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="birth-date" className={labelClass}>{t("kundli.date")}</label>
-          <input id="birth-date" type="date" required value={date} max={new Date().toISOString().slice(0, 10)}
+          <label htmlFor={`${idPrefix}-date`} className={labelClass}>{t("kundli.date")}</label>
+          <input id={`${idPrefix}-date`} type="date" required value={date} max={new Date().toISOString().slice(0, 10)}
                  onChange={(e) => setDate(e.target.value)} className={inputClass} />
         </div>
         <div>
-          <label htmlFor="birth-time" className={labelClass}>{t("kundli.time")}</label>
-          <input id="birth-time" type="time" required={!timeUnknown} disabled={timeUnknown} value={timeUnknown ? "" : time}
+          <label htmlFor={`${idPrefix}-time`} className={labelClass}>{t("kundli.time")}</label>
+          <input id={`${idPrefix}-time`} type="time" required={!timeUnknown} disabled={timeUnknown} value={timeUnknown ? "" : time}
                  onChange={(e) => setTime(e.target.value)} className={`${inputClass} disabled:opacity-50`} />
         </div>
       </div>
@@ -79,9 +84,9 @@ export function BirthForm({
       </label>
 
       <div className="relative">
-        <label htmlFor="birth-place" className={labelClass}>{t("kundli.place")}</label>
+        <label htmlFor={`${idPrefix}-place`} className={labelClass}>{t("kundli.place")}</label>
         <input
-          id="birth-place"
+          id={`${idPrefix}-place`}
           autoComplete="off"
           value={query}
           placeholder={t("kundli.placeHint")}
@@ -91,10 +96,10 @@ export function BirthForm({
           }}
           className={inputClass}
           aria-autocomplete="list"
-          aria-controls="birth-place-list"
+          aria-controls={`${idPrefix}-place-list`}
         />
         {suggestions.length > 0 && (
-          <ul id="birth-place-list" role="listbox"
+          <ul id={`${idPrefix}-place-list`} role="listbox"
               className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-line bg-surface shadow-cosmic">
             {suggestions.map((p) => (
               <li key={`${p.name}-${p.latitude}-${p.longitude}`} role="option" aria-selected={false}>
@@ -120,7 +125,7 @@ export function BirthForm({
       {error && <p role="alert" className="text-sm text-red-700 dark:text-red-400">{error}</p>}
 
       <button type="submit" disabled={busy} className="btn-gold w-full py-3.5 text-base disabled:opacity-50">
-        {busy ? t("kundli.calculating") : t("kundli.submit")}
+        {busy ? t("kundli.calculating") : submitLabel ?? t("kundli.submit")}
       </button>
       <p className="text-center text-xs text-cosmic-500">{t("kundli.privacy")}</p>
     </form>

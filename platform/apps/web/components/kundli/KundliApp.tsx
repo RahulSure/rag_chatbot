@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MessageCircle, Pencil } from "lucide-react";
 import { getBirthChart, getPanchang, type BirthChart, type BirthDetails, type Panchang } from "@/lib/api";
 import { useLanguage, type Lang } from "@/lib/i18n";
+import { loadBirth as loadSaved, saveBirth as save } from "@/lib/birth";
 import { BirthForm } from "./BirthForm";
 import { NorthIndianChart } from "./NorthIndianChart";
 import { AshtakavargaPanel, IshtaPanel, MangalPanel, NakshatraPanel, ReportsPanel, VargaPanel, WesternPanel } from "./ChartPanels";
@@ -21,25 +22,6 @@ const TABS: { id: string; label: Key }[] = [
   { id: "western", label: "kt.western" },
 ];
 
-// Per-viewer convenience only: birth details never leave the browser except to be calculated.
-const STORAGE_KEY = "sadhak_birth";
-
-function loadSaved(): BirthDetails | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as BirthDetails) : null;
-  } catch {
-    return null;
-  }
-}
-
-function save(details: BirthDetails) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(details));
-  } catch {
-    /* storage unavailable — the chart still shows, it just won't be remembered */
-  }
-}
 
 const WEEKDAYS_HI: Record<string, string> = {
   Sunday: "रविवार", Monday: "सोमवार", Tuesday: "मंगलवार", Wednesday: "बुधवार",

@@ -4,11 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { BirthChart, BirthDetails } from "@/lib/api";
 import { useLanguage, type Key } from "@/lib/i18n";
+import { saveBirth } from "@/lib/birth";
 import { BirthForm } from "@/components/kundli/BirthForm";
 import { NorthIndianChart } from "@/components/kundli/NorthIndianChart";
 
-// Same key the kundli page reads, so the chart is calculated as soon as it opens.
-const BIRTH_KEY = "sadhak_birth";
 const POINTS: Key[] = ["v4.formPoint1", "v4.formPoint2", "v4.formPoint3"];
 
 /** The birth form beside the chart of this very moment, read the same way. */
@@ -20,11 +19,7 @@ export function KundliPreview({ chart }: { chart: BirthChart | null }) {
 
   const open = (details: BirthDetails) => {
     setBusy(true);
-    try {
-      localStorage.setItem(BIRTH_KEY, JSON.stringify(details));
-    } catch {
-      /* the kundli page will simply ask again */
-    }
+    saveBirth(details);
     router.push("/kundli");
   };
 
