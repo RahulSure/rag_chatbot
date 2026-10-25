@@ -10,6 +10,7 @@ import { useLanguage, type Key } from "@/lib/i18n";
 const NAV_LINKS: { href: string; label: Key }[] = [
   { href: "/chat", label: "nav.chat" },
   { href: "/kundli", label: "nav.kundli" },
+  { href: "/numerology", label: "num.nav" },
   { href: "/#today", label: "v4.toolPanchang" },
   { href: "/teachings", label: "nav.explore" },
   { href: "/blog", label: "nav.articles" },

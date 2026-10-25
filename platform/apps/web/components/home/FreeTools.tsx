@@ -24,6 +24,18 @@ const GLYPHS: Record<string, React.ReactNode> = {
       <ellipse cx="20" cy="20" rx="16" ry="6" transform="rotate(-20 20 20)" />
     </>
   ),
+  numerology: (
+    <>
+      <rect x="5" y="5" width="30" height="30" />
+      <path d="M15 5v30M25 5v30M5 15h30M5 25h30" />
+    </>
+  ),
+  tarot: (
+    <>
+      <rect x="10" y="3" width="20" height="34" rx="2" />
+      <path d="M20 13l1.8 4.2 4.2 1.8-4.2 1.8L20 25l-1.8-4.2L14 19l4.2-1.8Z" />
+    </>
+  ),
   matching: (
     <>
       <path d="M14 6 26 18 14 30 2 18Z" />
@@ -43,6 +55,8 @@ const TOOLS: { id: string; title: Key; desc: Key; href?: string }[] = [
   { id: "panchang", title: "v4.toolPanchang", desc: "v4.toolPanchangDesc", href: "/#today" },
   { id: "dasha", title: "v4.toolDasha", desc: "v4.toolDashaDesc", href: "/kundli" },
   { id: "sadeSati", title: "v4.toolSadeSati", desc: "v4.toolSadeSatiDesc", href: "/kundli" },
+  { id: "numerology", title: "v4.toolNumerology", desc: "v4.toolNumerologyDesc", href: "/numerology" },
+  { id: "tarot", title: "v4.toolTarot", desc: "v4.toolTarotDesc" },
   { id: "matching", title: "v4.toolMatching", desc: "v4.toolMatchingDesc" },
   { id: "mangal", title: "v4.toolMangal", desc: "v4.toolMangalDesc" },
 ];
@@ -55,7 +69,7 @@ export function FreeTools() {
         <h2 id="tools-title" className="text-center text-4xl leading-tight sm:text-5xl">
           {t("v4.toolsTitle")} <em className="text-gold">{t("v4.toolsAccent")}</em>
         </h2>
-        <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TOOLS.map((tool) => {
             const body = (
               <>
@@ -63,7 +77,7 @@ export function FreeTools() {
                      strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round" className="text-gold">
                   {GLYPHS[tool.id]}
                 </svg>
-                <span className="mt-5 flex items-center gap-3">
+                <span className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
                   <span className="font-serif text-2xl text-foreground">{t(tool.title)}</span>
                   {!tool.href && (
                     <span className="rounded-full border border-line px-2.5 py-0.5 text-[0.7rem] uppercase tracking-wider text-cosmic-500">

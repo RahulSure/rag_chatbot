@@ -8,6 +8,7 @@ import { useT, type Key } from "@/lib/i18n";
 const EXPLORE: { href: string; label: Key }[] = [
   { href: "/chat", label: "nav.chat" },
   { href: "/kundli", label: "nav.kundli" },
+  { href: "/numerology", label: "num.nav" },
   { href: "/#today", label: "v4.toolPanchang" },
   { href: "/teachings", label: "nav.explore" },
 ];
