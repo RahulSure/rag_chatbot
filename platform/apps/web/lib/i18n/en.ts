@@ -97,7 +97,7 @@ export const en = {
   "v4.heroLabel": "Sadhak · your sadhana companion",
   "v4.heroTitle1": "Your sadhana companion,",
   "v4.heroTitle2": "guided by the books.",
-  "v4.heroLead": "An AI companion grounded in the teachings of Dr. Narayan Dutt Shrimali. Mantras exactly as the books give them, your kundli read the Vedic way, and today's panchang for your city.",
+  "v4.heroLead": "An AI companion grounded in the teachings of Dr. Narayan Dutt Shrimali, with switch words from Naran S. Balakumar. Mantras exactly as the books give them, your kundli read the Vedic way, and today's panchang for your city.",
   "v4.askTitle": "What do you want to know?",
   "v4.askPlaceholder": "Ask about a mantra, a sadhana, your chart or today's tithi…",
   "v4.askButton": "Ask",
@@ -155,7 +155,7 @@ export const en = {
   "v4.faqTitle": "Questions,",
   "v4.faqAccent": "answered",
   "v4.faq1q": "What is Sadhak?",
-  "v4.faq1a": "An AI companion for spiritual practice. It answers from the books of Dr. Narayan Dutt Shrimali and the writings of his disciples, suggests practices that fit you, and reads your kundli.",
+  "v4.faq1a": "An AI companion for spiritual practice. It answers from the books of Dr. Narayan Dutt Shrimali and the writings of his disciples, and from Naran S. Balakumar's switch words, Bach flower remedies and Reiki. It suggests practices that fit you, and reads your kundli.",
   "v4.faq2q": "Is Sadhak a guru?",
   "v4.faq2a": "No. It is an AI companion. For diksha, and for advanced practices such as tantra, learn from a qualified guru.",
   "v4.faq3q": "Where do the mantras come from?",
@@ -509,6 +509,24 @@ export const en = {
   // tools hub titles
   "tools.varsha": "Varshaphal",
   "tools.japaShort": "Mala counter",
+
+  // switch words
+  "sw.label": "Switch words",
+  "sw.title": "Find your switch words",
+  "sw.lead": "Tell Sadhak what you need help with. It finds Naran S. Balakumar's answers to people in the same place, with the switch words he gave, exactly as he wrote them.",
+  "sw.placeholder": "For example: confidence before an interview",
+  "sw.search": "Find",
+  "sw.try": "Or choose a need",
+  "sw.copy": "Tap a switch word to copy it",
+  "sw.copied": "Copied",
+  "sw.none": "Nothing close to that yet. Try other words, or ask Sadhak directly.",
+  "sw.searching": "Searching Naran sir's answers…",
+  "sw.ask": "Ask Sadhak how to use these",
+  "sw.howTitle": "How switch words are used",
+  "sw.how": "Switch words are short words chanted for a purpose, silently or aloud, whenever the need arises. Each of Naran sir's answers says how to use its words: follow what that answer says.",
+  "sw.credit": "Switch words are the teaching of Naran S. Balakumar. Sadhak shows them exactly as he wrote them.",
+  "sw.health": "For health problems, use switch words and flower remedies alongside your doctor's care, never instead of it.",
+  "tools.swDesc": "Naran S. Balakumar's switch words for what you need, exactly as he gave them.",
 } as const;
 
 export type Key = keyof typeof en;

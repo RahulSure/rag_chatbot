@@ -34,7 +34,7 @@ ANSWER_MAX_TOKENS = 4096
 
 ASK_MARKER = "[[ASK]]"
 
-PROMPT = """You are Sadhak, a caring spiritual companion (kalyan-mitra) for seekers, grounded in the teachings of Dr. Narayan Dutt Shrimali (Paramhans Swami Nikhileshwaranand) — from his books and from articles by his disciples.
+PROMPT = """You are Sadhak, a caring spiritual companion (kalyan-mitra) for seekers, grounded in the teachings of Dr. Narayan Dutt Shrimali (Paramhans Swami Nikhileshwaranand) — from his books and from articles by his disciples — and of other teachers in the library, such as Naran S. Balakumar (switch words, Bach flower remedies and Reiki). A source that belongs to another teacher names them.
 
 Below are SOURCES. Each one is a separate book passage or a complete article.
 
@@ -63,6 +63,12 @@ MANTRAS AND PROCEDURES — STRICT:
 4. Write each procedure faithfully: the same steps in the same order, with the same counts, mala, days, timings, direction, asana, materials and offerings. Do not add, drop or change any step, and do not invent details the source doesn't state.
 5. If no source contains a mantra or procedure for the question, say so plainly. You may explain the topic in general terms, but do not make up a mantra or method.
 
+SWITCH WORDS AND REMEDIES (Naran S. Balakumar's teaching):
+- Switch words are short words chanted for a purpose. Copy each switch word or combination exactly as in ONE source: the same words in the same order, nothing added, dropped or swapped. Write them in CAPITALS inside quotes, e.g. "TOGETHER CHANGE ADJUST".
+- Say how and how often to chant them only as the source says; do not invent counts or timings.
+- When you share them, say once, naturally, that this is Naran S. Balakumar's teaching.
+- For illness or physical problems, offer switch words, Bach flower remedies or Reiki only as support alongside proper medical care. Never suggest avoiding, stopping, delaying or replacing a doctor's treatment or medicine, even if a source seems to.
+
 EXPLANATION AND STYLE:
 - Introductions and explanations can be in your own words: warm, natural and concise.
 - Reply in the SAME language as the USER'S QUESTION, not the language of the sources. Mantras always stay in Devanagari exactly as in the source; in an English answer you may add a transliteration after the Devanagari mantra.
@@ -90,6 +96,12 @@ IMPORTANT: a previous draft contained mantra text that does not appear exactly i
 {bad}
 Write the answer again. Copy each mantra exactly from one source, or leave it out if the sources don't contain it."""
 
+RETRY_SWITCH_NOTE = """
+
+IMPORTANT: a previous draft contained switch words that do not appear exactly in any single source:
+{bad}
+Write the answer again. Copy each switch word combination exactly from one source, or leave it out."""
+
 
 @dataclass
 class Source:
@@ -101,6 +113,7 @@ class Source:
     topic: str | None = None
     url: str | None = None
     snippet: str = ""
+    teacher: str | None = None
 
 
 # ── Retrieval ───────────────────────────────────────────────────────────────
@@ -179,7 +192,7 @@ _STOPWORDS = (
 )
 _STOP_SKELETONS = _skeletons(_STOPWORDS)
 GENERIC_TITLE_DF = 100  # a word in more titles than this ("diksha", "gurukripa") identifies no topic
-_WANTS_MANTRA = re.compile(r"(?i)mantra|मंत्र|मन्त्र|sadhana|sadhna|साधना|vidhi|विधि|प्रयोग|jaap|jap\b|जप")
+_WANTS_MANTRA = re.compile(r"(?i)mantra|मंत्र|मन्त्र|sadhana|sadhna|साधना|vidhi|विधि|प्रयोग|jaap|jap\b|जप|switch ?words?|स्विच|chant")
 
 TITLE_MATCHES = 2      # articles added because their title names the topic
 BOOK_MATCHES = 2       # book passages added when the question names a book's topic
@@ -301,7 +314,8 @@ def gather_sources(question: str, top_k: int = 12) -> list[Source]:
     title_hits = _title_matches(question, exclude=set(groups) | {_source_key(s) for s in book_sources},
                                 wants_mantra=wants_mantra)
     title_sources = [
-        Source(d["title"], _window(d["text"], ""), True, d.get("site_name"), None, None, d["_id"], d["text"][:300])
+        Source(d["title"], _window(d["text"], ""), True, d.get("site_name"), None, None, d["_id"], d["text"][:300],
+               d.get("teacher"))
         for d in title_hits
     ]
 
@@ -327,7 +341,7 @@ def gather_sources(question: str, top_k: int = 12) -> list[Source]:
             article = articles.get(key)
             text = _window(article["text"], chunks[0]) if article else "\n".join(chunks)
             vector_sources.append(Source(md.get("chapter_title") or "", text, True, md.get("book"), None,
-                                         md.get("topic"), key, chunks[0][:300]))
+                                         md.get("topic"), key, chunks[0][:300], md.get("teacher")))
         else:
             vector_sources.append(Source(md.get("chapter_title") or md.get("book") or "", "\n".join(chunks), False,
                                          md.get("book"), md.get("page"), md.get("topic"), None, chunks[0][:300]))
@@ -339,6 +353,8 @@ def _format_sources(sources: list[Source]) -> str:
     parts = []
     for i, s in enumerate(sources, 1):
         kind = "article" if s.is_web else f"book: {s.book}" + (f", page {s.page}" if s.page else "")
+        if s.teacher:
+            kind += f"; teacher: {s.teacher}"
         parts.append(f"[SOURCE {i}] ({kind}) Title: {s.title}\n{s.text}\n[END SOURCE {i}]")
     return "\n\n".join(parts) if parts else "(no sources found)"
 
@@ -385,6 +401,32 @@ def unverified_mantras(answer: str, sources: list[Source]) -> list[str]:
 def _drop_lines_with(answer: str, spans: list[str]) -> str:
     kept = [ln for ln in answer.splitlines() if not any(_norm(s) in _norm(ln) for s in spans)]
     return "\n".join(kept).strip()
+
+
+# ── Switch-word verification ────────────────────────────────────────────────
+
+# A quoted run of two or more capitalised words: "TOGETHER CHANGE ADJUST".
+_SWITCH = re.compile(r"[\"“‘']\s*([A-Z]{2,}(?:[ ,\-–]+[A-Z]{2,})+)\s*[\"”’']")
+
+
+def _caps(text: str) -> str:
+    return " ".join(re.findall(r"[A-Z]+", text.upper()))
+
+
+def switch_word_spans(answer: str) -> list[str]:
+    return [m.group(1) for m in _SWITCH.finditer(answer)]
+
+
+def unverified_switch_words(answer: str, sources: list[Source]) -> list[str]:
+    """Only checked when a switch-word teacher's source is in play; elsewhere capitals mean nothing special."""
+    texts = [_caps(s.text) for s in sources if s.teacher]
+    if not texts:
+        return []
+    return [sp for sp in switch_word_spans(answer) if not any(_caps(sp) in t for t in texts)]
+
+
+def _drop_lines_containing(answer: str, spans: list[str]) -> str:
+    return "\n".join(ln for ln in answer.splitlines() if not any(sp in ln for sp in spans)).strip()
 
 
 REPAIR_MIN_SIMILARITY = 0.8
@@ -530,4 +572,13 @@ def answer_question(
             if unresolved:
                 logger.warning("removing mantra lines with no source match: %s", unresolved)
                 answer = _drop_lines_with(answer, unresolved)
+
+    bad = unverified_switch_words(answer, sources)
+    if bad:
+        logger.warning("answer contained unverified switch words, retrying: %s", bad)
+        answer = _complete(prompt + RETRY_SWITCH_NOTE.format(bad="\n".join(f"- {b}" for b in bad)), 0.0)
+        bad = unverified_switch_words(answer, sources)
+        if bad:
+            logger.warning("removing switch-word lines with no source match: %s", bad)
+            answer = _drop_lines_containing(answer, bad)
     return answer.replace(ASK_MARKER, "").strip(), sources, False

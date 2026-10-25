@@ -62,6 +62,35 @@ WEB_SOURCES: list[dict] = [
         "base": "https://gurugamyaanubhutsadhanaye.blogspot.com",
         "seeds": ["https://gurugamyaanubhutsadhanaye.blogspot.com/"],
     },
+    # Naran S. Balakumar: switch words, Bach flower remedies, Reiki. The "Ask Naran"
+    # questions and his answers are written into the posts themselves.
+    {
+        "slug": "reachonnaran",
+        "name": "Reach on Naran",
+        "base": "https://reachonnaran.com",
+        "seeds": ["https://reachonnaran.com/tag/ask-naran/"],
+        "teacher": "Naran S. Balakumar",
+        "min_chars": 20,  # the weekly chanting posts are a single line of switch words
+    },
+    {
+        "slug": "naransevents",
+        "name": "Naran's Events",
+        "base": "https://naransevents.wordpress.com",
+        "seeds": ["https://naransevents.wordpress.com/about/"],
+        "teacher": "Naran S. Balakumar",
+        "min_chars": 20,  # the weekly chanting posts are a single line of switch words
+    },
+    {
+        "slug": "reachlotus",
+        "name": "Reach Lotus",
+        "base": "https://www.reachlotus.com",
+        "seeds": ["https://www.reachlotus.com/blog/categories/life-is-easy-1"],
+        "teacher": "Naran S. Balakumar",
+        "min_chars": 20,  # the weekly chanting posts are a single line of switch words
+        # Wix: the post body is server-rendered in this block; general extraction picks the sidebar instead.
+        "content_selector": '[data-id="content-viewer"]',
+        "title_selector": '[data-hook="post-title"]',
+    },
 ]
 
 SOURCES_BY_SLUG = {s["slug"]: s for s in WEB_SOURCES}

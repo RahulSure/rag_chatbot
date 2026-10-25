@@ -195,18 +195,21 @@ class SiteCrawler:
             return
 
         resp.encoding = resp.apparent_encoding if not resp.encoding or resp.encoding.lower() == "iso-8859-1" else resp.encoding
-        extracted = trafilatura.extract(
-            resp.text,
-            url=url,
-            output_format="json",
-            with_metadata=True,
-            include_comments=False,
-            include_tables=True,
-            favor_recall=True,
-        )
-        data = json.loads(extracted) if extracted else {}
+        if self.source.get("content_selector"):
+            data = self._extract_with_selector(resp.text)
+        else:
+            extracted = trafilatura.extract(
+                resp.text,
+                url=url,
+                output_format="json",
+                with_metadata=True,
+                include_comments=False,
+                include_tables=True,
+                favor_recall=True,
+            )
+            data = json.loads(extracted) if extracted else {}
         text = (data.get("text") or "").strip()
-        if len(text) < MIN_TEXT_CHARS:
+        if len(text) < self.source.get("min_chars", MIN_TEXT_CHARS):
             self.stats["too_short"] += 1
             return
 
@@ -224,6 +227,30 @@ class SiteCrawler:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(page, ensure_ascii=False, indent=1), encoding="utf-8")
         self.stats["saved"] += 1
+
+    def _extract_with_selector(self, html: str) -> dict:
+        """Text, title and date from a site whose article block is known (e.g. Wix blogs)."""
+        from bs4 import BeautifulSoup
+
+        soup = BeautifulSoup(html, "lxml")
+        body = soup.select_one(self.source["content_selector"])
+        if body is None:
+            return {}
+        for br in body.find_all("br"):
+            br.replace_with("\n")
+        blocks = [b.get_text(" ", strip=True) for b in body.find_all(["p", "h1", "h2", "h3", "h4", "li", "blockquote"])]
+        text = "\n".join(b for b in blocks if b) or body.get_text("\n", strip=True)
+        title_el = soup.select_one(self.source.get("title_selector", "h1"))
+        date = None
+        for script in soup.find_all("script", type="application/ld+json"):
+            try:
+                meta = json.loads(script.string or "")
+            except ValueError:
+                continue
+            if isinstance(meta, dict) and meta.get("datePublished"):
+                date = meta["datePublished"][:10]
+                break
+        return {"text": text, "title": title_el.get_text(" ", strip=True) if title_el else "", "date": date}
 
     def run(self) -> dict:
         self._load_robots()

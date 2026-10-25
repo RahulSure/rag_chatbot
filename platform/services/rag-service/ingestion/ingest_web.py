@@ -10,6 +10,7 @@ Usage (from platform/services/rag-service):
     python -m ingestion.ingest_web --sites gurugamya shreedham108
     python -m ingestion.ingest_web --dry-run       # counts only, no DB writes
     python -m ingestion.ingest_web --remove taajmindpower   # delete a site's chunks
+    python -m ingestion.ingest_web --sites reachlotus --incremental   # embed only pages not stored yet
 """
 
 from __future__ import annotations
@@ -52,6 +53,21 @@ def _fallback_title(page: dict) -> str:
     return from_url
 
 
+_QUOTED_CAPS = re.compile(r"[\"“‘'][A-Z]{3,}(?:[ ,]+[A-Z]{2,})+[\"”’']")
+
+
+def _teacher_topic(title: str, text: str) -> str:
+    """Naran S. Balakumar's posts: switch words, Bach flower remedies or Reiki."""
+    blob = f"{title}\n{text}".lower()
+    if "switch word" in blob or "chanting" in title.lower() or _QUOTED_CAPS.search(text):
+        return "switch_words"
+    if "bach" in blob or "flower remed" in blob:
+        return "bach_flowers"
+    if "reiki" in blob:
+        return "reiki"
+    return "spiritual_teachings"
+
+
 def load_site_documents(slug: str):
     """Load one site's pages as LlamaIndex Documents, skipping duplicate texts."""
     from llama_index.core import Document
@@ -68,6 +84,7 @@ def load_site_documents(slug: str):
             continue
         seen_hashes.add(page["content_hash"])
         title = page["title"] if page["title"] and page["title"] not in generic_titles else _fallback_title(page)
+        teacher = SOURCES_BY_SLUG[slug].get("teacher")
         doc = Document(
             text=page["text"],
             metadata={
@@ -79,8 +96,10 @@ def load_site_documents(slug: str):
                 "source_type": "web",
                 "source_site": slug,
                 "source_url": page["url"],
-                "topic": _infer_topic(title),
+                "topic": _teacher_topic(title, page["text"]) if teacher else _infer_topic(title),
                 "fetched_at": page["fetched_at"],
+                # Named in the answer's context so Sadhak can credit the teacher.
+                **({"teacher": teacher} if teacher else {}),
             },
         )
         doc.excluded_embed_metadata_keys = _HIDDEN_FROM_EMBED
@@ -122,6 +141,7 @@ def store_articles(slug: str, documents) -> int:
                 "title": d.metadata["chapter_title"],
                 "language": d.metadata["language"],
                 "text": d.text,
+                "teacher": d.metadata.get("teacher"),
                 "mantra_count": len(mantra_spans(d.text)),  # lets mantra questions prefer articles with one
             },
             upsert=True,
@@ -144,11 +164,18 @@ def sync_titles(slug: str) -> int:
     return _collection().bulk_write(ops, ordered=False).modified_count if ops else 0
 
 
-def ingest_site(slug: str, dry_run: bool = False, articles_only: bool = False) -> None:
+def ingest_site(slug: str, dry_run: bool = False, articles_only: bool = False, incremental: bool = False) -> None:
     documents, page_count = load_site_documents(slug)
     if not documents:
         print(f"[ingest_web:{slug}] no crawled pages in {DATA_DIR / slug} - run the crawler first")
         return
+    if incremental:
+        # Embedding is the slow part: keep what is stored and add only pages it has not seen.
+        stored_urls = set(_collection().distinct("metadata.source_url", {"metadata.source_site": slug}))
+        documents = [d for d in documents if d.metadata["source_url"] not in stored_urls]
+        print(f"[ingest_web:{slug}] incremental: {len(stored_urls)} pages already stored, {len(documents)} new")
+        if not documents:
+            return
     if articles_only:
         stored = store_articles(slug, documents)
         print(f"[ingest_web:{slug}] stored {stored} full articles, updated titles on {sync_titles(slug)} chunks")
@@ -169,9 +196,10 @@ def ingest_site(slug: str, dry_run: bool = False, articles_only: bool = False) -
     Settings.embed_batch_size = 32
     Settings.llm = None
 
-    removed = remove_site(slug)
-    if removed:
-        print(f"[ingest_web:{slug}] removed {removed} previous chunks")
+    if not incremental:
+        removed = remove_site(slug)
+        if removed:
+            print(f"[ingest_web:{slug}] removed {removed} previous chunks")
     VectorStoreIndex(nodes, storage_context=StorageContext.from_defaults(vector_store=get_vector_store()), show_progress=True)
     print(f"[ingest_web:{slug}] stored {len(nodes)} chunks and {store_articles(slug, documents)} full articles")
 
@@ -182,6 +210,7 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Count pages and chunks without writing")
     parser.add_argument("--remove", metavar="SITE", choices=list(SOURCES_BY_SLUG), help="Delete a site's chunks and exit")
     parser.add_argument("--articles-only", action="store_true", help="Only (re)store full articles; no embedding")
+    parser.add_argument("--incremental", action="store_true", help="Keep stored chunks; embed only pages not stored yet")
     args = parser.parse_args()
 
     if args.remove:
@@ -190,7 +219,7 @@ def main() -> None:
 
     slugs = args.sites or sorted(p.name for p in DATA_DIR.iterdir() if p.is_dir() and p.name in SOURCES_BY_SLUG)
     for slug in slugs:
-        ingest_site(slug, dry_run=args.dry_run, articles_only=args.articles_only)
+        ingest_site(slug, dry_run=args.dry_run, articles_only=args.articles_only, incremental=args.incremental)
 
 
 if __name__ == "__main__":

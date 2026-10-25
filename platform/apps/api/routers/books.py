@@ -47,6 +47,16 @@ SPIRITUAL_TOPICS = [
     TopicResponse(slug="siddhashram", label="Siddhashram", label_hi="सिद्धाश्रम",
                   description="The mystical realm of perfected masters",
                   icon="🏔"),
+    # Naran S. Balakumar's teaching.
+    TopicResponse(slug="switch_words", label="Switch Words", label_hi="स्विच वर्ड्स",
+                  description="Naran S. Balakumar's short chanting words for everyday problems",
+                  icon=""),
+    TopicResponse(slug="bach_flowers", label="Bach Flower Remedies", label_hi="बाख फ्लावर उपचार",
+                  description="Gentle flower remedies for the emotions, as taught by Naran S. Balakumar",
+                  icon=""),
+    TopicResponse(slug="reiki", label="Reiki", label_hi="रेकी",
+                  description="Healing through touch and intention, from Naran S. Balakumar's workshops",
+                  icon=""),
 ]
 
 

@@ -39,6 +39,7 @@ export const TOOL_GROUPS: { title: Key; tools: Tool[] }[] = [
       { href: "/numerology", title: "v4.toolNumerology", desc: "v4.toolNumerologyDesc" },
       { href: "/tarot", title: "v4.toolTarot", desc: "v4.toolTarotDesc" },
       { href: "/palm", title: "palm.label", desc: "tools.palmDesc" },
+      { href: "/switch-words", title: "sw.label", desc: "tools.swDesc" },
     ],
   },
   {

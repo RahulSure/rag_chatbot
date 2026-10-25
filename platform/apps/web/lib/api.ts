@@ -511,3 +511,16 @@ export async function getCalendar(year: number, month: number, place: Place): Pr
   if (!res.ok) return null;
   return res.json();
 }
+
+export interface SwitchWordResult {
+  title: string;
+  topic: string | null;
+  switch_words: string[];
+  excerpt: string;
+}
+
+export async function findSwitchWords(q: string, limit = 8): Promise<SwitchWordResult[]> {
+  const res = await fetch(`${API_BASE}/switchwords?${new URLSearchParams({ q, limit: String(limit) })}`);
+  if (!res.ok) return [];
+  return res.json();
+}
