@@ -228,6 +228,30 @@ export const en = {
   "v4.toolNumerologyDesc": "Moolank, bhagyank, name number and your Lo Shu grid, with remedies.",
   "v4.toolTarot": "Tarot",
   "v4.toolTarotDesc": "A card for the day and a three-card spread from the classic deck.",
+
+  // tarot
+  "nav.tools": "Free tools",
+  "tarot.label": "Free tarot",
+  "tarot.title": "Tarot, read as a mirror",
+  "tarot.lead": "Draw a card for the day, or three for what is on your mind. Each card is read as a mirror for reflection, not a fixed fate.",
+  "tarot.tabDay": "Card of the day",
+  "tarot.tabSpread": "Three cards",
+  "tarot.pickOne": "Take a slow breath, think of the day ahead, and choose one card.",
+  "tarot.pickThree": "Hold your question in mind and choose three cards.",
+  "tarot.question": "What is on your mind? (optional)",
+  "tarot.questionHint": "For example: my work, a relationship, my sadhana",
+  "tarot.chosen": "chosen",
+  "tarot.past": "Past",
+  "tarot.present": "Present",
+  "tarot.ahead": "Path ahead",
+  "tarot.today": "Your card for today",
+  "tarot.comeBack": "Your card stays the same all day. Come back tomorrow for a new one.",
+  "tarot.askCard": "Ask Sadhak about this card",
+  "tarot.askSpread": "Ask Sadhak about this reading",
+  "tarot.again": "Shuffle and draw again",
+  "tarot.cardBack": "Face-down card",
+  "tarot.note": "Tarot is a mirror for reflection, not a fixed fate. Your choices and your sadhana shape what comes.",
+  "tarot.deck": "Cards from the Rider–Waite–Smith deck, drawn by Pamela Colman Smith in 1909.",
 } as const;
 
 export type Key = keyof typeof en;

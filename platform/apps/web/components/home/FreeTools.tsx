@@ -56,7 +56,7 @@ const TOOLS: { id: string; title: Key; desc: Key; href?: string }[] = [
   { id: "dasha", title: "v4.toolDasha", desc: "v4.toolDashaDesc", href: "/kundli" },
   { id: "sadeSati", title: "v4.toolSadeSati", desc: "v4.toolSadeSatiDesc", href: "/kundli" },
   { id: "numerology", title: "v4.toolNumerology", desc: "v4.toolNumerologyDesc", href: "/numerology" },
-  { id: "tarot", title: "v4.toolTarot", desc: "v4.toolTarotDesc" },
+  { id: "tarot", title: "v4.toolTarot", desc: "v4.toolTarotDesc", href: "/tarot" },
   { id: "matching", title: "v4.toolMatching", desc: "v4.toolMatchingDesc" },
   { id: "mangal", title: "v4.toolMangal", desc: "v4.toolMangalDesc" },
 ];

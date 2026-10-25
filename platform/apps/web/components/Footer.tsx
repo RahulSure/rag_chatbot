@@ -9,6 +9,7 @@ const EXPLORE: { href: string; label: Key }[] = [
   { href: "/chat", label: "nav.chat" },
   { href: "/kundli", label: "nav.kundli" },
   { href: "/numerology", label: "num.nav" },
+  { href: "/tarot", label: "v4.toolTarot" },
   { href: "/#today", label: "v4.toolPanchang" },
   { href: "/teachings", label: "nav.explore" },
 ];
@@ -24,6 +25,7 @@ const LEARN: { href: string; label: Key }[] = [
 const CREDITS = [
   { title: "Everest, Himalayas", by: "Vyacheslav Argenberg", licence: "CC BY 4.0", licenceUrl: "https://creativecommons.org/licenses/by/4.0", url: "https://commons.wikimedia.org/wiki/File:Everest,_Himalayas.jpg", via: "Wikimedia Commons" },
   { title: "Mystical Diagram (Yantra), India, 19th century", by: "", licence: "public domain", licenceUrl: "https://creativecommons.org/publicdomain/zero/1.0/", url: "https://www.artic.edu/artworks/144939", via: "Art Institute of Chicago" },
+  { title: "Rider–Waite–Smith tarot deck", by: "Pamela Colman Smith (1909)", licence: "public domain", licenceUrl: "https://creativecommons.org/publicdomain/mark/1.0/", url: "https://commons.wikimedia.org/wiki/File:RWS_Tarot_00_Fool.jpg", via: "Wikimedia Commons" },
   // The video and its poster frame.
   { title: "Ganga Aarti in Haridwar", by: "Bhaiyaji Smile 123", licence: "CC BY-SA 4.0", licenceUrl: "https://creativecommons.org/licenses/by-sa/4.0", url: "https://commons.wikimedia.org/wiki/File:Ganga_Aarti_in_Haridwar.webm", via: "Wikimedia Commons" },
 ];

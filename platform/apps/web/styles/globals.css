@@ -187,6 +187,30 @@ select:focus-visible {
     border-color: rgb(var(--accent));
   }
 
+  /* Tarot card that turns over: back face first, front face rotated behind it */
+  .tarot-flip {
+    perspective: 1200px;
+  }
+  .tarot-flip-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .tarot-flip.is-open .tarot-flip-inner {
+    transform: rotateY(180deg);
+  }
+  .tarot-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .tarot-face-front {
+    transform: rotateY(180deg);
+  }
+
   /* Ornamental divider: two hairlines and a dot */
   .gold-divider {
     height: 1px;

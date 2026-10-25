@@ -2,33 +2,61 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useLanguage, type Key } from "@/lib/i18n";
 
-const NAV_LINKS: { href: string; label: Key }[] = [
-  { href: "/chat", label: "nav.chat" },
+type NavLink = { href: string; label: Key };
+
+const TOOL_LINKS: NavLink[] = [
   { href: "/kundli", label: "nav.kundli" },
-  { href: "/numerology", label: "num.nav" },
+  { href: "/numerology", label: "v4.toolNumerology" },
+  { href: "/tarot", label: "v4.toolTarot" },
   { href: "/#today", label: "v4.toolPanchang" },
+];
+
+const AFTER_TOOLS: NavLink[] = [
   { href: "/teachings", label: "nav.explore" },
   { href: "/blog", label: "nav.articles" },
 ];
 
-const MORE_LINKS: { href: string; label: Key }[] = [
+const MORE_LINKS: NavLink[] = [
   { href: "/books", label: "nav.library" },
   { href: "/guru", label: "nav.about" },
   { href: "/search", label: "nav.search" },
 ];
 
-/** Spaced gold wordmark, a few quiet links, one outlined action. */
+/** Spaced gold wordmark, a few quiet links with the free tools in one menu, one outlined action. */
 export function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const toolsRef = useRef<HTMLDivElement>(null);
   const { lang, setLang, t } = useLanguage();
 
   const isActive = (href: string) => !href.includes("#") && pathname.startsWith(href);
+  const linkClass = (href: string) =>
+    `text-sm transition-colors hover:text-gold ${isActive(href) ? "text-gold" : "text-cosmic-300"}`;
+
+  // Close the menus on navigation, on Escape and on a click outside the tools menu.
+  useEffect(() => {
+    setToolsOpen(false);
+    setOpen(false);
+  }, [pathname]);
+  useEffect(() => {
+    if (!toolsOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!toolsRef.current?.contains(e.target as Node)) setToolsOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setToolsOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [toolsOpen]);
 
   return (
     <nav aria-label="Primary" className="sticky top-0 z-50 border-b border-line bg-background/85 backdrop-blur-md">
@@ -38,13 +66,43 @@ export function Navbar() {
         </Link>
 
         <div className="hidden items-center gap-7 lg:flex">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              aria-current={isActive(link.href) ? "page" : undefined}
-              className={`text-sm transition-colors hover:text-gold ${isActive(link.href) ? "text-gold" : "text-cosmic-300"}`}
+          <Link href="/chat" aria-current={isActive("/chat") ? "page" : undefined} className={linkClass("/chat")}>
+            {t("nav.chat")}
+          </Link>
+
+          <div ref={toolsRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setToolsOpen((v) => !v)}
+              aria-expanded={toolsOpen}
+              aria-controls="tools-menu"
+              className={`inline-flex items-center gap-1 text-sm transition-colors hover:text-gold ${
+                TOOL_LINKS.some((l) => isActive(l.href)) ? "text-gold" : "text-cosmic-300"}`}
             >
+              {t("nav.tools")}
+              <ChevronDown size={14} aria-hidden="true" className={`transition-transform ${toolsOpen ? "rotate-180" : ""}`} />
+            </button>
+            {toolsOpen && (
+              <ul id="tools-menu" className="absolute left-0 top-full mt-3 w-60 rounded-xl border border-line bg-surface p-2 shadow-cosmic">
+                {TOOL_LINKS.map((l) => (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      onClick={() => setToolsOpen(false)}
+                      aria-current={isActive(l.href) ? "page" : undefined}
+                      className={`block rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-gold/10 ${
+                        isActive(l.href) ? "text-gold" : "text-cosmic-200"}`}
+                    >
+                      {t(l.label)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {AFTER_TOOLS.map((link) => (
+            <Link key={link.href} href={link.href} aria-current={isActive(link.href) ? "page" : undefined} className={linkClass(link.href)}>
               {t(link.label)}
             </Link>
           ))}
@@ -77,7 +135,17 @@ export function Navbar() {
 
       {open && (
         <div className="border-t border-line bg-background px-4 pb-5 pt-2 lg:hidden">
-          {[...NAV_LINKS, ...MORE_LINKS].map((link) => (
+          <Link href="/chat" onClick={() => setOpen(false)} className="block border-b border-line py-3.5 text-lg text-foreground">
+            {t("nav.chat")}
+          </Link>
+          <p className="label-caps pb-1 pt-4 text-[0.68rem]">{t("nav.tools")}</p>
+          {TOOL_LINKS.map((link) => (
+            <Link key={link.href} href={link.href} onClick={() => setOpen(false)}
+                  className="block border-b border-line py-3.5 pl-3 text-lg text-foreground">
+              {t(link.label)}
+            </Link>
+          ))}
+          {[...AFTER_TOOLS, ...MORE_LINKS].map((link) => (
             <Link
               key={link.href}
               href={link.href}

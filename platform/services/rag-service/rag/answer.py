@@ -423,7 +423,12 @@ _SOURCE_REFS = re.compile(
 )
 
 
-_AS_GIVEN = re.compile(r"\s*\(as (?:given|written|stated)(?: in the (?:source|article|text))?\)", re.I)
+# Asides that echo the prompt's copying rule: "(as given)", "(copy exactly as taught)" …
+_AS_GIVEN = re.compile(
+    r"\s*\((?:as (?:given|written|stated)(?: in the (?:source|article|text))?"
+    r"|(?:copy|copied|quoted|written|given) exactly(?: as (?:taught|given|written))?)\)",
+    re.I,
+)
 _RULE_LINE = re.compile(r"^\s*(?:-{3,}|\*{3,}|_{3,})\s*$\n?", re.M)
 
 
