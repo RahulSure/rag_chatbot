@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, MessageCircle, Pencil } from "lucide-react";
 import { useLanguage, type Key } from "@/lib/i18n";
 import {
-  LOSHU_LAYOUT, NUMBERS, PERSONAL_YEAR, PLANES, pick, readNumbers, type Reading, type Source,
+  DIRECTION_NAMES, LOSHU_LAYOUT, NUMBERS, PERSONAL_YEAR, PLANES, kua, pick, readNumbers, type Reading, type Source,
 } from "@/lib/numerology";
 
 // Per-viewer convenience only: the reading is worked out here and never sent anywhere.
@@ -63,6 +63,7 @@ export function NumerologyApp() {
   const [date, setDate] = useState("");
   const [details, setDetails] = useState<Details | null>(null);
   const [reading, setReading] = useState<Reading | null>(null);
+  const [gender, setGender] = useState<"male" | "female" | null>(null);
 
   const show = (d: Details) => {
     setDetails(d);
@@ -298,6 +299,49 @@ export function NumerologyApp() {
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-cosmic-400">{t("num.repeatedNote")}</p>
         </section>
       )}
+
+      <section className="rounded-2xl border border-line bg-surface p-6 sm:p-8" aria-labelledby="kua-heading">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 id="kua-heading" className="font-serif text-3xl text-foreground">{t("kua.title")}</h2>
+            <p className="mt-1 text-sm text-cosmic-400">{t("kua.lead")}</p>
+          </div>
+          <div className="flex rounded-full border border-line p-1">
+            {(["male", "female"] as const).map((g) => (
+              <button key={g} type="button" onClick={() => setGender(g)} aria-pressed={gender === g}
+                      className={`rounded-full px-4 py-1.5 text-sm ${gender === g ? "bg-gold text-background" : "text-cosmic-300 hover:text-foreground"}`}>
+                {t(g === "male" ? "kua.male" : "kua.female")}
+              </button>
+            ))}
+          </div>
+        </div>
+        {gender && (() => {
+          const k = kua(details.date, gender);
+          const labels = [t("kua.success"), t("kua.health"), t("kua.love"), t("kua.growth")];
+          return (
+            <div className="mt-6 grid gap-6 md:grid-cols-[auto_1fr_1fr] md:items-start">
+              <div className="flex items-baseline gap-3">
+                <span className="font-serif text-6xl leading-none lining-nums text-gold">{k.number}</span>
+                <span className="text-sm text-cosmic-400">{t(k.group === "east" ? "kua.east" : "kua.west")} {t("kua.group")}</span>
+              </div>
+              <div>
+                <p className="label-caps text-[0.68rem]">{t("kua.good")}</p>
+                <ul className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                  {k.good.map((d, i) => (
+                    <li key={d} className="rounded-lg border border-gold/40 px-3 py-2"><span className="text-cosmic-500">{labels[i]}</span><br /><span className="text-foreground">{pick(DIRECTION_NAMES[d], lang)}</span></li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="label-caps text-[0.68rem]">{t("kua.bad")}</p>
+                <ul className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                  {k.avoid.map((d) => <li key={d} className="rounded-lg border border-line px-3 py-2 text-cosmic-300">{pick(DIRECTION_NAMES[d], lang)}</li>)}
+                </ul>
+              </div>
+            </div>
+          );
+        })()}
+      </section>
 
       <div className="flex flex-col items-center gap-3 border-t border-line pt-10 text-center">
         <Link href={`/chat?q=${encodeURIComponent(askAll)}`} className="btn-gold">

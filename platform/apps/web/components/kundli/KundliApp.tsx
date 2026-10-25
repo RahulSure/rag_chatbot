@@ -76,6 +76,8 @@ export function KundliApp() {
   };
 
   useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get("tab");
+    if (wanted && TABS.some((tb) => tb.id === wanted)) setTab(wanted);
     const saved = loadSaved();
     if (saved) {
       setDetails(saved);

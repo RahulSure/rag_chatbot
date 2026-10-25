@@ -239,3 +239,35 @@ export const PERSONAL_YEAR: Record<number, Pair> = {
 };
 
 export const pick = (pair: Pair, lang: Lang) => (lang === "hi" ? pair[1] : pair[0]);
+
+// ── Kua number (feng shui) ────────────────────────────────────────────────
+
+export type Direction = "N" | "NE" | "E" | "SE" | "S" | "SW" | "W" | "NW";
+const ALL_DIRECTIONS: Direction[] = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+
+// Good directions in order: success, health, love, growth.
+const KUA_GOOD: Record<number, Direction[]> = {
+  1: ["SE", "E", "S", "N"], 2: ["NE", "W", "NW", "SW"], 3: ["S", "N", "SE", "E"], 4: ["N", "S", "E", "SE"],
+  6: ["W", "NE", "SW", "NW"], 7: ["NW", "SW", "NE", "W"], 8: ["SW", "NW", "W", "NE"], 9: ["E", "SE", "N", "S"],
+};
+
+export const DIRECTION_NAMES: Record<Direction, Pair> = {
+  N: ["North", "उत्तर"], NE: ["North-east", "उत्तर-पूर्व"], E: ["East", "पूर्व"], SE: ["South-east", "दक्षिण-पूर्व"],
+  S: ["South", "दक्षिण"], SW: ["South-west", "दक्षिण-पश्चिम"], W: ["West", "पश्चिम"], NW: ["North-west", "उत्तर-पश्चिम"],
+};
+
+/** Kua from the birth year; the feng shui year turns around 4 February. */
+export function kua(isoDate: string, gender: "male" | "female") {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  const year = m < 2 || (m === 2 && d < 4) ? y - 1 : y;
+  const s = reduceChain(digitSum(String(year))).at(-1)!;
+  let k = gender === "male" ? reduceChain(11 - s).at(-1)! : reduceChain(s + 4).at(-1)!;
+  if (k === 5) k = gender === "male" ? 2 : 8;
+  const good = KUA_GOOD[k];
+  return {
+    number: k,
+    group: [1, 3, 4, 9].includes(k) ? ("east" as const) : ("west" as const),
+    good,
+    avoid: ALL_DIRECTIONS.filter((x) => !good.includes(x)),
+  };
+}

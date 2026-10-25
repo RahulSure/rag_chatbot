@@ -3,19 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useLanguage, type Key } from "@/lib/i18n";
+import { TOOL_GROUPS } from "@/lib/tools";
 
 type NavLink = { href: string; label: Key };
-
-const TOOL_LINKS: NavLink[] = [
-  { href: "/kundli", label: "nav.kundli" },
-  { href: "/numerology", label: "v4.toolNumerology" },
-  { href: "/tarot", label: "v4.toolTarot" },
-  { href: "/muhurat", label: "mu.nav" },
-  { href: "/#today", label: "v4.toolPanchang" },
-];
 
 const AFTER_TOOLS: NavLink[] = [
   { href: "/teachings", label: "nav.explore" },
@@ -28,7 +21,10 @@ const MORE_LINKS: NavLink[] = [
   { href: "/search", label: "nav.search" },
 ];
 
-/** Spaced gold wordmark, a few quiet links with the free tools in one menu, one outlined action. */
+// The tools that open the menu; the menu itself lists every one of them.
+const TOOL_PATHS = TOOL_GROUPS.flatMap((g) => g.tools.map((t) => t.href.split(/[?#]/)[0])).filter((p) => p !== "/");
+
+/** Spaced gold wordmark, a few quiet links with every free tool in one menu, one outlined action. */
 export function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -36,9 +32,10 @@ export function Navbar() {
   const toolsRef = useRef<HTMLDivElement>(null);
   const { lang, setLang, t } = useLanguage();
 
-  const isActive = (href: string) => !href.includes("#") && pathname.startsWith(href);
+  const isActive = (href: string) => !href.includes("#") && href !== "/chat" ? pathname.startsWith(href.split("?")[0]) : pathname === href;
   const linkClass = (href: string) =>
     `text-sm transition-colors hover:text-gold ${isActive(href) ? "text-gold" : "text-cosmic-300"}`;
+  const inTools = TOOL_PATHS.some((p) => p !== "/chat" && pathname.startsWith(p)) || pathname === "/tools";
 
   // Close the menus on navigation, on Escape and on a click outside the tools menu.
   useEffect(() => {
@@ -67,38 +64,48 @@ export function Navbar() {
         </Link>
 
         <div className="hidden items-center gap-7 lg:flex">
-          <Link href="/chat" aria-current={isActive("/chat") ? "page" : undefined} className={linkClass("/chat")}>
+          <Link href="/chat" aria-current={pathname === "/chat" ? "page" : undefined} className={linkClass("/chat")}>
             {t("nav.chat")}
           </Link>
 
-          <div ref={toolsRef} className="relative">
+          <div ref={toolsRef}>
             <button
               type="button"
               onClick={() => setToolsOpen((v) => !v)}
               aria-expanded={toolsOpen}
               aria-controls="tools-menu"
-              className={`inline-flex items-center gap-1 text-sm transition-colors hover:text-gold ${
-                TOOL_LINKS.some((l) => isActive(l.href)) ? "text-gold" : "text-cosmic-300"}`}
+              className={`inline-flex items-center gap-1 text-sm transition-colors hover:text-gold ${inTools ? "text-gold" : "text-cosmic-300"}`}
             >
               {t("nav.tools")}
               <ChevronDown size={14} aria-hidden="true" className={`transition-transform ${toolsOpen ? "rotate-180" : ""}`} />
             </button>
             {toolsOpen && (
-              <ul id="tools-menu" className="absolute left-0 top-full mt-3 w-60 rounded-xl border border-line bg-surface p-2 shadow-cosmic">
-                {TOOL_LINKS.map((l) => (
-                  <li key={l.href}>
-                    <Link
-                      href={l.href}
-                      onClick={() => setToolsOpen(false)}
-                      aria-current={isActive(l.href) ? "page" : undefined}
-                      className={`block rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-gold/10 ${
-                        isActive(l.href) ? "text-gold" : "text-cosmic-200"}`}
-                    >
-                      {t(l.label)}
+              <div id="tools-menu" className="absolute inset-x-0 top-full border-b border-line bg-surface shadow-cosmic">
+                <div className="mx-auto grid max-w-6xl grid-cols-4 gap-8 px-4 py-8">
+                  {TOOL_GROUPS.map((g) => (
+                    <div key={g.title}>
+                      <p className="label-caps text-[0.68rem]">{t(g.title)}</p>
+                      <ul className="mt-3 space-y-0.5">
+                        {g.tools.map((tool) => (
+                          <li key={tool.href}>
+                            <Link href={tool.href} onClick={() => setToolsOpen(false)}
+                                  className="-mx-2 block rounded-md px-2 py-1.5 text-sm text-cosmic-200 transition-colors hover:bg-gold/10 hover:text-foreground">
+                              {t(tool.title)}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-line">
+                  <div className="mx-auto max-w-6xl px-4 py-3">
+                    <Link href="/tools" onClick={() => setToolsOpen(false)} className="inline-flex items-center gap-1.5 text-sm text-gold hover:underline">
+                      {t("tools.all")} <ArrowRight size={14} aria-hidden="true" />
                     </Link>
-                  </li>
-                ))}
-              </ul>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 
@@ -135,16 +142,21 @@ export function Navbar() {
       </div>
 
       {open && (
-        <div className="border-t border-line bg-background px-4 pb-5 pt-2 lg:hidden">
+        <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-line bg-background px-4 pb-6 pt-2 lg:hidden">
           <Link href="/chat" onClick={() => setOpen(false)} className="block border-b border-line py-3.5 text-lg text-foreground">
             {t("nav.chat")}
           </Link>
-          <p className="label-caps pb-1 pt-4 text-[0.68rem]">{t("nav.tools")}</p>
-          {TOOL_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} onClick={() => setOpen(false)}
-                  className="block border-b border-line py-3.5 pl-3 text-lg text-foreground">
-              {t(link.label)}
-            </Link>
+          {TOOL_GROUPS.map((g) => (
+            <div key={g.title} className="border-b border-line pb-2">
+              <p className="label-caps pb-1 pt-4 text-[0.68rem]">{t(g.title)}</p>
+              <div className="grid grid-cols-2 gap-x-4">
+                {g.tools.filter((tool) => tool.href !== "/chat").map((tool) => (
+                  <Link key={tool.href} href={tool.href} onClick={() => setOpen(false)} className="block py-2 text-base text-foreground">
+                    {t(tool.title)}
+                  </Link>
+                ))}
+              </div>
+            </div>
           ))}
           {[...AFTER_TOOLS, ...MORE_LINKS].map((link) => (
             <Link

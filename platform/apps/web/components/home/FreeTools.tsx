@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { useT, type Key } from "@/lib/i18n";
 
 // Small line drawings in the chart's own language, one per tool.
@@ -11,10 +12,10 @@ const GLYPHS: Record<string, React.ReactNode> = {
       <path d="M4 4 36 36M36 4 4 36M20 4 36 20 20 36 4 20Z" />
     </>
   ),
-  panchang: (
+  day: (
     <>
-      <circle cx="20" cy="20" r="15" />
-      <path d="M20 5a15 15 0 0 1 0 30a9 15 0 0 0 0-30Z" fill="currentColor" stroke="none" />
+      <circle cx="20" cy="20" r="7" />
+      <path d="M20 4v5M20 31v5M4 20h5M31 20h5M8.7 8.7l3.5 3.5M27.8 27.8l3.5 3.5M8.7 31.3l3.5-3.5M27.8 12.2l3.5-3.5" />
     </>
   ),
   muhurat: (
@@ -23,10 +24,10 @@ const GLYPHS: Record<string, React.ReactNode> = {
       <path d="M20 10v5M9 15l3 3M31 15l-3 3" />
     </>
   ),
-  sadeSati: (
+  matching: (
     <>
-      <circle cx="20" cy="20" r="6" />
-      <ellipse cx="20" cy="20" rx="16" ry="6" transform="rotate(-20 20 20)" />
+      <path d="M14 6 26 18 14 30 2 18Z" />
+      <path d="M26 10 38 22 26 34 14 22Z" />
     </>
   ),
   numerology: (
@@ -41,29 +42,34 @@ const GLYPHS: Record<string, React.ReactNode> = {
       <path d="M20 13l1.8 4.2 4.2 1.8-4.2 1.8L20 25l-1.8-4.2L14 19l4.2-1.8Z" />
     </>
   ),
-  matching: (
+  japa: (
     <>
-      <path d="M14 6 26 18 14 30 2 18Z" />
-      <path d="M26 10 38 22 26 34 14 22Z" />
+      {Array.from({ length: 12 }, (_, i) => {
+        const a = (i / 12) * 2 * Math.PI;
+        return <circle key={i} cx={Math.round((20 + 13 * Math.sin(a)) * 10) / 10} cy={Math.round((22 - 13 * Math.cos(a)) * 10) / 10} r="2" />;
+      })}
+      <circle cx="20" cy="5" r="2.6" fill="currentColor" />
     </>
   ),
-  mangal: (
+  calendar: (
     <>
-      <circle cx="17" cy="23" r="11" />
-      <path d="M25 15 35 5M27 5h8v8" />
+      <rect x="4" y="7" width="32" height="29" rx="2" />
+      <path d="M4 15h32M12 3v7M28 3v7" />
+      <circle cx="26" cy="26" r="4.5" />
+      <path d="M26 21.5a4.5 4.5 0 0 1 0 9a3 4.5 0 0 0 0-9Z" fill="currentColor" stroke="none" />
     </>
   ),
 };
 
-const TOOLS: { id: string; title: Key; desc: Key; href?: string }[] = [
+const TOOLS: { id: string; title: Key; desc: Key; href: string }[] = [
   { id: "kundli", title: "v4.toolKundli", desc: "v4.toolKundliDesc", href: "/kundli" },
-  { id: "panchang", title: "v4.toolPanchang", desc: "v4.toolPanchangDesc", href: "/#today" },
+  { id: "day", title: "day.label", desc: "tools.dayDesc", href: "/my-day" },
   { id: "muhurat", title: "mu.nav", desc: "mu.navDesc", href: "/muhurat" },
-  { id: "sadeSati", title: "v4.toolSadeSati", desc: "v4.toolSadeSatiDesc", href: "/kundli" },
+  { id: "matching", title: "v4.toolMatching", desc: "tools.matchingDesc", href: "/matching" },
   { id: "numerology", title: "v4.toolNumerology", desc: "v4.toolNumerologyDesc", href: "/numerology" },
   { id: "tarot", title: "v4.toolTarot", desc: "v4.toolTarotDesc", href: "/tarot" },
-  { id: "matching", title: "v4.toolMatching", desc: "v4.toolMatchingDesc" },
-  { id: "mangal", title: "v4.toolMangal", desc: "v4.toolMangalDesc" },
+  { id: "japa", title: "tools.japaShort", desc: "tools.japaDesc", href: "/japa" },
+  { id: "calendar", title: "cal.label", desc: "tools.calDesc", href: "/calendar" },
 ];
 
 export function FreeTools() {
@@ -75,35 +81,24 @@ export function FreeTools() {
           {t("v4.toolsTitle")} <em className="text-gold">{t("v4.toolsAccent")}</em>
         </h2>
         <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {TOOLS.map((tool) => {
-            const body = (
-              <>
+          {TOOLS.map((tool) => (
+            <li key={tool.id}>
+              <Link href={tool.href} className="cosmic-card flex h-full flex-col p-6 sm:p-7">
                 <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="currentColor"
                      strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round" className="text-gold">
                   {GLYPHS[tool.id]}
                 </svg>
-                <span className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
-                  <span className="font-serif text-2xl text-foreground">{t(tool.title)}</span>
-                  {!tool.href && (
-                    <span className="rounded-full border border-line px-2.5 py-0.5 text-[0.7rem] uppercase tracking-wider text-cosmic-500">
-                      {t("v4.comingSoon")}
-                    </span>
-                  )}
-                </span>
+                <span className="mt-5 font-serif text-2xl text-foreground">{t(tool.title)}</span>
                 <span className="mt-2 leading-relaxed text-cosmic-400">{t(tool.desc)}</span>
-              </>
-            );
-            return (
-              <li key={tool.id}>
-                {tool.href ? (
-                  <Link href={tool.href} className="cosmic-card flex h-full flex-col p-6 sm:p-7">{body}</Link>
-                ) : (
-                  <div className="cosmic-card flex h-full flex-col p-6 opacity-70 sm:p-7">{body}</div>
-                )}
-              </li>
-            );
-          })}
+              </Link>
+            </li>
+          ))}
         </ul>
+        <p className="mt-10 text-center">
+          <Link href="/tools" className="btn-ghost">
+            {t("tools.all")} <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </p>
       </div>
     </section>
   );

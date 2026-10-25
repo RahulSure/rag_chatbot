@@ -8,15 +8,17 @@ import { useT, type Key } from "@/lib/i18n";
 const EXPLORE: { href: string; label: Key }[] = [
   { href: "/chat", label: "nav.chat" },
   { href: "/kundli", label: "nav.kundli" },
-  { href: "/numerology", label: "num.nav" },
-  { href: "/tarot", label: "v4.toolTarot" },
+  { href: "/matching", label: "v4.toolMatching" },
+  { href: "/my-day", label: "day.label" },
   { href: "/muhurat", label: "mu.nav" },
-  { href: "/#today", label: "v4.toolPanchang" },
-  { href: "/teachings", label: "nav.explore" },
+  { href: "/calendar", label: "cal.label" },
+  { href: "/tools", label: "tools.all" },
 ];
 
 const LEARN: { href: string; label: Key }[] = [
+  { href: "/teachings", label: "nav.explore" },
   { href: "/blog", label: "nav.articles" },
+  { href: "/nakshatra", label: "nak.label" },
   { href: "/books", label: "nav.library" },
   { href: "/guru", label: "nav.about" },
   { href: "/search", label: "nav.search" },
