@@ -33,12 +33,11 @@ export default async function TeachingsPage() {
               href={`/teachings/${topic.slug}`}
               className="cosmic-card p-8 flex items-start gap-5 group"
             >
-              <div className="text-4xl flex-shrink-0" aria-hidden="true">{topic.icon || "✦"}</div>
               <div className="flex-1">
+                <p lang="hi" className="font-serif text-3xl text-gold mb-3">{topic.label_hi}</p>
                 <h2 className="font-serif text-2xl text-foreground group-hover:text-gold transition-colors mb-1">
                   {topic.label}
                 </h2>
-                <p className="text-cosmic-500 text-sm font-devanagari mb-3">{topic.label_hi}</p>
                 {topic.description && (
                   <p className="text-cosmic-400 text-sm leading-relaxed mb-4">{topic.description}</p>
                 )}

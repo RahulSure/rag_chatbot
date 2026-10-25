@@ -70,7 +70,6 @@ export default async function TopicPage({ params }: Props) {
 
         {/* Header */}
         <div className="flex items-center gap-6 mb-12">
-          <div className="text-6xl" aria-hidden="true">{topicMeta.icon || "✦"}</div>
           <div>
             <h1 className="font-serif text-5xl text-foreground mb-2">{topicMeta.label}</h1>
             <p className="text-gold font-devanagari text-xl">{topicMeta.label_hi}</p>
@@ -147,7 +146,6 @@ export default async function TopicPage({ params }: Props) {
                       href={`/teachings/${t.slug}`}
                       className="flex items-center gap-2 text-cosmic-400 hover:text-gold text-sm transition-colors"
                     >
-                      <span>{t.icon}</span>
                       <span>{t.label}</span>
                     </Link>
                   ))}

@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, User, Sparkles, Share2, Copy, Check, Clock } from "lucide-react";
+import { ArrowUp, Share2, Copy, Check, Clock } from "lucide-react";
 import { useStreamChat, ChatMessage } from "@/lib/useStream";
 import { useT, type Key } from "@/lib/i18n";
 import { SourceList } from "./SourceList";
 
-const STARTERS: Key[] = ["chat.follow1", "chat.follow2", "chat.follow3", "chat.follow4"];
+const STARTERS: Key[] = ["v4.suggest1", "v4.suggest2", "v4.suggest3", "v4.suggest4"];
 
 export function ChatInterface({ initialQuestion }: { initialQuestion?: string }) {
   const t = useT();
@@ -65,23 +65,23 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
   };
 
   return (
-    <div className="flex h-full max-h-[80vh] flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       {/* Messages */}
-      <div className="flex-1 space-y-6 overflow-y-auto p-4 pb-2" aria-live="polite">
+      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4 pb-2 sm:p-6" aria-live="polite">
         {messages.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center py-14 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gold/10">
-              <Sparkles size={26} className="text-gold" aria-hidden="true" />
-            </div>
-            <h3 className="mb-2 font-serif text-2xl text-foreground">{t("chat.emptyTitle")}</h3>
-            <p className="mb-8 max-w-md text-cosmic-400">{t("chat.emptyBody")}</p>
-            <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex h-full flex-col items-center justify-center py-10 text-center">
+            <span aria-hidden="true" className="mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-gold/50 font-serif text-2xl text-gold">
+              स
+            </span>
+            <h2 className="mb-2 font-serif text-3xl text-foreground sm:text-4xl">{t("v4.askTitle")}</h2>
+            <p className="mb-8 max-w-md text-cosmic-400">{t("chat.lead")}</p>
+            <div className="grid w-full max-w-xl gap-2 sm:grid-cols-2">
               {STARTERS.map((k) => (
                 <button
                   key={k}
                   onClick={() => sendMessage(t(k))}
-                  className="rounded-full border border-gold/25 bg-gold/5 px-4 py-2 text-sm text-cosmic-300
-                             transition-colors hover:border-gold/60 hover:text-foreground"
+                  className="rounded-xl border border-line px-4 py-3 text-left text-sm leading-snug text-cosmic-200
+                             transition-colors hover:border-gold/50 hover:text-foreground"
                 >
                   {t(k)}
                 </button>
@@ -132,8 +132,8 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
       </div>
 
       {/* Input */}
-      <div className="border-t border-gold/15 p-4">
-        <form onSubmit={handleSubmit} className="flex gap-3">
+      <div className="border-t border-line bg-surface-2/60 p-3 sm:p-4">
+        <form onSubmit={handleSubmit} className="flex gap-2 rounded-xl border border-line bg-surface p-1.5 transition-colors focus-within:border-gold/60">
           <label htmlFor="chat-input" className="sr-only">
             {t("chat.placeholder")}
           </label>
@@ -143,18 +143,17 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={isRateLimited ? t("chat.placeholderLimited") : t("chat.placeholder")}
-            className="flex-1 rounded-xl border border-gold/25 bg-cosmic-900/60 px-4 py-3 text-sm text-foreground
-                       placeholder-cosmic-500 transition-all focus:border-gold/60 focus:outline-none
-                       disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-base text-foreground placeholder:text-cosmic-500
+                       focus:outline-none focus-visible:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isLoading || isRateLimited}
           />
           <button
             type="submit"
             aria-label="Send"
             disabled={isLoading || !input.trim() || isRateLimited}
-            className="btn-gold flex items-center gap-2 rounded-xl px-4 py-3 disabled:cursor-not-allowed disabled:opacity-40"
+            className="btn-gold shrink-0 px-3.5 py-2.5 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Send size={16} />
+            <ArrowUp size={18} aria-hidden="true" />
           </button>
         </form>
         <p className="mt-2 text-center text-xs text-cosmic-500">
@@ -188,14 +187,14 @@ function MessageBubble({
       className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}
     >
       {/* Avatar */}
-      <div
-        className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
-          isUser ? "bg-gold/20 text-gold" : "border border-gold/30 bg-cosmic-800 text-gold"
-        }`}
-        aria-hidden="true"
-      >
-        {isUser ? <User size={14} /> : <Sparkles size={14} />}
-      </div>
+      {!isUser && (
+        <span
+          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-gold/50 font-serif text-base text-gold"
+          aria-hidden="true"
+        >
+          स
+        </span>
+      )}
 
       <div className={`flex max-w-[85%] flex-col space-y-3 sm:max-w-[80%] ${isUser ? "items-end" : "items-start"}`}>
         {msg.isRateLimit ? (
@@ -209,10 +208,10 @@ function MessageBubble({
           </div>
         ) : (
           <div
-            className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+            className={`leading-relaxed ${
               isUser
-                ? "border border-gold/30 bg-gold/15 text-foreground"
-                : "border border-gold/15 bg-cosmic-900/60 text-cosmic-100"
+                ? "rounded-2xl rounded-br-md bg-gold/15 px-4 py-3 text-foreground"
+                : "pt-1 text-[0.95rem] text-cosmic-100"
             } ${msg.isStreaming ? "cursor-blink" : ""}`}
           >
             <p className="whitespace-pre-wrap font-devanagari">{msg.content}</p>
@@ -228,8 +227,8 @@ function MessageBubble({
                 <button
                   key={i}
                   onClick={() => onFollowUp(q)}
-                  className="rounded-full border border-gold/25 bg-gold/5 px-3 py-1.5 text-left text-xs text-cosmic-300
-                             font-devanagari transition-colors hover:border-gold/60 hover:text-foreground"
+                  className="rounded-lg border border-line px-3 py-1.5 text-left text-xs text-cosmic-300
+                             font-devanagari transition-colors hover:border-gold/50 hover:text-foreground"
                 >
                   {q}
                 </button>
@@ -243,7 +242,7 @@ function MessageBubble({
           <div className="flex gap-2">
             <button
               onClick={() => onCopy(msg.id, msg.content)}
-              className="flex items-center gap-1 rounded-lg border border-gold/15 px-3 py-1 text-xs text-cosmic-400
+              className="flex items-center gap-1 rounded-lg border border-line px-3 py-1 text-xs text-cosmic-400
                          transition-colors hover:border-gold/40 hover:text-foreground"
             >
               {copiedId === msg.id ? <Check size={10} /> : <Copy size={10} />}
@@ -251,7 +250,7 @@ function MessageBubble({
             </button>
             <button
               onClick={() => onShare(msg.content)}
-              className="flex items-center gap-1 rounded-lg border border-gold/15 px-3 py-1 text-xs text-cosmic-400
+              className="flex items-center gap-1 rounded-lg border border-line px-3 py-1 text-xs text-cosmic-400
                          transition-colors hover:border-gold/40 hover:text-foreground"
             >
               <Share2 size={10} />

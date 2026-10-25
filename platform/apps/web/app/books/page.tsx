@@ -15,7 +15,7 @@ export default async function BooksPage() {
     <div className="min-h-screen px-6 py-16">
       <div className="mx-auto max-w-6xl">
         <div className="mb-14 text-center">
-          <span className="text-sm uppercase tracking-widest text-gold">Library</span>
+          <p className="label-caps">Library</p>
           <h1 className="mb-4 mt-2 font-serif text-5xl text-foreground">Books behind the answers</h1>
           <p className="mx-auto max-w-xl text-lg text-cosmic-400">
             Sadhak.ai draws its answers from these published books.
@@ -34,16 +34,13 @@ export default async function BooksPage() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {books.map((book) => (
               <article key={book.slug} className="cosmic-card p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gold/10">
-                  <BookOpen size={22} className="text-gold" aria-hidden="true" />
-                </div>
-                <h2 className="mb-1 font-serif text-xl font-semibold text-foreground">{book.name}</h2>
-                <p className="mb-3 text-sm text-cosmic-500">{book.author}</p>
+                <p className="label-caps text-[0.68rem]">{book.language === "hi" ? "Hindi" : "English"}</p>
+                <h2 className="mb-1 mt-3 font-serif text-3xl text-foreground">{book.name}</h2>
+                <p className="mb-3 text-sm text-cosmic-400">{book.author}</p>
                 {book.description && <p className="mb-3 text-sm text-cosmic-400">{book.description}</p>}
-                <div className="flex items-center gap-3 text-xs text-cosmic-500">
-                  <span className="rounded-full bg-gold/10 px-2 py-0.5">{book.language.toUpperCase()}</span>
-                  {book.chunk_count > 0 && <span>{book.chunk_count} passages</span>}
-                </div>
+                {book.chunk_count > 0 && (
+                  <p className="text-xs text-cosmic-500">{book.chunk_count.toLocaleString("en-IN")} passages</p>
+                )}
                 <Link
                   href={`/chat?q=${encodeURIComponent(`What is ${book.name} about?`)}`}
                   className="mt-5 inline-flex items-center gap-1 text-sm text-gold transition-colors hover:text-gold-light"

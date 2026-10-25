@@ -46,8 +46,8 @@ function formatDate(iso: string, lang: Lang) {
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="cosmic-card p-4 hover:translate-y-0">
-      <p className="text-xs uppercase tracking-wider text-cosmic-500">{label}</p>
-      <p className="mt-1 font-serif text-xl text-foreground">{value}</p>
+      <p className="label-caps text-[0.68rem]">{label}</p>
+      <p className="mt-2 font-serif text-2xl text-foreground">{value}</p>
       {sub && <p className="mt-0.5 text-xs text-cosmic-400">{sub}</p>}
     </div>
   );

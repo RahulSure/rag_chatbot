@@ -100,7 +100,7 @@ export default async function BlogPage({ searchParams }: Props) {
                   : "border-gold/20 text-cosmic-400 hover:text-foreground hover:border-gold/40"
               }`}
             >
-              {t.icon} {t.label}
+              {t.label}
             </a>
           ))}
         </div>

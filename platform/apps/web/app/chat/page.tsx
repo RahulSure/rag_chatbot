@@ -17,18 +17,12 @@ export default async function ChatPage({ searchParams }: Props) {
   const { q } = await searchParams;
 
   return (
-    <div className="min-h-screen px-4 py-8">
+    <div className="px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-3xl">
-        <div className="mb-8 text-center">
-          <h1 className="mb-3 font-serif text-4xl text-foreground">
-            <T k="chat.title" />
-          </h1>
-          <p className="mx-auto max-w-lg text-cosmic-400">
-            <T k="chat.lead" />
-          </p>
-        </div>
-
-        <div className="cosmic-card flex min-h-[600px] flex-col">
+        <h1 className="sr-only">
+          <T k="chat.title" />
+        </h1>
+        <div className="flex h-[calc(100dvh-10rem)] min-h-[560px] flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-cosmic">
           <Suspense fallback={<div className="p-8 text-center text-cosmic-500">…</div>}>
             <ChatInterface initialQuestion={q} />
           </Suspense>

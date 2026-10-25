@@ -4,61 +4,68 @@
 
 /*
  * Design tokens — RGB channels so Tailwind opacity modifiers work.
- * Light is "ash" (a low-chroma stone), dark is "kajal" (lamp-black); the accent
- * is tulsi green. The home page sets its own chapter colours on top of these.
+ * Dark "night & gold" is the default (html.dark, set by ThemeProvider);
+ * light is a warm cream with deep gold. Names are kept from earlier versions
+ * (gold = accent, cosmic-* = neutral ramp) so every page follows the theme.
  */
 :root {
   color-scheme: light;
 
-  --background: 236 235 231;
-  --foreground: 20 18 16;
+  --background: 247 241 232;   /* cream */
+  --foreground: 33 27 22;
+  --surface: 255 253 249;
+  --surface-2: 240 231 218;
+  --line: 228 216 199;
 
-  --accent: 23 97 74;          /* tulsi, dark enough for text on ash */
-  --accent-strong: 15 70 53;
-  --accent-soft: 31 122 90;
-  --shadow: 20 18 16;
+  --accent: 138 98 32;         /* deep gold, readable on cream */
+  --accent-strong: 110 76 22;
+  --accent-soft: 122 31 78;    /* plum */
+  --shadow: 60 40 20;
 
-  --cosmic-50: 20 18 16;
-  --cosmic-100: 32 30 27;
-  --cosmic-200: 46 43 40;
-  --cosmic-300: 64 60 56;
-  --cosmic-400: 82 77 72;
-  --cosmic-500: 98 92 86;
-  --cosmic-600: 110 104 97;
-  --cosmic-700: 196 192 186;
-  --cosmic-800: 214 211 206;
-  --cosmic-900: 226 224 220;
-  --cosmic-950: 244 243 240;
+  --cosmic-50: 33 27 22;
+  --cosmic-100: 46 39 33;
+  --cosmic-200: 62 54 47;
+  --cosmic-300: 82 73 64;
+  --cosmic-400: 100 90 80;
+  --cosmic-500: 114 104 94;
+  --cosmic-600: 126 116 106;
+  --cosmic-700: 205 194 180;
+  --cosmic-800: 228 216 199;
+  --cosmic-900: 240 231 218;
+  --cosmic-950: 255 253 249;
 
-  --btn-bg: #1f7a5a;
+  --btn-bg: #8a6220;
   --btn-fg: #ffffff;
 }
 
 html.dark {
   color-scheme: dark;
 
-  --background: 22 20 18;
-  --foreground: 255 255 255;
+  --background: 10 9 15;       /* night */
+  --foreground: 237 232 223;
+  --surface: 20 18 27;
+  --surface-2: 15 13 21;
+  --line: 42 38 52;
 
-  --accent: 79 182 140;        /* tulsi, light enough for text on kajal */
-  --accent-strong: 120 205 168;
-  --accent-soft: 31 122 90;
+  --accent: 200 169 110;       /* gold */
+  --accent-strong: 224 199 150;
+  --accent-soft: 122 31 78;    /* plum */
   --shadow: 0 0 0;
 
-  --cosmic-50: 255 255 255;
-  --cosmic-100: 240 238 235;
-  --cosmic-200: 222 219 214;
-  --cosmic-300: 200 196 190;
-  --cosmic-400: 181 174 166;
-  --cosmic-500: 162 155 147;
-  --cosmic-600: 145 138 130;
-  --cosmic-700: 90 85 80;
-  --cosmic-800: 50 47 43;
-  --cosmic-900: 34 31 28;
-  --cosmic-950: 26 24 21;
+  --cosmic-50: 245 241 234;
+  --cosmic-100: 237 232 223;
+  --cosmic-200: 214 208 199;
+  --cosmic-300: 190 184 175;
+  --cosmic-400: 166 160 151;
+  --cosmic-500: 144 138 130;
+  --cosmic-600: 124 118 112;
+  --cosmic-700: 70 66 78;
+  --cosmic-800: 42 38 52;
+  --cosmic-900: 20 18 27;
+  --cosmic-950: 15 13 21;
 
-  --btn-bg: #1f7a5a;
-  --btn-fg: #ffffff;
+  --btn-bg: #c8a96e;
+  --btn-fg: #14110b;
 }
 
 * {
@@ -75,14 +82,21 @@ body {
   overflow-x: hidden;
 }
 
+/* A quiet field of stars on the night theme only (static, no animation). */
+html.dark body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640'%3E%3Cg fill='%23fff'%3E%3Ccircle cx='42' cy='61' r='.7' opacity='.5'/%3E%3Ccircle cx='131' cy='212' r='.6' opacity='.35'/%3E%3Ccircle cx='217' cy='38' r='.9' opacity='.45'/%3E%3Ccircle cx='298' cy='147' r='.5' opacity='.3'/%3E%3Ccircle cx='371' cy='291' r='.8' opacity='.4'/%3E%3Ccircle cx='452' cy='83' r='.6' opacity='.5'/%3E%3Ccircle cx='533' cy='198' r='1' opacity='.35'/%3E%3Ccircle cx='604' cy='22' r='.6' opacity='.3'/%3E%3Ccircle cx='78' cy='351' r='.8' opacity='.4'/%3E%3Ccircle cx='163' cy='447' r='.5' opacity='.3'/%3E%3Ccircle cx='246' cy='386' r='.7' opacity='.45'/%3E%3Ccircle cx='327' cy='518' r='.9' opacity='.35'/%3E%3Ccircle cx='412' cy='433' r='.6' opacity='.5'/%3E%3Ccircle cx='497' cy='561' r='.7' opacity='.3'/%3E%3Ccircle cx='578' cy='402' r='.5' opacity='.4'/%3E%3Ccircle cx='24' cy='602' r='.6' opacity='.35'/%3E%3Ccircle cx='109' cy='533' r='.9' opacity='.3'/%3E%3Ccircle cx='392' cy='611' r='.6' opacity='.45'/%3E%3Ccircle cx='621' cy='311' r='.8' opacity='.35'/%3E%3Ccircle cx='270' cy='254' r='.5' opacity='.25'/%3E%3C/g%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+
 ::selection {
   background: rgb(var(--accent) / 0.25);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-sans), var(--font-devanagari), system-ui, sans-serif;
+h1, h2, h3 {
+  font-family: var(--font-serif), var(--font-serif-deva), Georgia, serif;
   color: rgb(var(--foreground));
-  letter-spacing: -0.02em;
+  font-weight: 500;
+  letter-spacing: -0.005em;
 }
 
 .devanagari {
@@ -95,67 +109,117 @@ h1, h2, h3, h4, h5, h6 {
   outline-offset: 2px;
 }
 input:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+select:focus-visible {
   outline-color: transparent;
-  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.35);
+  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.3);
 }
 
-/* Surface: one tone step from the page — no outline, no shadow at rest */
-.cosmic-card {
-  background: rgb(var(--cosmic-900));
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-.cosmic-card:hover {
-  background: rgb(var(--cosmic-800));
-}
+/* Component classes live in the components layer so utilities (hidden, px-5 …) can override them. */
+@layer components {
+  /* Gold, letter-spaced small capitals for section labels and the wordmark. */
+  .label-caps {
+    font-size: 0.75rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgb(var(--accent));
+    font-weight: 500;
+  }
+  /* Spacing Devanagari apart breaks the shirorekha, so Hindi labels stay set solid and a little larger. */
+  html[lang="hi"] .label-caps {
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+  }
 
-/* Primary button: flat, one fill, square corners */
-.btn-gold {
-  background: var(--btn-bg);
-  color: var(--btn-fg);
-  font-weight: 500;
-  padding: 12px 28px;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.16s ease, filter 0.16s ease;
-}
-.btn-gold:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
+  /* Card: one step up from the ground, hairline border */
+  .cosmic-card {
+    background: rgb(var(--surface));
+    border: 1px solid rgb(var(--line));
+    border-radius: 14px;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  a.cosmic-card:hover,
+  .cosmic-card.is-link:hover {
+    border-color: rgb(var(--accent) / 0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgb(var(--shadow) / 0.2);
+  }
 
-/* Secondary button: solid 2px border */
-.btn-ghost {
-  background: transparent;
-  border: 2px solid rgb(var(--foreground));
-  color: rgb(var(--foreground));
-  padding: 10px 24px;
-  cursor: pointer;
-  transition: transform 0.16s ease, background-color 0.16s ease;
-}
-.btn-ghost:hover {
-  background: rgb(var(--cosmic-900));
-  transform: translateY(-1px);
-}
+  /* Primary button: solid gold */
+  .btn-gold {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    padding: 12px 26px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: filter 0.16s ease, transform 0.16s ease;
+  }
+  .btn-gold:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+  }
 
-/* Separation by space, not by a line */
-.gold-divider {
-  height: 0;
-  margin: 2rem 0;
+  /* Secondary button: gold hairline */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid rgb(var(--accent) / 0.6);
+    color: rgb(var(--accent));
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    padding: 11px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.16s ease, border-color 0.16s ease;
+  }
+  .btn-ghost:hover {
+    background: rgb(var(--accent) / 0.08);
+    border-color: rgb(var(--accent));
+  }
+
+  /* Ornamental divider: two hairlines and a dot */
+  .gold-divider {
+    height: 1px;
+    width: 100px;
+    margin: 2.5rem auto;
+    background: linear-gradient(90deg, rgb(var(--accent) / 0.4) 0 44%, transparent 44% 56%, rgb(var(--accent) / 0.4) 56% 100%);
+    position: relative;
+  }
+  .gold-divider::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgb(var(--accent) / 0.7);
+    transform: translate(-50%, -50%);
+  }
 }
 
 /* Markdown content */
 .prose-spiritual h2 {
-  @apply text-2xl font-bold text-foreground mt-8 mb-4;
+  @apply text-3xl text-foreground mt-10 mb-4;
 }
 .prose-spiritual h3 {
-  @apply text-xl font-medium text-foreground mt-6 mb-3;
+  @apply text-2xl text-foreground mt-8 mb-3;
 }
 .prose-spiritual p {
-  @apply text-foreground leading-relaxed mb-4;
+  @apply text-cosmic-200 leading-relaxed mb-4;
 }
 .prose-spiritual blockquote {
-  @apply pl-4 my-6 bg-cosmic-900 py-3 pr-4;
+  @apply border-l-2 border-gold pl-4 italic text-cosmic-200 my-6;
 }
 .prose-spiritual strong {
   @apply text-foreground font-semibold;
@@ -164,7 +228,7 @@ textarea:focus-visible {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: rgb(var(--background)); }
-::-webkit-scrollbar-thumb { background: rgb(var(--cosmic-700)); }
+::-webkit-scrollbar-thumb { background: rgb(var(--cosmic-700)); border-radius: 4px; }
 
 /* Chat streaming cursor */
 @keyframes blink {
@@ -177,7 +241,13 @@ textarea:focus-visible {
   color: rgb(var(--accent));
 }
 
-/* Respect users who ask for less motion */
+/* Gentle entrance for hero content */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.rise-in { animation: rise-in 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

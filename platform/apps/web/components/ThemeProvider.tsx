@@ -8,7 +8,8 @@ const STORAGE_KEY = "sadhak_theme";
 
 /** Runs before first paint (inlined in <head>) so there is no light/dark flash. */
 // It also marks <html class="js"> so scroll reveals hide content only when script is running.
-export const themeInitScript = `(function(){document.documentElement.classList.add('js');try{var t=localStorage.getItem('${STORAGE_KEY}')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`;
+// Night is the house theme: dark unless the visitor picked light (or system, and their OS is light).
+export const themeInitScript = `(function(){document.documentElement.classList.add('js');try{var t=localStorage.getItem('${STORAGE_KEY}')||'dark';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`;
 
 interface ThemeContextValue {
   choice: ThemeChoice;
@@ -24,7 +25,7 @@ function applyTheme(choice: ThemeChoice) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [choice, setChoiceState] = useState<ThemeChoice>("system");
+  const [choice, setChoiceState] = useState<ThemeChoice>("dark");
 
   useEffect(() => {
     try {

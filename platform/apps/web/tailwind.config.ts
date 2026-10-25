@@ -18,6 +18,12 @@ const config: Config = {
       colors: {
         background: token("background"),
         foreground: token("foreground"),
+        // Cards sit on "surface", inset fields on "surface-2", hairlines are "line".
+        surface: {
+          DEFAULT: token("surface"),
+          2: token("surface-2"),
+        },
+        line: token("line"),
         gold: {
           DEFAULT: token("accent"),
           light: token("accent-strong"),
@@ -46,13 +52,14 @@ const config: Config = {
         },
       },
       fontFamily: {
-        serif: ["var(--font-sans)", "var(--font-devanagari)", "system-ui", "sans-serif"],
+        // Headings: Cormorant Garamond, Hindi headings fall through to Noto Serif Devanagari.
+        serif: ["var(--font-serif)", "var(--font-serif-deva)", "Georgia", "serif"],
+        // Text: DM Sans, Hindi text falls through to Noto Sans Devanagari.
         sans: ["var(--font-sans)", "var(--font-devanagari)", "system-ui", "sans-serif"],
-        // Latin is set in Jost; Devanagari glyphs fall through to Noto Sans Devanagari.
         devanagari: ["var(--font-sans)", "var(--font-devanagari)", "system-ui", "sans-serif"],
-        // Legacy aliases — every face is now Jost.
-        cinzel: ["var(--font-sans)", "system-ui", "sans-serif"],
-        cormorant: ["var(--font-sans)", "system-ui", "sans-serif"],
+        // Legacy aliases kept so older class names still resolve.
+        cinzel: ["var(--font-serif)", "Georgia", "serif"],
+        cormorant: ["var(--font-serif)", "Georgia", "serif"],
       },
       animation: {
         "float": "float 6s ease-in-out infinite",

@@ -1,13 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Jost, Noto_Sans_Devanagari } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans, Noto_Sans_Devanagari, Noto_Serif_Devanagari } from "next/font/google";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ThemeProvider, themeInitScript } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/lib/i18n";
 import "@/styles/globals.css";
 
-// One family in three weights for display and text (taste-skill direction "Colour chapters").
-const jost = Jost({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-sans", display: "swap" });
+// An elegant serif for headings, a quiet sans for reading.
+const serif = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+  display: "swap",
+});
+const sans = DM_Sans({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const serifDeva = Noto_Serif_Devanagari({ subsets: ["devanagari"], weight: ["500", "600"], variable: "--font-serif-deva", display: "swap" });
 const devanagari = Noto_Sans_Devanagari({
   subsets: ["devanagari"],
   variable: "--font-devanagari",
@@ -67,7 +75,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     // The theme script toggles the "dark" class before paint, so hydration must tolerate it.
-    <html lang="en" suppressHydrationWarning className={`${jost.variable} ${devanagari.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`dark ${serif.variable} ${sans.variable} ${serifDeva.variable} ${devanagari.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>

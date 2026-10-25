@@ -6,8 +6,9 @@ import { searchPlaces, type BirthDetails, type Place } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 
 const inputClass =
-  "w-full rounded-xl border border-gold/25 bg-cosmic-900/60 px-4 py-2.5 text-sm text-foreground " +
-  "placeholder-cosmic-500 transition-all focus:border-gold/60 focus:outline-none";
+  "w-full rounded-lg border border-line bg-surface-2 px-4 py-3 text-base text-foreground " +
+  "placeholder:text-cosmic-500 transition-colors focus:border-gold/60 focus:outline-none";
+const labelClass = "label-caps mb-2 block !text-[0.7rem]";
 
 function placeLabel(p: Place) {
   return [p.name, p.region, p.country].filter(Boolean).join(", ");
@@ -52,20 +53,20 @@ export function BirthForm({
   };
 
   return (
-    <form onSubmit={submit} className="cosmic-card space-y-4 p-6 hover:translate-y-0">
+    <form onSubmit={submit} className="space-y-5 rounded-2xl border border-line bg-surface p-6 shadow-cosmic sm:p-8">
       <div>
-        <label htmlFor="birth-name" className="mb-1 block text-sm text-cosmic-300">{t("kundli.name")}</label>
+        <label htmlFor="birth-name" className={labelClass}>{t("kundli.name")}</label>
         <input id="birth-name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="birth-date" className="mb-1 block text-sm text-cosmic-300">{t("kundli.date")}</label>
+          <label htmlFor="birth-date" className={labelClass}>{t("kundli.date")}</label>
           <input id="birth-date" type="date" required value={date} max={new Date().toISOString().slice(0, 10)}
                  onChange={(e) => setDate(e.target.value)} className={inputClass} />
         </div>
         <div>
-          <label htmlFor="birth-time" className="mb-1 block text-sm text-cosmic-300">{t("kundli.time")}</label>
+          <label htmlFor="birth-time" className={labelClass}>{t("kundli.time")}</label>
           <input id="birth-time" type="time" required={!timeUnknown} disabled={timeUnknown} value={timeUnknown ? "" : time}
                  onChange={(e) => setTime(e.target.value)} className={`${inputClass} disabled:opacity-50`} />
         </div>
@@ -78,7 +79,7 @@ export function BirthForm({
       </label>
 
       <div className="relative">
-        <label htmlFor="birth-place" className="mb-1 block text-sm text-cosmic-300">{t("kundli.place")}</label>
+        <label htmlFor="birth-place" className={labelClass}>{t("kundli.place")}</label>
         <input
           id="birth-place"
           autoComplete="off"
@@ -94,7 +95,7 @@ export function BirthForm({
         />
         {suggestions.length > 0 && (
           <ul id="birth-place-list" role="listbox"
-              className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-gold/25 bg-background shadow-cosmic">
+              className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-line bg-surface shadow-cosmic">
             {suggestions.map((p) => (
               <li key={`${p.name}-${p.latitude}-${p.longitude}`} role="option" aria-selected={false}>
                 <button
@@ -118,10 +119,10 @@ export function BirthForm({
 
       {error && <p role="alert" className="text-sm text-red-700 dark:text-red-400">{error}</p>}
 
-      <button type="submit" disabled={busy} className="btn-gold w-full rounded-xl py-3 text-sm disabled:opacity-50">
+      <button type="submit" disabled={busy} className="btn-gold w-full py-3.5 text-base disabled:opacity-50">
         {busy ? t("kundli.calculating") : t("kundli.submit")}
       </button>
-      <p className="text-xs text-cosmic-500">{t("kundli.privacy")}</p>
+      <p className="text-center text-xs text-cosmic-500">{t("kundli.privacy")}</p>
     </form>
   );
 }
