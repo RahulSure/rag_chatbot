@@ -1,5 +1,5 @@
 """
-Switch-word finder — meaning search over Naran S. Balakumar's posts.
+Switch-word finder — meaning search over the remedy posts.
 """
 
 from __future__ import annotations

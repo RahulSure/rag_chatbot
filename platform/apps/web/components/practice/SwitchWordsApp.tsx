@@ -94,8 +94,8 @@ export function SwitchWordsApp() {
                 </ul>
                 <p className="mt-4 text-sm leading-relaxed text-cosmic-400">{r.excerpt}…</p>
                 <Link href={`/chat?q=${encodeURIComponent(hi
-                  ? `${asked} के लिए नारन जी ने "${r.switch_words.slice(0, 3).join('", "')}" बताए हैं। इनका जप कैसे और कितनी बार करें?`
-                  : `For ${asked}, Naran sir gives the switch words "${r.switch_words.slice(0, 3).join('", "')}". How and how often should I chant them?`)}`}
+                  ? `${asked} के लिए स्विच वर्ड्स "${r.switch_words.slice(0, 3).join('", "')}" हैं। इनका जप कैसे और कितनी बार करें?`
+                  : `For ${asked}, the switch words are "${r.switch_words.slice(0, 3).join('", "')}". How and how often should I chant them?`)}`}
                       className="mt-auto inline-flex items-center gap-1.5 pt-5 text-sm text-gold hover:underline">
                   <MessageCircle size={14} aria-hidden="true" /> {t("sw.ask")}
                 </Link>

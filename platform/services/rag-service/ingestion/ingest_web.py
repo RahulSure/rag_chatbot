@@ -27,6 +27,7 @@ from dotenv import load_dotenv
 from ingestion.ingest import _infer_topic, chunk_documents
 from ingestion.web_crawler import DATA_DIR
 from ingestion.web_sources import SOURCES_BY_SLUG
+from rag.hide_names import clean_title, hide_names
 
 load_dotenv()
 
@@ -56,8 +57,8 @@ def _fallback_title(page: dict) -> str:
 _QUOTED_CAPS = re.compile(r"[\"“‘'][A-Z]{3,}(?:[ ,]+[A-Z]{2,})+[\"”’']")
 
 
-def _teacher_topic(title: str, text: str) -> str:
-    """Naran S. Balakumar's posts: switch words, Bach flower remedies or Reiki."""
+def _remedy_topic(title: str, text: str) -> str:
+    """Remedy posts: switch words, Bach flower remedies or Reiki."""
     blob = f"{title}\n{text}".lower()
     if "switch word" in blob or "chanting" in title.lower() or _QUOTED_CAPS.search(text):
         return "switch_words"
@@ -84,11 +85,14 @@ def load_site_documents(slug: str):
             continue
         seen_hashes.add(page["content_hash"])
         title = page["title"] if page["title"] and page["title"] not in generic_titles else _fallback_title(page)
-        teacher = SOURCES_BY_SLUG[slug].get("teacher")
+        remedy = bool(SOURCES_BY_SLUG[slug].get("remedy"))
+        text = hide_names(page["text"]) if remedy else page["text"]
+        if remedy:
+            title = clean_title(title)
         doc = Document(
-            text=page["text"],
+            text=text,
             metadata={
-                "book": page["site_name"],
+                "book": SOURCES_BY_SLUG[slug]["name"],
                 "book_slug": slug,
                 "chapter_title": title,
                 "language": page["language"],
@@ -96,10 +100,10 @@ def load_site_documents(slug: str):
                 "source_type": "web",
                 "source_site": slug,
                 "source_url": page["url"],
-                "topic": _teacher_topic(title, page["text"]) if teacher else _infer_topic(title),
+                "topic": _remedy_topic(title, text) if remedy else _infer_topic(title),
                 "fetched_at": page["fetched_at"],
-                # Named in the answer's context so Sadhak can credit the teacher.
-                **({"teacher": teacher} if teacher else {}),
+                # Lets answers offer these as complementary practice, and keeps them out of source lists.
+                **({"remedy": True} if remedy else {}),
             },
         )
         doc.excluded_embed_metadata_keys = _HIDDEN_FROM_EMBED
@@ -141,7 +145,7 @@ def store_articles(slug: str, documents) -> int:
                 "title": d.metadata["chapter_title"],
                 "language": d.metadata["language"],
                 "text": d.text,
-                "teacher": d.metadata.get("teacher"),
+                "remedy": bool(d.metadata.get("remedy")),
                 "mantra_count": len(mantra_spans(d.text)),  # lets mantra questions prefer articles with one
             },
             upsert=True,

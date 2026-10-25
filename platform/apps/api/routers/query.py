@@ -189,7 +189,8 @@ def _answer_sources_to_schema(sources) -> list[SourceNode]:
             url=s.url,
         )
         for s in sources
-        if show_web or not s.is_web
+        # Remedy posts (switch words, flower remedies) are offered in the answer but never listed as a source.
+        if (show_web or not s.is_web) and not getattr(s, "remedy", False)
     ]
 
 

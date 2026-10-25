@@ -15,6 +15,8 @@ import logging
 import os
 import re
 import unicodedata
+
+from rag.hide_names import drop_naming_sentences
 from dataclasses import dataclass
 from functools import lru_cache
 
@@ -34,7 +36,7 @@ ANSWER_MAX_TOKENS = 4096
 
 ASK_MARKER = "[[ASK]]"
 
-PROMPT = """You are Sadhak, a caring spiritual companion (kalyan-mitra) for seekers, grounded in the teachings of Dr. Narayan Dutt Shrimali (Paramhans Swami Nikhileshwaranand) — from his books and from articles by his disciples — and of other teachers in the library, such as Naran S. Balakumar (switch words, Bach flower remedies and Reiki). A source that belongs to another teacher names them.
+PROMPT = """You are Sadhak, a caring spiritual companion (kalyan-mitra) for seekers, grounded in the teachings of Dr. Narayan Dutt Shrimali (Paramhans Swami Nikhileshwaranand) — from his books and from articles by his disciples — and on practical remedies in the library: switch words, Bach flower remedies and Reiki.
 
 Below are SOURCES. Each one is a separate book passage or a complete article.
 
@@ -63,10 +65,12 @@ MANTRAS AND PROCEDURES — STRICT:
 4. Write each procedure faithfully: the same steps in the same order, with the same counts, mala, days, timings, direction, asana, materials and offerings. Do not add, drop or change any step, and do not invent details the source doesn't state.
 5. If no source contains a mantra or procedure for the question, say so plainly. You may explain the topic in general terms, but do not make up a mantra or method.
 
-SWITCH WORDS AND REMEDIES (Naran S. Balakumar's teaching):
+SWITCH WORDS AND REMEDIES (sources marked "remedy source"):
 - Switch words are short words chanted for a purpose. Copy each switch word or combination exactly as in ONE source: the same words in the same order, nothing added, dropped or swapped. Write them in CAPITALS inside quotes, e.g. "TOGETHER CHANGE ADJUST".
-- Say how and how often to chant them only as the source says; do not invent counts or timings.
-- When you share them, say once, naturally, that this is Naran S. Balakumar's teaching.
+- For the method, quote the source's own instruction sentence word for word, in English, e.g. Write daily 108 times "CRYSTAL GORSE WOLF HELP COUNT DIVINE JOB NOW DONE". (In a Hindi answer, give that English sentence and then its Hindi meaning.) Whether to chant, write or keep the words, and the count and time, must be exactly that sentence. Add no method, tip or step of your own or from another source: no notes in a pocket or under the pillow, no counts, no mudras, unless that very source says so. If the source gives no method, say only that they are chanted whenever the need is felt.
+- Never name the person who taught or wrote a remedy source, and never mention any teacher, author, website or workshop for them. Present them simply as switch words or remedies, in your own voice.
+- Bach flower remedies: name them exactly as the source does. Give how to take them only if that source says so; otherwise suggest asking a qualified practitioner. Never invent doses, drops, timings or ways of taking them.
+- Offer them when they suit: if a remedy source fits the user's situation, mood or interest, add it after the main sadhana or explanation as a short, gentle section such as "A simple daily support", with its exact switch words or remedies and how the source says to use them. If the user asked about switch words, flower remedies or Reiki, they are the main answer. If no remedy source fits, leave remedies out. Never use them to influence or control another person.
 - For illness or physical problems, offer switch words, Bach flower remedies or Reiki only as support alongside proper medical care. Never suggest avoiding, stopping, delaying or replacing a doctor's treatment or medicine, even if a source seems to.
 
 EXPLANATION AND STYLE:
@@ -74,7 +78,7 @@ EXPLANATION AND STYLE:
 - Reply in the SAME language as the USER'S QUESTION, not the language of the sources. Mantras always stay in Devanagari exactly as in the source; in an English answer you may add a transliteration after the Devanagari mantra.
 - Plain text only: no markdown symbols such as ** or #. Use short headings on their own line and numbered steps (1. 2. 3.).
 - Never mention website names or URLs. For book passages you may mention the book and page briefly in parentheses.
-- Never refer to the sources themselves: no "Source 2", no "as given in the source", "the article says" or "the website". Present the teaching directly.
+- Never refer to the sources themselves, in any language: no "Source 2", no "as given in the source", "the article says", "the website", "स्रोत में बताया गया है". Present the teaching directly.
 - If no source is relevant at all, answer briefly from general knowledge of the tradition, without claiming it comes from the books.
 - If the topic involves tantra, sadhana or attraction practices, end with ONE sentence that such practices should be done under a qualified guru's guidance.
 - For vashikaran, mohan, uchchatan, maran or similar influence rituals, and for parad (mercury) sadhana or alchemy, add ONE short warning line that these must be done only under a qualified, experienced guru. Never give steps for heating, processing or consuming mercury — it is highly toxic; explain the significance instead.
@@ -113,7 +117,7 @@ class Source:
     topic: str | None = None
     url: str | None = None
     snippet: str = ""
-    teacher: str | None = None
+    remedy: bool = False  # switch words, flower remedies, Reiki: offered as support, never shown as a source
 
 
 # ── Retrieval ───────────────────────────────────────────────────────────────
@@ -315,7 +319,7 @@ def gather_sources(question: str, top_k: int = 12) -> list[Source]:
                                 wants_mantra=wants_mantra)
     title_sources = [
         Source(d["title"], _window(d["text"], ""), True, d.get("site_name"), None, None, d["_id"], d["text"][:300],
-               d.get("teacher"))
+               bool(d.get("remedy")))
         for d in title_hits
     ]
 
@@ -341,20 +345,47 @@ def gather_sources(question: str, top_k: int = 12) -> list[Source]:
             article = articles.get(key)
             text = _window(article["text"], chunks[0]) if article else "\n".join(chunks)
             vector_sources.append(Source(md.get("chapter_title") or "", text, True, md.get("book"), None,
-                                         md.get("topic"), key, chunks[0][:300], md.get("teacher")))
+                                         md.get("topic"), key, chunks[0][:300], bool(md.get("remedy"))))
         else:
             vector_sources.append(Source(md.get("chapter_title") or md.get("book") or "", "\n".join(chunks), False,
                                          md.get("book"), md.get("page"), md.get("topic"), None, chunks[0][:300]))
+    sources = book_sources + title_sources + vector_sources
+    if not any(s.remedy for s in sources) and (_SITUATION.search(question) or _WANTS_REMEDY.search(question)):
+        sources += _remedy_sources(question, exclude={_source_key(s) for s in sources})
     # The question names the book's or article's topic directly, so those come first.
-    return book_sources + title_sources + vector_sources
+    return sources
+
+
+REMEDY_MIN_SCORE = 0.44  # cosine; fitting posts score 0.45-0.65, unrelated ones about 0.35
+
+# A remedy is offered for a life situation the user describes, not for questions about a teaching.
+_SITUATION = re.compile(
+    r"(?i)\b(?:anxi|worr|fear|scared|stress|tension|depress|sad\b|sadness|lonely|angry|anger|sleep|insomnia|tired|exam|stud(?:y|ies)"
+    r"|job|career|interview|promotion|business|debt|loan|money|financ|wealth|income|marri|husband|wife|divorce|relationship"
+    r"|love|boyfriend|girlfriend|child|son\b|daughter|famil|home\b|house|quarrel|fight|health|pain\b|ill\b|illness|sick|disease|fever"
+    r"|confiden|decision|confus|court|case\b|enemy|success|fail|problem|struggl|help me)"
+    r"|नौकरी|करियर|विवाह|शादी|पति|पत्नी|पैसा|पैसे|धन|कर्ज|क़र्ज़|व्यापार|तनाव|चिंता|डर|भय|नींद|परीक्षा|पढ़ाई|स्वास्थ्य"
+    r"|बीमार|रोग|दर्द|बच्च|बेटा|बेटी|परिवार|घर|कलह|झगड़|आत्मविश्वास|समस्या|परेशान"
+)
+_WANTS_REMEDY = re.compile(r"(?i)switch ?words?|स्विच|bach|flower remed|reiki|रेकी|remed(?:y|ies)|उपाय")
+
+
+def _remedy_sources(question: str, exclude: set[str]) -> list[Source]:
+    """The remedy post that best fits the user's situation, so the answer can offer it as support."""
+    from rag.switchwords import best_posts
+
+    return [
+        Source(p["title"], _window(p["text"], p["chunk"]), True, p["book"], None, p["topic"], p["url"], p["chunk"][:300], True)
+        for p in best_posts(question, k=1, min_score=REMEDY_MIN_SCORE, exclude=exclude)
+    ]
 
 
 def _format_sources(sources: list[Source]) -> str:
     parts = []
     for i, s in enumerate(sources, 1):
         kind = "article" if s.is_web else f"book: {s.book}" + (f", page {s.page}" if s.page else "")
-        if s.teacher:
-            kind += f"; teacher: {s.teacher}"
+        if s.remedy:
+            kind += "; remedy source"
         parts.append(f"[SOURCE {i}] ({kind}) Title: {s.title}\n{s.text}\n[END SOURCE {i}]")
     return "\n\n".join(parts) if parts else "(no sources found)"
 
@@ -413,15 +444,21 @@ def _caps(text: str) -> str:
     return " ".join(re.findall(r"[A-Z]+", text.upper()))
 
 
+# The same run without quotes: the model sometimes drops them.
+_CAPS_RUN = re.compile(r"\b[A-Z]{2,}(?:[ ,\-–]+[A-Z]{2,})+\b")
+
+
 def switch_word_spans(answer: str) -> list[str]:
-    return [m.group(1) for m in _SWITCH.finditer(answer)]
+    quoted = [m.group(1) for m in _SWITCH.finditer(answer)]
+    bare = [m.group(0) for m in _CAPS_RUN.finditer(_SWITCH.sub(" ", answer))]
+    return quoted + bare
 
 
 def unverified_switch_words(answer: str, sources: list[Source]) -> list[str]:
-    """Only checked when a switch-word teacher's source is in play; elsewhere capitals mean nothing special."""
-    texts = [_caps(s.text) for s in sources if s.teacher]
-    if not texts:
+    """Only checked when a remedy source is in play; elsewhere capitals mean nothing special."""
+    if not any(s.remedy for s in sources):
         return []
+    texts = [_caps(s.text) for s in sources]
     return [sp for sp in switch_word_spans(answer) if not any(_caps(sp) in t for t in texts)]
 
 
@@ -471,6 +508,7 @@ _AS_GIVEN = re.compile(
     r"|(?:copy|copied|quoted|written|given) exactly(?: as (?:taught|given|written))?)\)",
     re.I,
 )
+_AS_GIVEN_HI = re.compile(r",?\s*जैसा\s*(?:कि\s*)?(?:स्रोत|लेख|वेबसाइट)\s*में\s*(?:बताया|दिया|लिखा)\s*(?:गया\s*)?है")
 _RULE_LINE = re.compile(r"^\s*(?:-{3,}|\*{3,}|_{3,})\s*$\n?", re.M)
 
 
@@ -481,7 +519,9 @@ def _clean(text: str) -> str:
     text = _BULLET.sub("- ", text)
     text = _MARKDOWN.sub("", text)
     text = _AS_GIVEN.sub("", text)
+    text = _AS_GIVEN_HI.sub("", text)
     text = _SOURCE_REFS.sub("", text)
+    text = drop_naming_sentences(text)  # remedy sources are never attributed to a person
     return re.sub(r"\n{3,}", "\n\n", text).strip()
 
 

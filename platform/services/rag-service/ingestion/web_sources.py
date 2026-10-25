@@ -62,30 +62,31 @@ WEB_SOURCES: list[dict] = [
         "base": "https://gurugamyaanubhutsadhanaye.blogspot.com",
         "seeds": ["https://gurugamyaanubhutsadhanaye.blogspot.com/"],
     },
-    # Naran S. Balakumar: switch words, Bach flower remedies, Reiki. The "Ask Naran"
-    # questions and his answers are written into the posts themselves.
+    # Remedy sources: switch words, Bach flower remedies and Reiki. The questions and the
+    # answers are written into the posts themselves. Shown without the teacher's name
+    # (rag/hide_names.py), and never listed as a source under an answer.
     {
         "slug": "reachonnaran",
-        "name": "Reach on Naran",
+        "name": "Switch Words",
         "base": "https://reachonnaran.com",
         "seeds": ["https://reachonnaran.com/tag/ask-naran/"],
-        "teacher": "Naran S. Balakumar",
+        "remedy": True,
         "min_chars": 20,  # the weekly chanting posts are a single line of switch words
     },
     {
         "slug": "naransevents",
-        "name": "Naran's Events",
+        "name": "Healing Workshops",
         "base": "https://naransevents.wordpress.com",
         "seeds": ["https://naransevents.wordpress.com/about/"],
-        "teacher": "Naran S. Balakumar",
+        "remedy": True,
         "min_chars": 20,  # the weekly chanting posts are a single line of switch words
     },
     {
         "slug": "reachlotus",
-        "name": "Reach Lotus",
+        "name": "Life Is Easy",
         "base": "https://www.reachlotus.com",
         "seeds": ["https://www.reachlotus.com/blog/categories/life-is-easy-1"],
-        "teacher": "Naran S. Balakumar",
+        "remedy": True,
         "min_chars": 20,  # the weekly chanting posts are a single line of switch words
         # Wix: the post body is server-rendered in this block; general extraction picks the sidebar instead.
         "content_selector": '[data-id="content-viewer"]',

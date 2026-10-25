@@ -19,10 +19,16 @@ def test_answer_spans_need_two_words():
 
 
 def test_only_invented_combinations_are_flagged():
-    naran = [Source("t", POST, True, teacher="Naran S. Balakumar")]
+    remedy = [Source("t", POST, True, remedy=True)]
     answer = 'Chant "TOGETHER CHANGE ADJUST" and "DIVINE COUNT".'
-    assert unverified_switch_words(answer, naran) == ["DIVINE COUNT"]
+    assert unverified_switch_words(answer, remedy) == ["DIVINE COUNT"]
 
 
-def test_nothing_is_checked_without_a_teacher_source():
+def test_nothing_is_checked_without_a_remedy_source():
     assert unverified_switch_words('Chant "DIVINE COUNT".', [Source("t", "x", True)]) == []
+
+
+def test_unquoted_runs_are_checked_too():
+    remedy = [Source("t", POST, True, remedy=True)]
+    assert switch_word_spans("Chant TOGETHER CHANGE ADJUST and DIVINE COUNT daily.") == ["TOGETHER CHANGE ADJUST", "DIVINE COUNT"]
+    assert unverified_switch_words("Chant TOGETHER CHANGE ADJUST and DIVINE COUNT daily.", remedy) == ["DIVINE COUNT"]

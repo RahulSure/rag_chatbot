@@ -3,8 +3,8 @@ import { SwitchWordsApp } from "@/components/practice/SwitchWordsApp";
 import { ToolHeader } from "@/components/ToolHeader";
 
 export const metadata: Metadata = {
-  title: "Switch Words Finder — Naran S. Balakumar's Switch Words",
-  description: "Find the switch words Naran S. Balakumar gave for confidence, money, career, marriage, study, fear, sleep and more, exactly as he wrote them.",
+  title: "Switch Words Finder — Switch Words for Every Need",
+  description: "Find switch words for confidence, money, career, marriage, study, fear, sleep and more, exactly as they were given.",
 };
 
 export default function SwitchWordsPage() {
