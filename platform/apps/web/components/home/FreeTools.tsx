@@ -17,7 +17,12 @@ const GLYPHS: Record<string, React.ReactNode> = {
       <path d="M20 5a15 15 0 0 1 0 30a9 15 0 0 0 0-30Z" fill="currentColor" stroke="none" />
     </>
   ),
-  dasha: <path d="M5 10h30M5 17h18M5 24h26M5 31h11" />,
+  muhurat: (
+    <>
+      <path d="M4 28h32M12 28a8 8 0 0 1 16 0" />
+      <path d="M20 10v5M9 15l3 3M31 15l-3 3" />
+    </>
+  ),
   sadeSati: (
     <>
       <circle cx="20" cy="20" r="6" />
@@ -53,7 +58,7 @@ const GLYPHS: Record<string, React.ReactNode> = {
 const TOOLS: { id: string; title: Key; desc: Key; href?: string }[] = [
   { id: "kundli", title: "v4.toolKundli", desc: "v4.toolKundliDesc", href: "/kundli" },
   { id: "panchang", title: "v4.toolPanchang", desc: "v4.toolPanchangDesc", href: "/#today" },
-  { id: "dasha", title: "v4.toolDasha", desc: "v4.toolDashaDesc", href: "/kundli" },
+  { id: "muhurat", title: "mu.nav", desc: "mu.navDesc", href: "/muhurat" },
   { id: "sadeSati", title: "v4.toolSadeSati", desc: "v4.toolSadeSatiDesc", href: "/kundli" },
   { id: "numerology", title: "v4.toolNumerology", desc: "v4.toolNumerologyDesc", href: "/numerology" },
   { id: "tarot", title: "v4.toolTarot", desc: "v4.toolTarotDesc", href: "/tarot" },

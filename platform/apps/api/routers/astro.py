@@ -15,6 +15,7 @@ from fastapi import APIRouter, HTTPException, Query
 from packages.shared.schemas import BirthDetails
 from services.astro import places
 from services.astro.chart import compute_chart, panchang_now
+from services.astro.muhurat import muhurat_now
 
 router = APIRouter(prefix="/astro", tags=["Astrology"])
 
@@ -53,3 +54,16 @@ def panchang(
 ):
     """Today's panchang (tithi, nakshatra, yoga, karana, vara) at a place."""
     return panchang_now(lat, lon, _zone(tz))
+
+
+@router.get("/muhurat")
+def muhurat(
+    lat: float = Query(..., ge=-90, le=90),
+    lon: float = Query(..., ge=-180, le=180),
+    tz: str = Query("Asia/Kolkata"),
+):
+    """The Vedic day running now at a place: sunrise, hora, choghadiya, Rahu Kaal and the good muhurtas."""
+    try:
+        return muhurat_now(lat, lon, _zone(tz))
+    except ValueError as e:  # polar day or night
+        raise HTTPException(status_code=422, detail=str(e))

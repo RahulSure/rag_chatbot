@@ -13,6 +13,7 @@ const TOOL_LINKS: NavLink[] = [
   { href: "/kundli", label: "nav.kundli" },
   { href: "/numerology", label: "v4.toolNumerology" },
   { href: "/tarot", label: "v4.toolTarot" },
+  { href: "/muhurat", label: "mu.nav" },
   { href: "/#today", label: "v4.toolPanchang" },
 ];
 

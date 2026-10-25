@@ -10,6 +10,7 @@ const EXPLORE: { href: string; label: Key }[] = [
   { href: "/kundli", label: "nav.kundli" },
   { href: "/numerology", label: "num.nav" },
   { href: "/tarot", label: "v4.toolTarot" },
+  { href: "/muhurat", label: "mu.nav" },
   { href: "/#today", label: "v4.toolPanchang" },
   { href: "/teachings", label: "nav.explore" },
 ];

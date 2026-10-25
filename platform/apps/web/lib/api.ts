@@ -336,3 +336,33 @@ export async function getPanchang(place: Place): Promise<Panchang | null> {
   if (!res.ok) return null;
   return res.json();
 }
+
+export interface TimeSpan {
+  start: string; // ISO time with the place's offset
+  end: string;
+}
+
+export interface Muhurat {
+  date: string;
+  weekday: string;
+  weekday_lord: string;
+  tz: string;
+  sunrise: string;
+  sunset: string;
+  next_sunrise: string;
+  brahma_muhurta: TimeSpan;
+  abhijit: TimeSpan;
+  rahu_kaal: TimeSpan;
+  yamaganda: TimeSpan;
+  gulika: TimeSpan;
+  horas: (TimeSpan & { lord: string; day: boolean })[];
+  choghadiya: (TimeSpan & { name: string; lord: string; quality: "best" | "good" | "neutral" | "avoid"; day: boolean })[];
+}
+
+/** The Vedic day running now at a place; null where the Sun does not rise or set. */
+export async function getMuhurat(place: Place): Promise<Muhurat | null> {
+  const params = new URLSearchParams({ lat: String(place.latitude), lon: String(place.longitude), tz: place.tz });
+  const res = await fetch(`${API_BASE}/astro/muhurat?${params}`, { cache: "no-store" });
+  if (!res.ok) return null;
+  return res.json();
+}
