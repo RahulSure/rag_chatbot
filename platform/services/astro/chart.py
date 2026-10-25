@@ -17,6 +17,7 @@ import math
 from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
+from services.astro import jyotish
 from services.astro.names import (
     GRAHAS_HI,
     NAKSHATRAS_HI,
@@ -85,6 +86,19 @@ def _retrograde(utc: datetime) -> dict[str, bool]:
     return flags
 
 
+def sidereal_longitudes(utc: datetime) -> dict[str, float]:
+    """Sidereal (Lahiri) longitudes of the nine grahas at a naive UTC moment."""
+    from jyotipy import ayanamsa, ephemeris
+
+    epoch = ephemeris.epoch_from_datetime(utc, 0.0)
+    aya = ayanamsa.get_ayanamsa(epoch, ayanamsa.AyanamsaSystem.LAHIRI)
+    out = {}
+    for graha, value in ephemeris.tropical_longitudes(epoch).items():
+        lon = value["longitude"] if isinstance(value, dict) else value
+        out[_name(graha)] = (lon - aya) % 360
+    return out
+
+
 def _period(p: dict) -> dict:
     return {"lord": _name(p["lord"]), "lord_hi": GRAHAS_HI[_name(p["lord"])],
             "start": p["start"].date().isoformat(), "end": p["end"].date().isoformat()}
@@ -130,6 +144,7 @@ def compute_chart(birth_date: date, birth_time: time, tz_name: str, latitude: fl
 
     moon = next(p for p in planets if p["name"] == "Moon")
     panchang = chart.panchanga()
+    longitudes = {p["name"]: p["longitude"] for p in planets}
     return {
         "input": {"date": birth_date.isoformat(), "time": birth_time.strftime("%H:%M"), "tz": tz_name,
                   "utc_offset_hours": offset, "latitude": latitude, "longitude": longitude},
@@ -146,6 +161,12 @@ def compute_chart(birth_date: date, birth_time: time, tz_name: str, latitude: fl
         },
         "sade_sati": chart.sade_sati(now, 0.0),
         "panchang_at_birth": _plain(panchang),
+        "vargas": jyotish.vargas(longitudes, asc_long),
+        "karakas": jyotish.chara_karakas(longitudes),
+        "ishta_devata": jyotish.ishta_devata(longitudes),
+        "mangal_dosha": jyotish.mangal_dosha(longitudes, asc_long),
+        "ashtakavarga": jyotish.ashtakavarga(longitudes, asc_long),
+        "western": jyotish.western(longitudes, asc_long, aya),
     }
 
 

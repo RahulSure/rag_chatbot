@@ -195,6 +195,23 @@ class BirthDetails(BaseModel):
     place: Optional[str] = None
 
 
+class MatchRequest(BaseModel):
+    groom: BirthDetails
+    bride: BirthDetails
+
+
+class DayRequest(BaseModel):
+    birth: BirthDetails
+    # Where the visitor is today (for sunrise); the birthplace when left out.
+    latitude: Optional[float] = Field(None, ge=-90, le=90)
+    longitude: Optional[float] = Field(None, ge=-180, le=180)
+    tz: Optional[str] = None
+
+
+class VarshaphalRequest(DayRequest):
+    year: int = Field(..., ge=1900, le=2100)
+
+
 class VectorStoreHealth(BaseModel):
     status: str
     vector_store_docs: int

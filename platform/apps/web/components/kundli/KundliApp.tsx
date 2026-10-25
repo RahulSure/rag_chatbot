@@ -7,6 +7,19 @@ import { getBirthChart, getPanchang, type BirthChart, type BirthDetails, type Pa
 import { useLanguage, type Lang } from "@/lib/i18n";
 import { BirthForm } from "./BirthForm";
 import { NorthIndianChart } from "./NorthIndianChart";
+import { AshtakavargaPanel, IshtaPanel, MangalPanel, NakshatraPanel, ReportsPanel, VargaPanel, WesternPanel } from "./ChartPanels";
+import type { Key } from "@/lib/i18n";
+
+const TABS: { id: string; label: Key }[] = [
+  { id: "overview", label: "kt.overview" },
+  { id: "vargas", label: "kt.vargas" },
+  { id: "nakshatra", label: "kt.nakshatra" },
+  { id: "ishta", label: "kt.ishta" },
+  { id: "mangal", label: "kt.mangal" },
+  { id: "ashtaka", label: "kt.ashtaka" },
+  { id: "reports", label: "kt.reports" },
+  { id: "western", label: "kt.western" },
+];
 
 // Per-viewer convenience only: birth details never leave the browser except to be calculated.
 const STORAGE_KEY = "sadhak_birth";
@@ -61,6 +74,7 @@ export function KundliApp() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(true);
+  const [tab, setTab] = useState("overview");
 
   const calculate = async (d: BirthDetails) => {
     setBusy(true);
@@ -129,6 +143,26 @@ export function KundliApp() {
               {t("kundli.unknownTimeNote")}
             </p>
           )}
+
+          <div role="tablist" aria-label={t("kundli.title")} className="-mx-4 flex gap-1 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0">
+            {TABS.map((tb) => (
+              <button key={tb.id} type="button" role="tab" aria-selected={tab === tb.id} onClick={() => setTab(tb.id)}
+                      className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm transition-colors ${
+                        tab === tb.id ? "border-gold text-foreground" : "border-transparent text-cosmic-400 hover:text-foreground"}`}>
+                {t(tb.label)}
+              </button>
+            ))}
+          </div>
+
+          {tab === "vargas" && <VargaPanel chart={chart} />}
+          {tab === "nakshatra" && <NakshatraPanel chart={chart} />}
+          {tab === "ishta" && <IshtaPanel chart={chart} />}
+          {tab === "mangal" && <MangalPanel chart={chart} />}
+          {tab === "ashtaka" && <AshtakavargaPanel chart={chart} />}
+          {tab === "reports" && <ReportsPanel chart={chart} />}
+          {tab === "western" && <WesternPanel chart={chart} />}
+
+          {tab === "overview" && (<>
 
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
             <Stat label={t("kundli.lagna")} value={sign(chart.ascendant)} sub={degrees(chart.ascendant.degree_in_sign)} />
@@ -233,6 +267,7 @@ export function KundliApp() {
             )}
             <p className="text-xs text-cosmic-500">{t("kundli.method")}</p>
           </div>
+          </>)}
         </>
       )}
     </div>
