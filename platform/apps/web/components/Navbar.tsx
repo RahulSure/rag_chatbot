@@ -2,130 +2,170 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
-import { Menu, X, Search, MessageCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
+import { useLanguage, type Key } from "@/lib/i18n";
+import { TOOL_GROUPS } from "@/lib/tools";
 
-const NAV_LINKS_EN = [
-  { href: "/", label: "Home" },
-  { href: "/chat", label: "AI Chat" },
-  { href: "/teachings", label: "Teachings" },
-  { href: "/blog", label: "Blog" },
-  { href: "/guru", label: "About Gurudev" },
-  { href: "/search", label: "Search" },
+type NavLink = { href: string; label: Key };
+
+const AFTER_TOOLS: NavLink[] = [
+  { href: "/teachings", label: "nav.explore" },
+  { href: "/blog", label: "nav.articles" },
 ];
 
-const NAV_LINKS_HI = [
-  { href: "/", label: "होम" },
-  { href: "/chat", label: "प्रश्न पूछें" },
-  { href: "/teachings", label: "शिक्षाएं" },
-  { href: "/blog", label: "लेख" },
-  { href: "/guru", label: "गुरुदेव के बारे में" },
-  { href: "/search", label: "खोजें" },
+const MORE_LINKS: NavLink[] = [
+  { href: "/books", label: "nav.library" },
+  { href: "/guru", label: "nav.about" },
+  { href: "/search", label: "nav.search" },
 ];
 
+// The tools that open the menu; the menu itself lists every one of them.
+const TOOL_PATHS = TOOL_GROUPS.flatMap((g) => g.tools.map((t) => t.href.split(/[?#]/)[0])).filter((p) => p !== "/");
+
+/** Spaced gold wordmark, a few quiet links with every free tool in one menu, one outlined action. */
 export function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [lang, setLang] = useState<"en" | "hi">("en");
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const toolsRef = useRef<HTMLDivElement>(null);
+  const { lang, setLang, t } = useLanguage();
 
+  const isActive = (href: string) => !href.includes("#") && href !== "/chat" ? pathname.startsWith(href.split("?")[0]) : pathname === href;
+  const linkClass = (href: string) =>
+    `text-sm transition-colors hover:text-gold ${isActive(href) ? "text-gold" : "text-cosmic-300"}`;
+  const inTools = TOOL_PATHS.some((p) => p !== "/chat" && pathname.startsWith(p)) || pathname === "/tools";
+
+  // Close the menus on navigation, on Escape and on a click outside the tools menu.
   useEffect(() => {
-    const saved = localStorage.getItem("shrimali_lang") as "en" | "hi" | null;
-    if (saved) setLang(saved);
-  }, []);
-
-  const toggleLang = () => {
-    const next = lang === "en" ? "hi" : "en";
-    setLang(next);
-    localStorage.setItem("shrimali_lang", next);
-  };
-
-  const NAV_LINKS = lang === "hi" ? NAV_LINKS_HI : NAV_LINKS_EN;
+    setToolsOpen(false);
+    setOpen(false);
+  }, [pathname]);
+  useEffect(() => {
+    if (!toolsOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!toolsRef.current?.contains(e.target as Node)) setToolsOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setToolsOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [toolsOpen]);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gold/10 bg-background/80 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-3">
-          <span className="text-2xl">🕉</span>
-          <div>
-            <div className="font-serif text-gold font-bold leading-tight text-sm">
-              Sadhak<span className="text-gold/60">.ai</span>
-            </div>
-            <div className="text-cosmic-500 text-xs leading-tight">
-              {lang === "hi" ? "साधक का आत्मज्ञान साथी" : "AI Spiritual Companion"}
-            </div>
-          </div>
+    <nav aria-label="Primary" className="sticky top-0 z-50 border-b border-line bg-background/85 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-4">
+        <Link href="/" className="font-serif text-xl font-semibold uppercase tracking-[0.32em] text-gold">
+          Sadhak
         </Link>
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-1">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`px-3 py-2 rounded-lg text-sm transition-all font-devanagari ${
-                pathname === link.href
-                  ? "text-gold bg-gold/10"
-                  : "text-cosmic-300 hover:text-foreground hover:bg-cosmic-800/50"
-              }`}
+        <div className="hidden items-center gap-7 lg:flex">
+          <Link href="/chat" aria-current={pathname === "/chat" ? "page" : undefined} className={linkClass("/chat")}>
+            {t("nav.chat")}
+          </Link>
+
+          <div ref={toolsRef}>
+            <button
+              type="button"
+              onClick={() => setToolsOpen((v) => !v)}
+              aria-expanded={toolsOpen}
+              aria-controls="tools-menu"
+              className={`inline-flex items-center gap-1 text-sm transition-colors hover:text-gold ${inTools ? "text-gold" : "text-cosmic-300"}`}
             >
-              {link.label}
+              {t("nav.tools")}
+              <ChevronDown size={14} aria-hidden="true" className={`transition-transform ${toolsOpen ? "rotate-180" : ""}`} />
+            </button>
+            {toolsOpen && (
+              <div id="tools-menu" className="absolute inset-x-0 top-full border-b border-line bg-surface shadow-cosmic">
+                <div className="mx-auto grid max-w-6xl grid-cols-4 gap-8 px-4 py-8">
+                  {TOOL_GROUPS.map((g) => (
+                    <div key={g.title}>
+                      <p className="label-caps text-[0.68rem]">{t(g.title)}</p>
+                      <ul className="mt-3 space-y-0.5">
+                        {g.tools.map((tool) => (
+                          <li key={tool.href}>
+                            <Link href={tool.href} onClick={() => setToolsOpen(false)}
+                                  className="-mx-2 block rounded-md px-2 py-1.5 text-sm text-cosmic-200 transition-colors hover:bg-gold/10 hover:text-foreground">
+                              {t(tool.title)}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-line">
+                  <div className="mx-auto max-w-6xl px-4 py-3">
+                    <Link href="/tools" onClick={() => setToolsOpen(false)} className="inline-flex items-center gap-1.5 text-sm text-gold hover:underline">
+                      {t("tools.all")} <ArrowRight size={14} aria-hidden="true" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {AFTER_TOOLS.map((link) => (
+            <Link key={link.href} href={link.href} aria-current={isActive(link.href) ? "page" : undefined} className={linkClass(link.href)}>
+              {t(link.label)}
             </Link>
           ))}
         </div>
 
-        {/* CTA + Lang toggle */}
-        <div className="hidden md:flex items-center gap-3">
-          {/* Language toggle */}
+        <div className="ml-auto flex items-center gap-2">
           <button
-            onClick={toggleLang}
-            className="px-3 py-1.5 rounded-lg border border-gold/20 text-xs text-cosmic-400
-                       hover:border-gold/50 hover:text-gold transition-all font-devanagari"
-            title="Toggle language"
+            type="button"
+            onClick={() => setLang(lang === "en" ? "hi" : "en")}
+            aria-label={t("nav.language")}
+            className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-gold/20 px-2.5 text-sm text-cosmic-300 transition-colors hover:border-gold/50 hover:text-gold"
           >
             {lang === "en" ? "हिं" : "EN"}
           </button>
-          <Link href="/search" className="text-cosmic-400 hover:text-foreground transition-colors">
-            <Search size={18} />
+          <ThemeToggle />
+          <Link href="/chat" className="btn-ghost ml-2 hidden whitespace-nowrap px-5 py-2 text-sm md:inline-flex">
+            {t("nav.cta")}
           </Link>
-          <Link href="/chat" className="btn-gold text-sm px-4 py-2 rounded-lg flex items-center gap-2 font-devanagari">
-            <MessageCircle size={14} />
-            {lang === "hi" ? "AI गुरु से पूछें" : "Ask AI Guru"}
-          </Link>
-        </div>
-
-        {/* Mobile menu toggle */}
-        <div className="md:hidden flex items-center gap-3">
           <button
-            onClick={toggleLang}
-            className="px-2 py-1 rounded border border-gold/20 text-xs text-cosmic-400 font-devanagari"
-          >
-            {lang === "en" ? "हिं" : "EN"}
-          </button>
-          <button
-            className="text-cosmic-300 hover:text-foreground"
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center text-foreground lg:hidden"
             onClick={() => setOpen(!open)}
+            aria-label={t("nav.menu")}
+            aria-expanded={open}
           >
-            {open ? <X size={24} /> : <Menu size={24} />}
+            {open ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t border-gold/10 bg-background/95 backdrop-blur-md px-6 py-4 space-y-1">
-          {NAV_LINKS.map((link) => (
+        <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-line bg-background px-4 pb-6 pt-2 lg:hidden">
+          <Link href="/chat" onClick={() => setOpen(false)} className="block border-b border-line py-3.5 text-lg text-foreground">
+            {t("nav.chat")}
+          </Link>
+          {TOOL_GROUPS.map((g) => (
+            <div key={g.title} className="border-b border-line pb-2">
+              <p className="label-caps pb-1 pt-4 text-[0.68rem]">{t(g.title)}</p>
+              <div className="grid grid-cols-2 gap-x-4">
+                {g.tools.filter((tool) => tool.href !== "/chat").map((tool) => (
+                  <Link key={tool.href} href={tool.href} onClick={() => setOpen(false)} className="block py-2 text-base text-foreground">
+                    {t(tool.title)}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+          {[...AFTER_TOOLS, ...MORE_LINKS].map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
-              className={`block px-4 py-3 rounded-lg text-sm transition-all font-devanagari ${
-                pathname === link.href
-                  ? "text-gold bg-gold/10"
-                  : "text-cosmic-300 hover:text-foreground"
-              }`}
+              className="block border-b border-line py-3.5 text-lg text-foreground last:border-b-0"
             >
-              {link.label}
+              {t(link.label)}
             </Link>
           ))}
         </div>

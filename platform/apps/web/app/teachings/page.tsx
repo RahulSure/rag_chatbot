@@ -21,8 +21,8 @@ export default async function TeachingsPage() {
             Spiritual Teachings
           </h1>
           <p className="text-cosmic-400 max-w-xl mx-auto text-lg">
-            Sadgurudev's knowledge spans a vast spectrum of spiritual sciences. 
-            Explore each discipline through his actual teachings.
+            Browse the teachings by discipline. Each topic gathers the passages
+            and articles behind it.
           </p>
         </div>
 
@@ -33,12 +33,11 @@ export default async function TeachingsPage() {
               href={`/teachings/${topic.slug}`}
               className="cosmic-card p-8 flex items-start gap-5 group"
             >
-              <div className="text-4xl flex-shrink-0">{topic.icon || "🕉"}</div>
               <div className="flex-1">
+                <p lang="hi" className="font-serif text-3xl text-gold mb-3">{topic.label_hi}</p>
                 <h2 className="font-serif text-2xl text-foreground group-hover:text-gold transition-colors mb-1">
                   {topic.label}
                 </h2>
-                <p className="text-gold/60 text-sm font-devanagari mb-3">{topic.label_hi}</p>
                 {topic.description && (
                   <p className="text-cosmic-400 text-sm leading-relaxed mb-4">{topic.description}</p>
                 )}

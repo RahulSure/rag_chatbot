@@ -33,7 +33,7 @@ export default function SearchPage() {
           <span className="text-gold text-sm uppercase tracking-widest">Explore</span>
           <h1 className="font-serif text-5xl text-foreground mt-2 mb-4">Semantic Search</h1>
           <p className="text-cosmic-400">
-            Search across Sadgurudev's teachings by concept, not just keywords.
+            Search the teachings by concept, not just keywords.
           </p>
         </div>
 
@@ -60,13 +60,13 @@ export default function SearchPage() {
         {loading && (
           <div className="text-center py-12 text-cosmic-500">
             <Loader2 size={24} className="animate-spin mx-auto mb-3 text-gold" />
-            Searching through Sadgurudev's teachings...
+            Searching the teachings…
           </div>
         )}
 
         {!loading && searched && results.length === 0 && (
           <div className="text-center py-12 text-cosmic-500">
-            <div className="text-4xl mb-3">🔍</div>
+            <Search size={32} className="mx-auto mb-3 text-gold/60" aria-hidden="true" />
             <p>No passages found. Try a different search term.</p>
           </div>
         )}
@@ -78,13 +78,13 @@ export default function SearchPage() {
             </p>
             {results.map((result, i) => (
               <div key={i} className="cosmic-card p-6">
-                <div className="flex items-center gap-2 mb-3 text-xs text-gold/60">
+                <div className="flex items-center gap-2 mb-3 text-xs text-gold">
                   <BookOpen size={10} />
-                  <span>{result.book || "Saundarya"}</span>
+                  <span>{result.book || "Source"}</span>
                   {result.page && <span>— Page {result.page}</span>}
                   {result.chapter && <span>— {result.chapter}</span>}
                   {result.topic && (
-                    <span className="ml-auto px-2 py-0.5 rounded-full bg-gold/10 text-gold/50">
+                    <span className="ml-auto px-2 py-0.5 rounded-full bg-gold/10 text-cosmic-400">
                       {result.topic}
                     </span>
                   )}
@@ -97,7 +97,7 @@ export default function SearchPage() {
                 </p>
                 <Link
                   href={`/chat?q=${encodeURIComponent(query)}`}
-                  className="inline-flex items-center gap-1 text-xs text-gold/50 hover:text-gold mt-4 transition-colors"
+                  className="inline-flex items-center gap-1 text-xs text-cosmic-400 hover:text-gold mt-4 transition-colors"
                 >
                   Ask about this →
                 </Link>

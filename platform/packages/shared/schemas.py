@@ -4,7 +4,7 @@ Shared Pydantic schemas used across apps/api and services.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date as date_type, datetime, time as time_type
 from typing import Optional
 from pydantic import BaseModel, Field
 
@@ -36,6 +36,7 @@ class SourceNode(BaseModel):
     chapter: Optional[str] = None
     topic: Optional[str] = None
     text_snippet: str
+    url: Optional[str] = None  # set for web-article sources
 
 
 class QueryResponse(BaseModel):
@@ -179,6 +180,36 @@ class IngestRequest(BaseModel):
 class IngestResponse(BaseModel):
     status: str
     message: str
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Astrology
+# ──────────────────────────────────────────────────────────────────────────────
+
+class BirthDetails(BaseModel):
+    date: date_type = Field(..., description="Birth date at the birthplace (YYYY-MM-DD)")
+    time: time_type = Field(..., description="Local clock time of birth (HH:MM)")
+    latitude: float = Field(..., ge=-90, le=90)
+    longitude: float = Field(..., ge=-180, le=180)
+    tz: str = Field(..., description="IANA time zone of the birthplace, e.g. Asia/Kolkata")
+    place: Optional[str] = None
+
+
+class MatchRequest(BaseModel):
+    groom: BirthDetails
+    bride: BirthDetails
+
+
+class DayRequest(BaseModel):
+    birth: BirthDetails
+    # Where the visitor is today (for sunrise); the birthplace when left out.
+    latitude: Optional[float] = Field(None, ge=-90, le=90)
+    longitude: Optional[float] = Field(None, ge=-180, le=180)
+    tz: Optional[str] = None
+
+
+class VarshaphalRequest(DayRequest):
+    year: int = Field(..., ge=1900, le=2100)
 
 
 class VectorStoreHealth(BaseModel):

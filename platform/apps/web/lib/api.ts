@@ -1,5 +1,5 @@
 /**
- * Typed API client for the Shrimali AI FastAPI backend.
+ * Typed API client for the Sadhak.ai FastAPI backend.
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -10,6 +10,7 @@ export interface SourceNode {
   chapter?: string;
   topic?: string;
   text_snippet: string;
+  url?: string; // web-article sources link back to the original page
 }
 
 export interface QueryResponse {
@@ -237,6 +238,289 @@ export async function getTrendingQueries(limit = 10): Promise<TrendingQuery[]> {
   const res = await fetch(`${API_BASE}/analytics/trending?limit=${limit}`, {
     next: { revalidate: 3600 },
   });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+// ── Astrology ──────────────────────────────────────────────────────────────
+
+export interface Place {
+  name: string;
+  region: string;
+  country: string;
+  latitude: number;
+  longitude: number;
+  tz: string;
+  population: number;
+}
+
+export interface BirthDetails {
+  name?: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:MM, local clock time at the birthplace
+  timeUnknown?: boolean;
+  place: Place;
+}
+
+export interface ChartPosition {
+  longitude: number;
+  sign: string;
+  sign_hi: string;
+  degree_in_sign: number;
+  nakshatra_index: number;
+  nakshatra_hi: string;
+  pada: number;
+}
+
+export interface ChartPlanet extends ChartPosition {
+  name: string;
+  name_hi: string;
+  nakshatra: string;
+  house: number;
+  retrograde: boolean;
+}
+
+export interface DashaPeriod {
+  lord: string;
+  lord_hi: string;
+  start: string;
+  end: string;
+}
+
+export interface ChartHouse {
+  house: number;
+  sign: string;
+  sign_hi: string;
+  planets: string[];
+}
+
+export interface VargaChart {
+  lagna: string;
+  lagna_hi: string;
+  positions: Record<string, string>;
+  houses: ChartHouse[];
+}
+
+export interface MangalDosha {
+  from_lagna: { house: number; dosha: boolean };
+  from_moon: { house: number; dosha: boolean };
+  from_venus: { house: number; dosha: boolean };
+  manglik: boolean;
+  cancellations: ("own_sign" | "exalted" | "jupiter")[];
+  effective: boolean;
+}
+
+export interface BirthChart {
+  input: { date: string; time: string; tz: string; place?: string; latitude: number; longitude: number };
+  ayanamsa: { system: string; value: number };
+  ascendant: ChartPosition;
+  moon_sign: { sign: string; sign_hi: string };
+  birth_nakshatra: { name: string; name_hi: string; pada: number };
+  planets: ChartPlanet[];
+  houses: ChartHouse[];
+  dasha: { mahadasha: DashaPeriod | null; antardasha: DashaPeriod | null; sequence: DashaPeriod[] };
+  sade_sati: { sade_sati: boolean; phase: string | null; house_from_moon: number; kantaka_sani: boolean; ashtama_sani: boolean };
+  vargas: Record<string, VargaChart>;
+  karakas: { karaka: string; planet: string; degree: number }[];
+  ishta_devata: {
+    atmakaraka: string; karakamsha: string; karakamsha_hi: string; twelfth: string; twelfth_hi: string;
+    planets_in_twelfth: string[]; twelfth_lord: string; significator: string;
+  };
+  mangal_dosha: MangalDosha;
+  ashtakavarga: { bav: Record<string, number[]>; sav: number[]; total: number };
+  western: {
+    ascendant: { longitude: number; sign: string; degree_in_sign: number };
+    planets: { name: string; longitude: number; sign: string; degree_in_sign: number }[];
+    aspects: { a: string; b: string; aspect: string; orb: number }[];
+  };
+}
+
+export interface Panchang {
+  tithi: { name: string; paksha: string; number: number };
+  nakshatra: { name: string; name_hi?: string; pada: number };
+  yoga: { name: string };
+  karana: { name: string };
+  vara: string;
+  date: string;
+}
+
+export async function searchPlaces(q: string, limit = 8): Promise<Place[]> {
+  const res = await fetch(`${API_BASE}/astro/places?${new URLSearchParams({ q, limit: String(limit) })}`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function getBirthChart(details: BirthDetails): Promise<BirthChart> {
+  const res = await fetch(`${API_BASE}/astro/chart`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      date: details.date,
+      time: details.timeUnknown ? "12:00" : details.time,
+      latitude: details.place.latitude,
+      longitude: details.place.longitude,
+      tz: details.place.tz,
+      place: details.place.name,
+    }),
+  });
+  if (!res.ok) throw new Error(`Chart request failed: ${res.status}`);
+  return res.json();
+}
+
+export async function getPanchang(place: Place): Promise<Panchang | null> {
+  const params = new URLSearchParams({ lat: String(place.latitude), lon: String(place.longitude), tz: place.tz });
+  const res = await fetch(`${API_BASE}/astro/panchang?${params}`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export interface TimeSpan {
+  start: string; // ISO time with the place's offset
+  end: string;
+}
+
+export interface Muhurat {
+  date: string;
+  weekday: string;
+  weekday_lord: string;
+  tz: string;
+  sunrise: string;
+  sunset: string;
+  next_sunrise: string;
+  brahma_muhurta: TimeSpan;
+  abhijit: TimeSpan;
+  rahu_kaal: TimeSpan;
+  yamaganda: TimeSpan;
+  gulika: TimeSpan;
+  horas: (TimeSpan & { lord: string; day: boolean })[];
+  choghadiya: (TimeSpan & { name: string; lord: string; quality: "best" | "good" | "neutral" | "avoid"; day: boolean })[];
+}
+
+/** The Vedic day running now at a place; null where the Sun does not rise or set. */
+export async function getMuhurat(place: Place): Promise<Muhurat | null> {
+  const params = new URLSearchParams({ lat: String(place.latitude), lon: String(place.longitude), tz: place.tz });
+  const res = await fetch(`${API_BASE}/astro/muhurat?${params}`, { cache: "no-store" });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+
+function birthBody(d: BirthDetails) {
+  return {
+    date: d.date,
+    time: d.timeUnknown ? "12:00" : d.time,
+    latitude: d.place.latitude,
+    longitude: d.place.longitude,
+    tz: d.place.tz,
+    place: d.place.name,
+  };
+}
+
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`${path} failed: ${res.status}`);
+  return res.json();
+}
+
+export interface Koota {
+  koota: string;
+  max: number;
+  points: number;
+  groom: string | number;
+  bride: string | number;
+}
+
+export interface MatchResult {
+  kootas: Koota[];
+  total: number;
+  max: number;
+  doshas: { bhakoot: { present: boolean; cancelled: boolean }; nadi: { present: boolean; cancelled: boolean } };
+  mangal: { groom: MangalDosha; bride: MangalDosha; balanced: boolean };
+  groom: Pick<BirthChart, "ascendant" | "moon_sign" | "birth_nakshatra" | "mangal_dosha">;
+  bride: Pick<BirthChart, "ascendant" | "moon_sign" | "birth_nakshatra" | "mangal_dosha">;
+}
+
+export function matchKundli(groom: BirthDetails, bride: BirthDetails): Promise<MatchResult> {
+  return postJson("/astro/match", { groom: birthBody(groom), bride: birthBody(bride) });
+}
+
+export interface MoonReading {
+  nakshatra: string;
+  nakshatra_hi: string;
+  nakshatra_index: number;
+  moon_sign: string;
+  moon_sign_hi: string;
+  tara: string;
+  tara_number: number;
+  tara_quality: "good" | "avoid" | "mixed";
+  moon_house: number;
+  chandra: "good" | "hard" | "neutral";
+  chandrashtama: boolean;
+}
+
+export interface DayOutlook {
+  natal: { nakshatra: string; nakshatra_hi: string; nakshatra_index: number; pada: number; moon_sign: string; moon_sign_hi: string; lagna: string; lagna_hi: string };
+  now: MoonReading & { at: string };
+  week: (MoonReading & { date: string; sunrise: string })[];
+  chakra: { tara: string; number: number; quality: string; nakshatras: { index: number; name: string; name_hi: string }[] }[];
+  dasha: BirthChart["dasha"];
+  sade_sati: BirthChart["sade_sati"];
+}
+
+export function getMyDay(birth: BirthDetails, here?: Place | null): Promise<DayOutlook> {
+  return postJson("/astro/day", {
+    birth: birthBody(birth),
+    ...(here ? { latitude: here.latitude, longitude: here.longitude, tz: here.tz } : {}),
+  });
+}
+
+export interface Varshaphal {
+  year: number;
+  age: number;
+  pravesh: string;
+  varsha_lagna: { sign: string; sign_hi: string };
+  muntha: { sign: string; sign_hi: string; house: number; favourable: boolean };
+  chart: Pick<BirthChart, "ascendant" | "planets" | "houses" | "moon_sign" | "birth_nakshatra">;
+}
+
+export function getVarshaphal(birth: BirthDetails, year: number): Promise<Varshaphal> {
+  return postJson("/astro/varshaphal", { birth: birthBody(birth), year });
+}
+
+export interface CalendarDay {
+  date: string;
+  weekday: string;
+  sunrise: string;
+  tithi: number;
+  paksha: "Shukla" | "Krishna";
+  nakshatra: string;
+  nakshatra_hi: string;
+  phase: number;
+  events: string[];
+}
+
+export async function getCalendar(year: number, month: number, place: Place): Promise<{ days: CalendarDay[]; tz: string } | null> {
+  const params = new URLSearchParams({
+    year: String(year), month: String(month), lat: String(place.latitude), lon: String(place.longitude), tz: place.tz,
+  });
+  const res = await fetch(`${API_BASE}/astro/calendar?${params}`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export interface SwitchWordResult {
+  title: string;
+  topic: string | null;
+  switch_words: string[];
+  excerpt: string;
+}
+
+export async function findSwitchWords(q: string, limit = 8): Promise<SwitchWordResult[]> {
+  const res = await fetch(`${API_BASE}/switchwords?${new URLSearchParams({ q, limit: String(limit) })}`);
   if (!res.ok) return [];
   return res.json();
 }

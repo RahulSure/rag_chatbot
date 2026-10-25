@@ -72,3 +72,9 @@ responses.json
 *.mp4
 data/
 public/videos/
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+
+# Taste-skill working files and full-size downloads (web-sized copies live in platform/apps/web/public)
+.taste-skill/
+/assets/

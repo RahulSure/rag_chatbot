@@ -15,9 +15,9 @@ interface Props {
 }
 
 const LANG_OPTIONS = [
-  { value: undefined, label: "सभी / All", flag: "🌐" },
-  { value: "en",      label: "English",    flag: "🇬🇧" },
-  { value: "hi",      label: "हिन्दी",      flag: "🇮🇳" },
+  { value: undefined, label: "All / सभी" },
+  { value: "en",      label: "English" },
+  { value: "hi",      label: "हिन्दी" },
 ];
 
 export default async function BlogPage({ searchParams }: Props) {
@@ -53,8 +53,8 @@ export default async function BlogPage({ searchParams }: Props) {
             Spiritual Knowledge Blog
           </h1>
           <p className="text-cosmic-400 max-w-xl mx-auto font-devanagari">
-            Deep-dive articles on the spiritual sciences taught by Sadgurudev —
-            available in <span className="text-gold">Hindi</span> &amp; <span className="text-gold">English</span>.
+            In-depth articles on mantra, meditation and the spiritual sciences —
+            available in <span className="text-gold">English</span> &amp; <span className="text-gold">Hindi</span>.
           </p>
         </div>
 
@@ -72,7 +72,6 @@ export default async function BlogPage({ searchParams }: Props) {
                     : "border-gold/20 text-cosmic-400 hover:text-foreground hover:border-gold/40"
                 }`}
               >
-                <span>{opt.flag}</span>
                 {opt.label}
               </a>
             );
@@ -101,14 +100,14 @@ export default async function BlogPage({ searchParams }: Props) {
                   : "border-gold/20 text-cosmic-400 hover:text-foreground hover:border-gold/40"
               }`}
             >
-              {t.icon} {t.label}
+              {t.label}
             </a>
           ))}
         </div>
 
         {articles.length === 0 ? (
           <div className="text-center py-24 text-cosmic-500">
-            <div className="text-5xl mb-4">🪔</div>
+            <div className="text-5xl mb-4 text-gold/60" aria-hidden="true">✦</div>
             <p className="font-devanagari">
               {lang === "hi"
                 ? "हिन्दी लेख जल्द उपलब्ध होंगे।"
