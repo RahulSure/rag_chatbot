@@ -33,9 +33,12 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
     }
   }, []);
 
-  // Handle initial question from URL
+  // Handle initial question from URL — send it exactly once. Strict Mode runs
+  // effects twice in dev, and `messages` is still empty on the second run.
+  const sentInitialRef = useRef<string | null>(null);
   useEffect(() => {
-    if (initialQuestion && messages.length === 0) {
+    if (initialQuestion && sentInitialRef.current !== initialQuestion && messages.length === 0) {
+      sentInitialRef.current = initialQuestion;
       sendMessage(initialQuestion);
     }
   }, [initialQuestion]); // eslint-disable-line
