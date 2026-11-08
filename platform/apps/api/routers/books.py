@@ -4,12 +4,17 @@ Books & topics endpoints — catalog of ingested spiritual texts.
 
 from __future__ import annotations
 
+import os
+
 from fastapi import APIRouter
 
 from packages.shared.schemas import BookMeta, TopicResponse
 from apps.api.deps import get_db
 
 router = APIRouter(tags=["Knowledge Base"])
+
+# The passages live in the same collection the RAG service writes to.
+COLLECTION = os.getenv("MONGODB_COLLECTION", "embeddings")
 
 SPIRITUAL_TOPICS = [
     TopicResponse(slug="tantra", label="Tantra", label_hi="तंत्र",
@@ -42,6 +47,16 @@ SPIRITUAL_TOPICS = [
     TopicResponse(slug="siddhashram", label="Siddhashram", label_hi="सिद्धाश्रम",
                   description="The mystical realm of perfected masters",
                   icon="🏔"),
+    # Practical remedies.
+    TopicResponse(slug="switch_words", label="Switch Words", label_hi="स्विच वर्ड्स",
+                  description="Short words chanted for everyday problems and wishes",
+                  icon=""),
+    TopicResponse(slug="bach_flowers", label="Bach Flower Remedies", label_hi="बाख फ्लावर उपचार",
+                  description="Gentle flower remedies for the emotions",
+                  icon=""),
+    TopicResponse(slug="reiki", label="Reiki", label_hi="रेकी",
+                  description="Healing through touch and intention",
+                  icon=""),
 ]
 
 
@@ -51,6 +66,8 @@ def list_books():
     try:
         db = get_db()
         pipeline = [
+            # Books only: crawled web articles carry a source_site and stay out of the library list.
+            {"$match": {"metadata.book_slug": {"$exists": True, "$ne": None}, "metadata.source_site": {"$exists": False}}},
             {"$group": {
                 "_id": "$metadata.book_slug",
                 "name": {"$first": "$metadata.book"},
@@ -61,7 +78,7 @@ def list_books():
             }},
             {"$match": {"_id": {"$ne": None}}},
         ]
-        results = list(db["embeddings"].aggregate(pipeline))
+        results = list(db[COLLECTION].aggregate(pipeline))
         books = []
         for r in results:
             books.append(BookMeta(
@@ -95,7 +112,7 @@ def list_topics():
             {"$group": {"_id": "$metadata.topic", "chunk_count": {"$sum": 1}}},
             {"$match": {"_id": {"$ne": None}}},
         ]
-        counts = {r["_id"]: r["chunk_count"] for r in db["embeddings"].aggregate(pipeline)}
+        counts = {r["_id"]: r["chunk_count"] for r in db[COLLECTION].aggregate(pipeline)}
         article_counts = {}
         for art in db["articles"].find({"status": "published"}, {"topic": 1}):
             t = art.get("topic", "")

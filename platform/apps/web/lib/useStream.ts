@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { sendQuery, RateLimitError, SourceNode } from "./api";
 
 export interface ChatMessage {
@@ -18,10 +18,15 @@ export function useStreamChat(sessionIdRef: React.MutableRefObject<string | unde
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Synchronous in-flight lock. `isLoading` state only updates on the next
+  // render, so two calls in the same tick (React Strict Mode re-running an
+  // effect, double-click, Enter + click) would both pass a state check.
+  const inFlightRef = useRef(false);
 
   const sendMessage = useCallback(
     async (question: string) => {
-      if (isLoading) return;
+      if (inFlightRef.current) return;
+      inFlightRef.current = true;
 
       const userMsg: ChatMessage = {
         id: `user-${Date.now()}`,
@@ -88,10 +93,11 @@ export function useStreamChat(sessionIdRef: React.MutableRefObject<string | unde
           );
         }
       } finally {
+        inFlightRef.current = false;
         setIsLoading(false);
       }
     },
-    [isLoading, sessionIdRef]
+    [sessionIdRef]
   );
 
   const clearChat = useCallback(() => {

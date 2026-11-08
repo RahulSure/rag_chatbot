@@ -3,49 +3,45 @@ import { ArticleListItem } from "@/lib/api";
 import { Clock, Tag } from "lucide-react";
 
 export function ArticleCard({ article }: { article: ArticleListItem }) {
+  const isHindi = article.language === "hi";
+
   return (
-    <Link href={`/blog/${article.slug}`} className="cosmic-card p-6 group block">
+    <Link href={`/blog/${article.slug}`} className="cosmic-card group block p-6">
       {article.cover_image_url && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={article.cover_image_url}
           alt={article.title}
-          className="w-full h-40 object-cover rounded-lg mb-4 opacity-70 group-hover:opacity-90 transition-opacity"
+          className="mb-4 h-40 w-full rounded-lg object-cover opacity-90 transition-opacity group-hover:opacity-100"
         />
       )}
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        {/* Language badge */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         {article.language && (
           <span
-            className={`text-xs px-2 py-0.5 rounded-full font-medium border ${
-              article.language === "hi"
-                ? "text-amber-300 bg-amber-400/10 border-amber-400/20"
-                : "text-sky-300 bg-sky-400/10 border-sky-400/20"
+            className={`rounded-full border px-2 py-0.5 text-xs font-medium ${
+              isHindi
+                ? "border-amber-600/30 bg-amber-500/10 text-amber-800 dark:text-amber-300"
+                : "border-sky-600/30 bg-sky-500/10 text-sky-800 dark:text-sky-300"
             }`}
           >
-            {article.language === "hi" ? "🇮🇳 हिन्दी" : "🇬🇧 EN"}
+            {isHindi ? "हिन्दी" : "EN"}
           </span>
         )}
         {article.tags.slice(0, 2).map((tag) => (
-          <span
-            key={tag}
-            className="flex items-center gap-1 text-xs text-gold/70 bg-gold/10 px-2 py-0.5 rounded-full"
-          >
-            <Tag size={8} />
+          <span key={tag} className="flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-xs text-cosmic-300">
+            <Tag size={8} aria-hidden="true" />
             {tag}
           </span>
         ))}
       </div>
-      <h3 className="font-serif text-lg text-foreground group-hover:text-gold transition-colors mb-2 line-clamp-2">
+      <h3 className="mb-2 line-clamp-2 font-serif text-lg text-foreground transition-colors group-hover:text-gold">
         {article.title}
       </h3>
-      <p className="text-cosmic-400 text-sm line-clamp-3 leading-relaxed mb-4">
-        {article.meta_description}
-      </p>
-      <div className="flex items-center gap-2 text-xs text-cosmic-600">
-        <Clock size={10} />
+      <p className="mb-4 line-clamp-3 text-sm leading-relaxed text-cosmic-400">{article.meta_description}</p>
+      <div className="flex items-center gap-2 text-xs text-cosmic-500">
+        <Clock size={10} aria-hidden="true" />
         {article.published_at
-          ? new Date(article.published_at).toLocaleDateString("en-IN", {
+          ? new Date(article.published_at).toLocaleDateString(isHindi ? "hi-IN" : "en-GB", {
               day: "numeric",
               month: "short",
               year: "numeric",

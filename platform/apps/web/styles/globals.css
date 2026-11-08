@@ -1,16 +1,71 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&family=Noto+Sans+Devanagari:wght@300;400;500;600&family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens — RGB channels so Tailwind opacity modifiers work.
+ * Dark "night & gold" is the default (html.dark, set by ThemeProvider);
+ * light is a warm cream with deep gold. Names are kept from earlier versions
+ * (gold = accent, cosmic-* = neutral ramp) so every page follows the theme.
+ */
 :root {
-  --background: #0a0a0f;
-  --foreground: #f4f0e8;
-  --gold: #c9a84c;
-  --gold-light: #e2c97e;
-  --card-bg: rgba(20, 15, 35, 0.8);
-  --border-gold: rgba(201, 168, 76, 0.25);
+  color-scheme: light;
+
+  --background: 247 241 232;   /* cream */
+  --foreground: 33 27 22;
+  --surface: 255 253 249;
+  --surface-2: 240 231 218;
+  --line: 228 216 199;
+
+  --accent: 138 98 32;         /* deep gold, readable on cream */
+  --accent-strong: 110 76 22;
+  --accent-soft: 122 31 78;    /* plum */
+  --shadow: 60 40 20;
+
+  --cosmic-50: 33 27 22;
+  --cosmic-100: 46 39 33;
+  --cosmic-200: 62 54 47;
+  --cosmic-300: 82 73 64;
+  --cosmic-400: 100 90 80;
+  --cosmic-500: 114 104 94;
+  --cosmic-600: 126 116 106;
+  --cosmic-700: 205 194 180;
+  --cosmic-800: 228 216 199;
+  --cosmic-900: 240 231 218;
+  --cosmic-950: 255 253 249;
+
+  --btn-bg: #8a6220;
+  --btn-fg: #ffffff;
+}
+
+html.dark {
+  color-scheme: dark;
+
+  --background: 10 9 15;       /* night */
+  --foreground: 237 232 223;
+  --surface: 20 18 27;
+  --surface-2: 15 13 21;
+  --line: 42 38 52;
+
+  --accent: 200 169 110;       /* gold */
+  --accent-strong: 224 199 150;
+  --accent-soft: 122 31 78;    /* plum */
+  --shadow: 0 0 0;
+
+  --cosmic-50: 245 241 234;
+  --cosmic-100: 237 232 223;
+  --cosmic-200: 214 208 199;
+  --cosmic-300: 190 184 175;
+  --cosmic-400: 166 160 151;
+  --cosmic-500: 144 138 130;
+  --cosmic-600: 124 118 112;
+  --cosmic-700: 70 66 78;
+  --cosmic-800: 42 38 52;
+  --cosmic-900: 20 18 27;
+  --cosmic-950: 15 13 21;
+
+  --btn-bg: #c8a96e;
+  --btn-fg: #14110b;
 }
 
 * {
@@ -21,135 +76,183 @@
 
 html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', sans-serif;
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+  font-family: var(--font-sans), var(--font-devanagari), system-ui, sans-serif;
   overflow-x: hidden;
-  scroll-behavior: smooth;
 }
 
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Playfair Display', serif;
-  color: var(--foreground);
+/* A quiet field of stars on the night theme only (static, no animation). */
+html.dark body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640'%3E%3Cg fill='%23fff'%3E%3Ccircle cx='42' cy='61' r='.7' opacity='.5'/%3E%3Ccircle cx='131' cy='212' r='.6' opacity='.35'/%3E%3Ccircle cx='217' cy='38' r='.9' opacity='.45'/%3E%3Ccircle cx='298' cy='147' r='.5' opacity='.3'/%3E%3Ccircle cx='371' cy='291' r='.8' opacity='.4'/%3E%3Ccircle cx='452' cy='83' r='.6' opacity='.5'/%3E%3Ccircle cx='533' cy='198' r='1' opacity='.35'/%3E%3Ccircle cx='604' cy='22' r='.6' opacity='.3'/%3E%3Ccircle cx='78' cy='351' r='.8' opacity='.4'/%3E%3Ccircle cx='163' cy='447' r='.5' opacity='.3'/%3E%3Ccircle cx='246' cy='386' r='.7' opacity='.45'/%3E%3Ccircle cx='327' cy='518' r='.9' opacity='.35'/%3E%3Ccircle cx='412' cy='433' r='.6' opacity='.5'/%3E%3Ccircle cx='497' cy='561' r='.7' opacity='.3'/%3E%3Ccircle cx='578' cy='402' r='.5' opacity='.4'/%3E%3Ccircle cx='24' cy='602' r='.6' opacity='.35'/%3E%3Ccircle cx='109' cy='533' r='.9' opacity='.3'/%3E%3Ccircle cx='392' cy='611' r='.6' opacity='.45'/%3E%3Ccircle cx='621' cy='311' r='.8' opacity='.35'/%3E%3Ccircle cx='270' cy='254' r='.5' opacity='.25'/%3E%3C/g%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgb(var(--accent) / 0.25);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-serif), var(--font-serif-deva), Georgia, serif;
+  color: rgb(var(--foreground));
+  font-weight: 500;
+  letter-spacing: -0.005em;
 }
 
 .devanagari {
-  font-family: 'Noto Sans Devanagari', sans-serif;
+  font-family: var(--font-sans), var(--font-devanagari), sans-serif;
 }
 
-/* Gold text utility */
-.text-gold {
-  background: linear-gradient(135deg, #c9a84c, #e2c97e, #9d7a2f);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Keyboard focus */
+:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline-color: transparent;
+  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.3);
 }
 
-/* Cosmic card */
-.cosmic-card {
-  background: rgba(20, 15, 35, 0.7);
-  border: 1px solid rgba(201, 168, 76, 0.2);
-  backdrop-filter: blur(12px);
-  border-radius: 12px;
-  transition: all 0.3s ease;
-}
+/* Component classes live in the components layer so utilities (hidden, px-5 …) can override them. */
+@layer components {
+  /* Gold, letter-spaced small capitals for section labels and the wordmark. */
+  .label-caps {
+    font-size: 0.75rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgb(var(--accent));
+    font-weight: 500;
+  }
+  /* Spacing Devanagari apart breaks the shirorekha, so Hindi labels stay set solid and a little larger. */
+  html[lang="hi"] .label-caps {
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+  }
 
-.cosmic-card:hover {
-  border-color: rgba(201, 168, 76, 0.5);
-  box-shadow: 0 0 30px rgba(201, 168, 76, 0.15);
-  transform: translateY(-2px);
-}
+  /* Card: one step up from the ground, hairline border */
+  .cosmic-card {
+    background: rgb(var(--surface));
+    border: 1px solid rgb(var(--line));
+    border-radius: 14px;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  a.cosmic-card:hover,
+  .cosmic-card.is-link:hover {
+    border-color: rgb(var(--accent) / 0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgb(var(--shadow) / 0.2);
+  }
 
-/* Gold button */
-.btn-gold {
-  background: linear-gradient(135deg, #c9a84c, #e2c97e);
-  color: #0a0a0f;
-  font-weight: 600;
-  padding: 12px 28px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
+  /* Primary button: solid gold */
+  .btn-gold {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    padding: 12px 26px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: filter 0.16s ease, transform 0.16s ease;
+  }
+  .btn-gold:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+  }
 
-.btn-gold:hover {
-  box-shadow: 0 0 25px rgba(201, 168, 76, 0.5);
-  transform: translateY(-1px);
-}
+  /* Secondary button: gold hairline */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid rgb(var(--accent) / 0.6);
+    color: rgb(var(--accent));
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    padding: 11px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.16s ease, border-color 0.16s ease;
+  }
+  .btn-ghost:hover {
+    background: rgb(var(--accent) / 0.08);
+    border-color: rgb(var(--accent));
+  }
 
-/* Ghost button */
-.btn-ghost {
-  background: transparent;
-  border: 1px solid rgba(201, 168, 76, 0.4);
-  color: var(--gold);
-  padding: 10px 24px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
+  /* Tarot card that turns over: back face first, front face rotated behind it */
+  .tarot-flip {
+    perspective: 1200px;
+  }
+  .tarot-flip-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .tarot-flip.is-open .tarot-flip-inner {
+    transform: rotateY(180deg);
+  }
+  .tarot-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .tarot-face-front {
+    transform: rotateY(180deg);
+  }
 
-.btn-ghost:hover {
-  background: rgba(201, 168, 76, 0.1);
-  border-color: var(--gold);
-}
-
-/* Background texture */
-.cosmic-bg {
-  background: radial-gradient(ellipse at 20% 20%, rgba(30, 10, 60, 0.6) 0%, transparent 50%),
-              radial-gradient(ellipse at 80% 80%, rgba(60, 20, 20, 0.4) 0%, transparent 50%),
-              linear-gradient(180deg, #0a0a0f 0%, #0f0a1a 50%, #0a0a0f 100%);
-  min-height: 100vh;
-}
-
-/* Stars particle effect */
-.stars-bg::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image:
-    radial-gradient(1px 1px at 10% 20%, rgba(201,168,76,0.4) 0%, transparent 100%),
-    radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,0.15) 0%, transparent 100%),
-    radial-gradient(1px 1px at 60% 10%, rgba(201,168,76,0.25) 0%, transparent 100%),
-    radial-gradient(1px 1px at 80% 50%, rgba(255,255,255,0.1) 0%, transparent 100%),
-    radial-gradient(1px 1px at 25% 85%, rgba(201,168,76,0.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 90% 30%, rgba(255,255,255,0.2) 0%, transparent 100%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Divider */
-.gold-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.5), transparent);
-  margin: 2rem 0;
+  /* Ornamental divider: two hairlines and a dot */
+  .gold-divider {
+    height: 1px;
+    width: 100px;
+    margin: 2.5rem auto;
+    background: linear-gradient(90deg, rgb(var(--accent) / 0.4) 0 44%, transparent 44% 56%, rgb(var(--accent) / 0.4) 56% 100%);
+    position: relative;
+  }
+  .gold-divider::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgb(var(--accent) / 0.7);
+    transform: translate(-50%, -50%);
+  }
 }
 
 /* Markdown content */
-.prose-spiritual h2 { 
-  @apply font-serif text-2xl text-gold-light mt-8 mb-4; 
+.prose-spiritual h2 {
+  @apply text-3xl text-foreground mt-10 mb-4;
 }
-.prose-spiritual h3 { 
-  @apply font-serif text-xl text-foreground mt-6 mb-3; 
+.prose-spiritual h3 {
+  @apply text-2xl text-foreground mt-8 mb-3;
 }
-.prose-spiritual p { 
-  @apply text-cosmic-200 leading-relaxed mb-4; 
+.prose-spiritual p {
+  @apply text-cosmic-200 leading-relaxed mb-4;
 }
-.prose-spiritual blockquote { 
-  @apply border-l-4 border-gold pl-4 italic text-gold-light my-6; 
+.prose-spiritual blockquote {
+  @apply border-l-2 border-gold pl-4 italic text-cosmic-200 my-6;
 }
-.prose-spiritual strong { 
-  @apply text-foreground font-semibold; 
+.prose-spiritual strong {
+  @apply text-foreground font-semibold;
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0a0a0f; }
-::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.3); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.6); }
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: rgb(var(--background)); }
+::-webkit-scrollbar-thumb { background: rgb(var(--cosmic-700)); border-radius: 4px; }
 
 /* Chat streaming cursor */
 @keyframes blink {
@@ -159,63 +262,23 @@ h1, h2, h3, h4, h5, h6 {
 .cursor-blink::after {
   content: '▋';
   animation: blink 1s step-end infinite;
-  color: var(--gold);
+  color: rgb(var(--accent));
 }
 
-/* Magical title — Cinzel uppercase with shifting gold gradient and soft glow */
-.title-magical {
-  font-family: 'Cinzel Decorative', 'Cinzel', 'Playfair Display', serif;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  background: linear-gradient(
-    120deg,
-    #e2c97e 0%,
-    #fff2c4 25%,
-    #c9a84c 50%,
-    #fff2c4 75%,
-    #e2c97e 100%
-  );
-  background-size: 250% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: 0 0 35px rgba(201, 168, 76, 0.25);
-  animation: titleShimmer 9s ease-in-out infinite;
+/* Gentle entrance for hero content */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
 }
+.rise-in { animation: rise-in 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 
-@keyframes titleShimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-/* Magical mantra — Devanagari with breathing glow */
-.mantra-glow {
-  font-family: 'Noto Sans Devanagari', serif;
-  color: #f4e4a8;
-  text-shadow:
-    0 0 12px rgba(226, 201, 126, 0.55),
-    0 0 28px rgba(201, 168, 76, 0.35),
-    0 0 48px rgba(201, 168, 76, 0.18);
-  animation: mantraBreath 6s ease-in-out infinite;
-}
-
-@keyframes mantraBreath {
-  0%, 100% { opacity: 0.92; text-shadow: 0 0 12px rgba(226,201,126,0.45), 0 0 28px rgba(201,168,76,0.3); }
-  50% { opacity: 1; text-shadow: 0 0 18px rgba(226,201,126,0.75), 0 0 40px rgba(201,168,76,0.5); }
-}
-
-/* Elegant subtitle — Cormorant italic */
-.text-elegant {
-  font-family: 'Cormorant Garamond', 'Playfair Display', serif;
-  font-weight: 400;
-  font-style: italic;
-  letter-spacing: 0.01em;
-}
-
-/* Decorative small caps badge */
-.text-mystical-caps {
-  font-family: 'Cinzel', 'Playfair Display', serif;
-  text-transform: uppercase;
-  letter-spacing: 0.35em;
-  font-weight: 500;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

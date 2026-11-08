@@ -137,6 +137,10 @@ def semantic_search(
             if language and meta.get("language") != language:
                 continue
             text = node.text or ""
+            if meta.get("remedy"):  # stored without the teacher's name already; this is a safeguard
+                from rag.hide_names import hide_names
+
+                text = hide_names(text)
             snippet = text[:350].strip() + ("..." if len(text) > 350 else "")
             results.append(SearchResult(
                 text_snippet=snippet,

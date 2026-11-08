@@ -167,7 +167,7 @@ export default function AdminPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="font-serif text-3xl text-foreground">Admin Dashboard</h1>
-            <p className="text-cosmic-500 text-sm">Shrimali AI Platform Control Center</p>
+            <p className="text-cosmic-500 text-sm">Sadhak.ai Control Center</p>
           </div>
           <button onClick={fetchData} className="btn-ghost flex items-center gap-2 text-sm px-4 py-2 rounded-lg">
             <RefreshCw size={14} />
@@ -179,8 +179,8 @@ export default function AdminPage() {
         {message && (
           <div className={`mb-6 px-4 py-3 rounded-xl border flex items-center gap-2 text-sm ${
             message.type === "success"
-              ? "bg-green-900/20 border-green-600/30 text-green-400"
-              : "bg-red-900/20 border-red-500/30 text-red-400"
+              ? "bg-green-500/10 border-green-600/30 text-green-800 dark:text-green-400"
+              : "bg-red-500/10 border-red-600/30 text-red-800 dark:text-red-400"
           }`}>
             {message.type === "success" ? <CheckCircle size={14} /> : <XCircle size={14} />}
             {message.text}
@@ -277,11 +277,11 @@ export default function AdminPage() {
                           <Eye size={14} />
                         </a>
                         <button onClick={() => handleApprove(art.id, "published")}
-                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-900/20 border border-green-600/30 text-green-400 text-xs hover:bg-green-900/40 transition-all">
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-600/30 text-green-800 dark:text-green-400 text-xs hover:bg-green-500/20 transition-all">
                           <CheckCircle size={12} /> Publish
                         </button>
                         <button onClick={() => handleApprove(art.id, "rejected")}
-                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-900/20 border border-red-500/30 text-red-400 text-xs hover:bg-red-900/40 transition-all">
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-600/30 text-red-800 dark:text-red-400 text-xs hover:bg-red-500/20 transition-all">
                           <XCircle size={12} /> Reject
                         </button>
                       </div>
