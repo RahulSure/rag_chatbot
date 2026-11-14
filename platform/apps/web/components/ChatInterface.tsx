@@ -17,7 +17,7 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
   const [input, setInput] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const sessionIdRef = useRef<string | undefined>(undefined);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { messages, isLoading, error, sendMessage, loadConversation, newChat } = useStreamChat(sessionIdRef);
   const { user, loading: authLoading } = useAuth();
@@ -94,9 +94,34 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
     }
   }, [initialQuestion]); // eslint-disable-line
 
-  // Auto scroll
+  // Scroll inside the chat box only — never the page itself (scrollIntoView would also
+  // scroll the window, jumping past the header) — and only when something new is out of view:
+  //  - A question was just sent: if it's below the visible area, reveal it.
+  //  - An answer arrived: if it runs past the bottom, scroll just enough to show more of it,
+  //    but never past putting its question at the top, so it still reads from the first line.
+  //  If everything new is already visible, nothing moves. Never scrolls up.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const box = messagesRef.current;
+    const last = messages[messages.length - 1];
+    if (!box || !last) return;
+    const visibleBottom = box.scrollTop + box.clientHeight;
+    const scrollDownTo = (top: number) => {
+      if (top > box.scrollTop + 1) box.scrollTo({ top, behavior: "smooth" });
+    };
+
+    if (last.role === "assistant" && !last.isStreaming) {
+      const question = [...messages].reverse().find((m) => m.role === "user");
+      const qEl = question && box.querySelector<HTMLElement>(`[data-msg-id="${question.id}"]`);
+      const aEl = box.querySelector<HTMLElement>(`[data-msg-id="${last.id}"]`);
+      if (qEl && aEl) {
+        const answerBottom = aEl.offsetTop + aEl.offsetHeight + 16;
+        if (answerBottom <= visibleBottom) return; // already fully visible
+        scrollDownTo(Math.min(qEl.offsetTop - 16, answerBottom - box.clientHeight));
+        return;
+      }
+    }
+    // New question (and the thinking row): only if it ended up out of view.
+    if (box.scrollHeight > visibleBottom + 1) scrollDownTo(box.scrollHeight - box.clientHeight);
   }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -153,7 +178,7 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
       )}
 
       {/* Messages */}
-      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4 pb-2 sm:p-6" aria-live="polite">
+      <div ref={messagesRef} className="relative min-h-0 flex-1 space-y-6 overflow-y-auto p-4 pb-2 sm:p-6" aria-live="polite">
         {messages.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center py-10 text-center">
             <span aria-hidden="true" className="mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-gold/50 font-serif text-2xl text-gold">
@@ -220,7 +245,6 @@ export function ChatInterface({ initialQuestion }: { initialQuestion?: string })
           </div>
         )}
 
-        <div ref={bottomRef} />
       </div>
 
       {/* Input */}
@@ -274,6 +298,7 @@ function MessageBubble({
 
   return (
     <motion.div
+      data-msg-id={msg.id}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}
