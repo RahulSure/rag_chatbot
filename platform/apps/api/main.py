@@ -46,6 +46,8 @@ from fastapi.responses import JSONResponse
 load_dotenv()
 
 from apps.api.routers import query, books, articles, wisdom, analytics, admin, subscribe, astro, switchwords
+from apps.api.routers import auth as auth_router, me
+from apps.api.auth import ensure_indexes
 from apps.api.middleware import StructuredLoggingMiddleware, setup_logging, add_metrics_endpoint
 
 setup_logging()
@@ -70,9 +72,12 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
 )
 
+# Sign-in uses an httpOnly cookie, so CORS must allow credentials — which in turn
+# needs explicit origins (a "*" origin can't carry cookies). Comma-separated list.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
+    allow_origins=[o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if o.strip()],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -91,6 +96,15 @@ app.include_router(admin.router)
 app.include_router(subscribe.router)
 app.include_router(switchwords.router)
 app.include_router(astro.router)
+app.include_router(auth_router.router)
+app.include_router(me.router)
+
+
+@app.on_event("startup")
+def _create_account_indexes():
+    # In a thread so an unreachable Mongo can't hold up startup.
+    import threading
+    threading.Thread(target=ensure_indexes, daemon=True).start()
 
 
 @app.get("/health", tags=["Utility"])

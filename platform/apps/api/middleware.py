@@ -12,8 +12,10 @@ import logging
 import json
 from datetime import datetime, timedelta
 
-from fastapi import Request, Response, HTTPException
+from fastapi import Depends, Request, Response, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from apps.api.auth import get_current_user_optional
 
 logger = logging.getLogger("shrimali.api")
 
@@ -33,9 +35,10 @@ class _IPState:
 
 class QueryRateLimiter:
     """
-    In-process per-IP rate limiter.
-    - Allows `max_requests` questions per `window_minutes`.
-    - Once the limit is breached the IP is banned for `ban_hours`.
+    In-process rate limiter, keyed per user when signed in and per IP otherwise.
+    - Anonymous visitors get `max_requests` questions per `window_minutes`;
+      signed-in users get `max_requests_user`.
+    - Once the limit is breached the key is banned for `ban_hours`.
     Usage as a FastAPI dependency:
 
         @router.post("")
@@ -48,21 +51,27 @@ class QueryRateLimiter:
         max_requests: int = 10,
         window_minutes: int = 30,
         ban_hours: int = 1,
+        max_requests_user: int | None = None,
     ):
         self.max_requests = max_requests
+        self.max_requests_user = max_requests_user or max_requests
         self.window = timedelta(minutes=window_minutes)
         self.ban_duration = timedelta(hours=ban_hours)
         self._store: dict[str, _IPState] = {}
 
-    def _state(self, ip: str) -> _IPState:
-        if ip not in self._store:
-            self._store[ip] = _IPState()
-        return self._store[ip]
+    def _state(self, key: str) -> _IPState:
+        if key not in self._store:
+            self._store[key] = _IPState()
+        return self._store[key]
 
-    def __call__(self, request: Request) -> None:
-        ip = (request.client.host if request.client else None) or "unknown"
+    def __call__(self, request: Request, user: dict | None = Depends(get_current_user_optional)) -> None:
+        if user is not None:
+            key, limit = f"user:{user['_id']}", self.max_requests_user
+        else:
+            ip = (request.client.host if request.client else None) or "unknown"
+            key, limit = f"ip:{ip}", self.max_requests
         now = datetime.utcnow()
-        state = self._state(ip)
+        state = self._state(key)
 
         # Still banned?
         if state.banned_until and now < state.banned_until:
@@ -87,19 +96,36 @@ class QueryRateLimiter:
         state.count += 1
 
         # Breach — impose ban
-        if state.count > self.max_requests:
+        if state.count > limit:
             state.banned_until = now + self.ban_duration
+            hint = (
+                ""
+                if user is not None or self.max_requests_user <= self.max_requests
+                else f" Sign in with Google to ask up to {self.max_requests_user}."
+            )
             raise HTTPException(
                 status_code=429,
                 detail=(
-                    f"You've asked {self.max_requests} questions in 30 minutes — "
-                    "that's wonderful curiosity! Please return in 1 hour for more wisdom. 🙏"
+                    f"You've asked {limit} questions in 30 minutes — "
+                    "that's wonderful curiosity! Please return in 1 hour for more wisdom. 🙏" + hint
                 ),
             )
 
 
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, default))
+    except ValueError:
+        return default
+
+
 # Singleton — shared across all requests in the process
-query_rate_limiter = QueryRateLimiter(max_requests=10, window_minutes=30, ban_hours=1)
+query_rate_limiter = QueryRateLimiter(
+    max_requests=_env_int("RATE_LIMIT_ANON", 10),
+    max_requests_user=_env_int("RATE_LIMIT_USER", 30),
+    window_minutes=30,
+    ban_hours=1,
+)
 
 
 class StructuredLoggingMiddleware(BaseHTTPMiddleware):

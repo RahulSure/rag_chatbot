@@ -4,6 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ThemeProvider, themeInitScript } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/lib/i18n";
+import { AuthProvider } from "@/lib/auth";
 import "@/styles/globals.css";
 
 // An elegant serif for headings, a quiet sans for reading.
@@ -82,6 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen antialiased">
         <ThemeProvider>
           <LanguageProvider>
+            <AuthProvider>
             <a
               href="#main"
               className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60]
@@ -94,6 +96,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {children}
             </main>
             <Footer />
+            </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>

@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { GoogleSignInButton } from "./GoogleSignInButton";
+import { UserMenu } from "./UserMenu";
 import { useLanguage, type Key } from "@/lib/i18n";
 import { TOOL_GROUPS } from "@/lib/tools";
 
@@ -126,6 +128,11 @@ export function Navbar() {
             {lang === "en" ? "हिं" : "EN"}
           </button>
           <ThemeToggle />
+          {/* Signed in: avatar menu on every size. Signed out: Google's button on wide screens, in the menu otherwise. */}
+          <UserMenu />
+          <div className="hidden lg:block">
+            <GoogleSignInButton />
+          </div>
           <Link href="/chat" className="btn-ghost ml-2 hidden whitespace-nowrap px-5 py-2 text-sm md:inline-flex">
             {t("nav.cta")}
           </Link>
@@ -168,6 +175,9 @@ export function Navbar() {
               {t(link.label)}
             </Link>
           ))}
+          <div className="pt-5">
+            <GoogleSignInButton full />
+          </div>
         </div>
       )}
     </nav>

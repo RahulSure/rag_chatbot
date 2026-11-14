@@ -527,4 +527,16 @@ export const hi: Record<Key, string> = {
   "sw.credit": "साधक हर स्विच वर्ड ठीक वैसे ही दिखाता है जैसे वह दिया गया था।",
   "sw.health": "स्वास्थ्य समस्याओं में स्विच वर्ड्स और फ्लावर उपचार डॉक्टर के उपचार के साथ उपयोग करें, उसके स्थान पर कभी नहीं।",
   "tools.swDesc": "आपकी आवश्यकता के लिए स्विच वर्ड्स, ठीक वैसे ही जैसे वे दिए गए।",
+
+  // Accounts (optional Google sign-in) and saved chats
+  "auth.signIn": "साइन इन करें",
+  "auth.signOut": "साइन आउट",
+  "auth.account": "आपका खाता",
+  "auth.history": "चैट इतिहास",
+  "chat.newChat": "नई चैट",
+  "chat.historyTitle": "आपकी चैट",
+  "chat.historyEmpty": "अभी कोई सहेजी गई चैट नहीं है। आपके प्रश्न यहाँ दिखेंगे।",
+  "chat.historyClose": "चैट इतिहास बंद करें",
+  "chat.delete": "चैट हटाएँ",
+  "chat.notFound": "यह चैट नहीं मिली।",
 };
