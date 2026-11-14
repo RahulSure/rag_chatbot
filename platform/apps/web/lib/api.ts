@@ -623,3 +623,109 @@ export async function deleteConversation(id: string): Promise<boolean> {
   const res = await fetch(`${API_BASE}/me/conversations/${encodeURIComponent(id)}`, { ...withCreds, method: "DELETE" });
   return res.ok;
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Ganga: diyas floated between sadhaks (signed in only)
+// ──────────────────────────────────────────────────────────────────────────────
+
+export type DiyaKind = "seeking" | "sharing" | "gratitude" | "prayer" | "partner";
+
+export interface GangaProfile {
+  name: string;
+  languages: ("en" | "hi")[];
+  practices: string[];
+  by_kundli: boolean;
+  tz: string;
+}
+
+export interface MaitriReason {
+  code: "shared_practice" | "moon_friends" | "tara_good" | "same_gana" | "moolank_friends" | "loshu_complement";
+  items?: string[];
+  a?: string | number;
+  b?: string | number;
+  gana?: string;
+}
+
+export interface CaughtDiya {
+  id: string;
+  kind: DiyaKind;
+  text: string;
+  lang: "en" | "hi";
+  from: string;
+  created_at: string;
+  action: "blessed" | "passed" | "replied" | "reported" | null;
+  thread: string | null;
+  maitri: { score: number; reasons: MaitriReason[]; by_kundli: boolean };
+}
+
+export interface MyDiya {
+  id: string;
+  kind: DiyaKind;
+  text: string;
+  status: "floating" | "settled" | "removed";
+  created_at: string;
+  blessings: number;
+  replies: number;
+  sadhak_blessed: boolean;
+}
+
+export interface GangaThreadSummary {
+  id: string;
+  with: string;
+  diya_text: string;
+  updated_at: string;
+  last: string;
+  unread: boolean;
+  closed: boolean;
+}
+
+export interface GangaThread {
+  id: string;
+  with: string;
+  diya_text: string;
+  closed: boolean;
+  letters: { id: string; mine: boolean; text: string; created_at: string }[];
+}
+
+/** A request the river refused, with the reason code the page explains (contact, crisis, float_limit …). */
+export class GangaError extends Error {
+  constructor(public code: string, public status: number) {
+    super(code);
+  }
+}
+
+async function ganga<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${API_BASE}/ganga${path}`, {
+    ...withCreds,
+    ...init,
+    headers: init.body ? { "Content-Type": "application/json" } : undefined,
+  });
+  if (!res.ok) {
+    const detail = (await res.json().catch(() => null))?.detail;
+    throw new GangaError(typeof detail === "object" && detail?.code ? detail.code : String(res.status), res.status);
+  }
+  return res.status === 204 ? (undefined as T) : res.json();
+}
+
+const post = (body?: unknown): RequestInit => ({ method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
+
+export const gangaApi = {
+  me: () => ganga<{ profile: GangaProfile | null; unread?: number }>("/me"),
+  join: (body: {
+    name: string; languages: ("en" | "hi")[]; practices: string[]; adult: boolean; accept_rules: boolean; tz: string;
+    birth?: { date: string; time: string; latitude: number; longitude: number; tz: string } | null;
+  }) => ganga<{ profile: GangaProfile }>("/me", { method: "PUT", body: JSON.stringify(body) }),
+  leave: () => ganga<void>("/me", { method: "DELETE" }),
+  float: (kind: DiyaKind, text: string) => ganga<MyDiya>("/diyas", post({ kind, text })),
+  mine: () => ganga<MyDiya[]>("/diyas/mine"),
+  catch: () => ganga<{ diyas: CaughtDiya[]; share: number; left: number }>("/catch"),
+  bless: (id: string) => ganga<{ ok: boolean }>(`/catches/${id}/bless`, post()),
+  pass: (id: string) => ganga<{ ok: boolean }>(`/catches/${id}/pass`, post()),
+  reply: (id: string, text: string) => ganga<{ thread: string }>(`/catches/${id}/reply`, post({ text })),
+  reportDiya: (id: string, reason = "other") => ganga<{ ok: boolean }>(`/catches/${id}/report`, post({ reason })),
+  threads: () => ganga<GangaThreadSummary[]>("/threads"),
+  thread: (id: string) => ganga<GangaThread>(`/threads/${id}`),
+  send: (id: string, text: string) => ganga<{ ok: boolean }>(`/threads/${id}/letters`, post({ text })),
+  block: (id: string) => ganga<{ ok: boolean }>(`/threads/${id}/block`, post()),
+  reportThread: (id: string, reason = "other") => ganga<{ ok: boolean }>(`/threads/${id}/report`, post({ reason })),
+};

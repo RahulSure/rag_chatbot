@@ -232,6 +232,54 @@ select:focus-visible {
   }
 }
 
+/* Ganga: the river at dawn (light) or under the moon (dark). Diyas drift, flames breathe. */
+.ganga-scene {
+  --sky-top: 246 214 178;
+  --sky-bottom: 250 236 214;
+  --water-top: 122 146 156;
+  --water-bottom: 64 86 104;
+  --bank: 116 84 62;
+  --orb: 238 160 82;
+  --glint: 255 216 156;
+}
+html.dark .ganga-scene {
+  --sky-top: 12 11 26;
+  --sky-bottom: 34 27 56;
+  --water-top: 26 28 54;
+  --water-bottom: 7 8 17;
+  --bank: 5 5 11;
+  --orb: 238 228 204;
+  --glint: 200 169 110;
+}
+@keyframes ganga-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(1340px); }
+}
+@keyframes ganga-bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(3px) rotate(2deg); }
+}
+@keyframes ganga-flame {
+  0%, 100% { transform: scale(1, 1); opacity: 1; }
+  40% { transform: scale(0.92, 1.08); opacity: 0.9; }
+  70% { transform: scale(1.05, 0.95); opacity: 1; }
+}
+@keyframes ganga-glint {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.8; }
+}
+.ganga-drift { animation: ganga-drift linear infinite; }
+.ganga-bob { animation: ganga-bob 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.ganga-flame { animation: ganga-flame 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.ganga-glint { animation: ganga-glint 3.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  /* Still water: each diya rests where it would be, nothing moves. */
+  .ganga-drift { animation: none; transform: translateX(var(--rest)); }
+  .ganga-bob,
+  .ganga-flame,
+  .ganga-glint { animation: none; }
+}
+
 /* Markdown content */
 .prose-spiritual h2 {
   @apply text-3xl text-foreground mt-10 mb-4;

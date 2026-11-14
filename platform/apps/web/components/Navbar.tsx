@@ -7,6 +7,8 @@ import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { UserMenu } from "./UserMenu";
+import { useGangaUnread } from "./ganga/unread";
+import { useAuth } from "@/lib/auth";
 import { useLanguage, type Key } from "@/lib/i18n";
 import { TOOL_GROUPS } from "@/lib/tools";
 
@@ -33,11 +35,20 @@ export function Navbar() {
   const [toolsOpen, setToolsOpen] = useState(false);
   const toolsRef = useRef<HTMLDivElement>(null);
   const { lang, setLang, t } = useLanguage();
+  const { user } = useAuth();
+  const unread = useGangaUnread(!!user, pathname);
+  // The river, with a dot when a letter is waiting.
+  const ganga = (
+    <>
+      {t("nav.ganga")}
+      {unread > 0 && <span className="ml-1.5 inline-block h-2 w-2 rounded-full bg-gold align-middle" aria-label={`${unread} ${t("ganga.new")}`} />}
+    </>
+  );
 
   const isActive = (href: string) => !href.includes("#") && href !== "/chat" ? pathname.startsWith(href.split("?")[0]) : pathname === href;
   const linkClass = (href: string) =>
     `text-sm transition-colors hover:text-gold ${isActive(href) ? "text-gold" : "text-cosmic-300"}`;
-  const inTools = TOOL_PATHS.some((p) => p !== "/chat" && pathname.startsWith(p)) || pathname === "/tools";
+  const inTools = TOOL_PATHS.some((p) => p !== "/chat" && p !== "/ganga" && pathname.startsWith(p)) || pathname === "/tools";
 
   // Close the menus on navigation, on Escape and on a click outside the tools menu.
   useEffect(() => {
@@ -68,6 +79,9 @@ export function Navbar() {
         <div className="hidden items-center gap-7 lg:flex">
           <Link href="/chat" aria-current={pathname === "/chat" ? "page" : undefined} className={linkClass("/chat")}>
             {t("nav.chat")}
+          </Link>
+          <Link href="/ganga" aria-current={pathname === "/ganga" ? "page" : undefined} className={linkClass("/ganga")}>
+            {ganga}
           </Link>
 
           <div ref={toolsRef}>
@@ -153,11 +167,14 @@ export function Navbar() {
           <Link href="/chat" onClick={() => setOpen(false)} className="block border-b border-line py-3.5 text-lg text-foreground">
             {t("nav.chat")}
           </Link>
+          <Link href="/ganga" onClick={() => setOpen(false)} className="block border-b border-line py-3.5 text-lg text-foreground">
+            {ganga}
+          </Link>
           {TOOL_GROUPS.map((g) => (
             <div key={g.title} className="border-b border-line pb-2">
               <p className="label-caps pb-1 pt-4 text-[0.68rem]">{t(g.title)}</p>
               <div className="grid grid-cols-2 gap-x-4">
-                {g.tools.filter((tool) => tool.href !== "/chat").map((tool) => (
+                {g.tools.filter((tool) => tool.href !== "/chat" && tool.href !== "/ganga").map((tool) => (
                   <Link key={tool.href} href={tool.href} onClick={() => setOpen(false)} className="block py-2 text-base text-foreground">
                     {t(tool.title)}
                   </Link>

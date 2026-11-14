@@ -45,7 +45,7 @@ from fastapi.responses import JSONResponse
 
 load_dotenv()
 
-from apps.api.routers import query, books, articles, wisdom, analytics, admin, subscribe, astro, switchwords
+from apps.api.routers import query, books, articles, wisdom, analytics, admin, subscribe, astro, switchwords, ganga
 from apps.api.routers import auth as auth_router, me
 from apps.api.auth import ensure_indexes
 from apps.api.middleware import StructuredLoggingMiddleware, setup_logging, add_metrics_endpoint
@@ -98,6 +98,7 @@ app.include_router(switchwords.router)
 app.include_router(astro.router)
 app.include_router(auth_router.router)
 app.include_router(me.router)
+app.include_router(ganga.router)
 
 
 @app.on_event("startup")
