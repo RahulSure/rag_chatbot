@@ -100,6 +100,7 @@ export async function sendQuery(
 ): Promise<QueryResponse> {
   const res = await fetch(`${API_BASE}/query`, {
     method: "POST",
+    credentials: "include", // signed-in users' chats are saved to their account
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question, top_k: topK, stream: false, session_id: sessionId }),
   });
@@ -523,4 +524,102 @@ export async function findSwitchWords(q: string, limit = 8): Promise<SwitchWordR
   const res = await fetch(`${API_BASE}/switchwords?${new URLSearchParams({ q, limit: String(limit) })}`);
   if (!res.ok) return [];
   return res.json();
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Accounts (optional Google sign-in). The session is an httpOnly cookie set by
+// the API, so these calls — and sendQuery — must send credentials.
+// ──────────────────────────────────────────────────────────────────────────────
+
+export interface User {
+  id: string;
+  email: string;
+  name?: string | null;
+  picture?: string | null;
+}
+
+export interface ProfileData {
+  birth?: BirthDetails | null;
+  place?: Place | null;
+  japa?: Record<string, unknown> | null;
+  updated_at?: string | null;
+}
+
+export interface ConversationSummary {
+  id: string;
+  title: string;
+  updated_at: string;
+  turn_count: number;
+}
+
+export interface ConversationTurn {
+  q: string;
+  a: string;
+  sources: SourceNode[];
+  suggested: string[];
+  ts?: string;
+}
+
+export interface ConversationDetail {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  turns: ConversationTurn[];
+}
+
+const withCreds: RequestInit = { credentials: "include" };
+
+export async function loginWithGoogle(credential: string): Promise<User> {
+  const res = await fetch(`${API_BASE}/auth/google`, {
+    ...withCreds,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ credential }),
+  });
+  if (!res.ok) throw new Error((await res.json().catch(() => null))?.detail ?? "Sign-in failed");
+  return res.json();
+}
+
+/** The signed-in user, or null for visitors (and when the API is unreachable). */
+export async function getMe(): Promise<User | null> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/me`, withCreds);
+    return res.ok ? res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function logout(): Promise<void> {
+  await fetch(`${API_BASE}/auth/logout`, { ...withCreds, method: "POST" }).catch(() => undefined);
+}
+
+export async function getProfile(): Promise<ProfileData | null> {
+  const res = await fetch(`${API_BASE}/me/profile`, withCreds);
+  return res.ok ? res.json() : null;
+}
+
+export async function updateProfile(data: Partial<ProfileData>): Promise<void> {
+  await fetch(`${API_BASE}/me/profile`, {
+    ...withCreds,
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function listConversations(limit = 30): Promise<ConversationSummary[]> {
+  const res = await fetch(`${API_BASE}/me/conversations?limit=${limit}`, withCreds);
+  return res.ok ? res.json() : [];
+}
+
+export async function getConversation(id: string): Promise<ConversationDetail | null> {
+  const res = await fetch(`${API_BASE}/me/conversations/${encodeURIComponent(id)}`, withCreds);
+  return res.ok ? res.json() : null;
+}
+
+export async function deleteConversation(id: string): Promise<boolean> {
+  const res = await fetch(`${API_BASE}/me/conversations/${encodeURIComponent(id)}`, { ...withCreds, method: "DELETE" });
+  return res.ok;
 }

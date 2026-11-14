@@ -11,6 +11,7 @@ import uuid
 from datetime import datetime
 from typing import AsyncGenerator
 
+from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
@@ -20,6 +21,7 @@ from packages.shared.schemas import (
     FilteredQueryRequest,
     SourceNode,
 )
+from apps.api.auth import get_current_user_optional
 from apps.api.deps import get_redis_optional, get_db
 from apps.api.middleware import query_rate_limiter
 
@@ -35,9 +37,41 @@ HISTORY_ANSWER_CHARS = 600  # enough for the companion to remember what it sugge
 _LOCAL_SESSIONS: dict[str, tuple[float, list[dict]]] = {}
 
 
-def _load_turns(session_id: str | None) -> list[dict]:
+# ──────────────────────────────────────────────────────────────────────────────
+# Session memory
+#   Anonymous visitors: Redis (or the in-process fallback), kept for 1 hour.
+#   Signed-in users:    a MongoDB `conversations` document that never expires and
+#                       stores sources + follow-ups so the chat can be reopened later.
+#                       The session_id they send is that conversation's id.
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _resolve_session(session_id: str | None, user: dict | None) -> str:
+    """The session id to use. For a signed-in user, an unknown or foreign id starts a new conversation."""
+    if user is None:
+        return session_id or str(uuid.uuid4())
+    if session_id:
+        try:
+            oid = ObjectId(session_id)
+            if get_db()["conversations"].count_documents({"_id": oid, "user_id": user["_id"]}, limit=1):
+                return session_id
+        except Exception:
+            pass
+    return str(ObjectId())
+
+
+def _load_turns(session_id: str | None, user: dict | None = None) -> list[dict]:
+    """The most recent turns (at most MAX_HISTORY), oldest first."""
     if not session_id:
         return []
+    if user is not None:
+        try:
+            doc = get_db()["conversations"].find_one(
+                {"_id": ObjectId(session_id), "user_id": user["_id"]},
+                {"turns": {"$slice": -MAX_HISTORY}},
+            )
+        except Exception:
+            return []
+        return (doc or {}).get("turns", [])
     r = get_redis_optional()
     if r:
         raw = r.get(f"session:{session_id}")
@@ -59,30 +93,63 @@ def _store_turns(session_id: str, turns: list[dict]) -> None:
             del _LOCAL_SESSIONS[sid]
 
 
-def _get_session_history(session_id: str | None) -> str:
+def _history_text(turns: list[dict]) -> str:
     lines = []
-    for turn in _load_turns(session_id):
+    for turn in turns[-MAX_HISTORY:]:
         answer = turn["a"]
         lines.append(f"User: {turn['q']}")
         lines.append(f"Assistant: {answer[:HISTORY_ANSWER_CHARS]}{'...' if len(answer) > HISTORY_ANSWER_CHARS else ''}")
     return "\n".join(lines)
 
 
-def _pending_request(session_id: str | None) -> str | None:
+def _pending_from(turns: list[dict]) -> str | None:
     """The user's earlier request, if the companion's last reply was a clarifying question."""
-    turns = _load_turns(session_id)
     if turns and turns[-1].get("clarify"):
         return turns[-1].get("request") or turns[-1]["q"]
     return None
 
 
-def _save_session_turn(session_id: str, question: str, answer: str, clarify: bool = False, request: str | None = None):
-    turns = _load_turns(session_id)
-    turn = {"q": question, "a": answer, "ts": datetime.utcnow().isoformat()}
+def _save_session_turn(
+    session_id: str,
+    question: str,
+    answer: str,
+    *,
+    user: dict | None = None,
+    turns: list[dict] | None = None,
+    clarify: bool = False,
+    request: str | None = None,
+    sources: list[SourceNode] | None = None,
+    suggested: list[str] | None = None,
+):
+    """Append one turn. `turns` are the already-loaded turns (anonymous path), to avoid re-reading them."""
+    now = datetime.utcnow()
+    turn: dict = {"q": question, "a": answer}
     if clarify:
         turn.update(clarify=True, request=request or question)
-    turns.append(turn)
-    _store_turns(session_id, turns)
+
+    if user is not None:
+        turn.update(
+            ts=now,
+            sources=[s.model_dump() for s in (sources or [])],
+            suggested=suggested or [],
+        )
+        try:
+            get_db()["conversations"].update_one(
+                {"_id": ObjectId(session_id), "user_id": user["_id"]},
+                {
+                    "$push": {"turns": turn},
+                    "$set": {"updated_at": now},
+                    "$setOnInsert": {"title": question.strip()[:80], "created_at": now},
+                },
+                upsert=True,
+            )
+        except Exception:
+            pass  # the answer is still returned; only the saved copy is lost
+        return
+
+    turn["ts"] = now.isoformat()
+    base = turns if turns is not None else _load_turns(session_id)
+    _store_turns(session_id, [*base, turn])
 
 
 def _log_query(question: str, session_id: str | None, language: str = "auto"):
@@ -121,23 +188,23 @@ def _source_nodes_to_schema(source_nodes) -> list[SourceNode]:
 
 
 @router.post("", response_model=QueryResponse, dependencies=[Depends(query_rate_limiter)])
-def query(req: QueryRequest):
-    """Ask a question — sync or streaming. Supports session memory.
-    Rate limit: 10 questions per 30 minutes per IP, then 1-hour cooldown."""
-    session_id = req.session_id or str(uuid.uuid4())
+def query(req: QueryRequest, user: dict | None = Depends(get_current_user_optional)):
+    """Ask a question — sync or streaming. Supports session memory; signed-in users'
+    chats are saved. Rate limited per IP (anonymous) or per user (signed in)."""
+    session_id = _resolve_session(req.session_id, user)
 
     if req.stream:
-        return _handle_streaming(req, session_id)
+        return _handle_streaming(req, session_id, user)
 
-    return _handle_sync(req, session_id)
+    return _handle_sync(req, session_id, user)
 
 
 @router.post("/filtered", response_model=QueryResponse, dependencies=[Depends(query_rate_limiter)])
-def filtered_query(req: FilteredQueryRequest):
+def filtered_query(req: FilteredQueryRequest, user: dict | None = Depends(get_current_user_optional)):
     """Query with optional filters: book, topic, language.
-    Rate limit: 10 questions per 30 minutes per IP, then 1-hour cooldown."""
-    session_id = req.session_id or str(uuid.uuid4())
-    return _handle_filtered(req, session_id)
+    Rate limited per IP (anonymous) or per user (signed in)."""
+    session_id = _resolve_session(req.session_id, user)
+    return _handle_filtered(req, session_id, user)
 
 
 def _generate_follow_ups(question: str, answer: str) -> list[str]:
@@ -194,16 +261,16 @@ def _answer_sources_to_schema(sources) -> list[SourceNode]:
     ]
 
 
-def _handle_sync(req: QueryRequest, session_id: str) -> QueryResponse:
+def _handle_sync(req: QueryRequest, session_id: str, user: dict | None = None) -> QueryResponse:
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "services" / "rag-service"))
 
     from rag.answer import answer_question
 
-    history = _get_session_history(session_id)
-    pending = _pending_request(session_id)
-    turns = _load_turns(session_id)
+    turns = _load_turns(session_id, user)  # read once; history and pending request derive from it
+    history = _history_text(turns)
+    pending = _pending_from(turns)
 
     try:
         # Whole-article context + mantra verification (see rag/answer.py). The companion may
@@ -218,20 +285,25 @@ def _handle_sync(req: QueryRequest, session_id: str) -> QueryResponse:
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
-    _save_session_turn(session_id, req.question, answer, clarify=asked, request=pending or req.question)
-    _log_query(req.question, session_id)
     suggested = [] if asked else _generate_follow_ups(req.question, answer)
+    source_nodes = _answer_sources_to_schema(sources)
+    _save_session_turn(
+        session_id, req.question, answer,
+        user=user, turns=turns, clarify=asked, request=pending or req.question,
+        sources=source_nodes, suggested=suggested,
+    )
+    _log_query(req.question, session_id)
 
     return QueryResponse(
         answer=answer,
-        sources=_answer_sources_to_schema(sources),
+        sources=source_nodes,
         model=os.getenv("KRUTRIM_MODEL", "gpt-oss-120b"),
         session_id=session_id,
         suggested_questions=suggested,
     )
 
 
-def _handle_filtered(req: FilteredQueryRequest, session_id: str) -> QueryResponse:
+def _handle_filtered(req: FilteredQueryRequest, session_id: str, user: dict | None = None) -> QueryResponse:
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "services" / "rag-service"))
@@ -250,25 +322,27 @@ def _handle_filtered(req: FilteredQueryRequest, session_id: str) -> QueryRespons
         raise HTTPException(status_code=500, detail=str(exc))
 
     answer = str(response)
-    _save_session_turn(session_id, req.question, answer)
+    source_nodes = _source_nodes_to_schema(response.source_nodes)
+    _save_session_turn(session_id, req.question, answer, user=user, sources=source_nodes)
     _log_query(req.question, session_id, req.language or "auto")
 
     return QueryResponse(
         answer=answer,
-        sources=_source_nodes_to_schema(response.source_nodes),
+        sources=source_nodes,
         model=os.getenv("KRUTRIM_MODEL", "gpt-oss-120b"),
         session_id=session_id,
     )
 
 
-def _handle_streaming(req: QueryRequest, session_id: str) -> StreamingResponse:
+def _handle_streaming(req: QueryRequest, session_id: str, user: dict | None = None) -> StreamingResponse:
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "services" / "rag-service"))
 
     from rag.query_engine import get_streaming_query_engine
 
-    history = _get_session_history(session_id)
+    turns = _load_turns(session_id, user)
+    history = _history_text(turns)
 
     def token_generator():
         accumulated = ""
@@ -281,7 +355,7 @@ def _handle_streaming(req: QueryRequest, session_id: str) -> StreamingResponse:
                 yield f"data: {json.dumps(token)}\n\n"
             yield f"data: [SESSION:{session_id}]\n\n"
             yield "data: [DONE]\n\n"
-            _save_session_turn(session_id, req.question, accumulated)
+            _save_session_turn(session_id, req.question, accumulated, user=user, turns=turns)
             _log_query(req.question, session_id)
         except Exception as exc:
             yield f"data: [ERROR] {str(exc)}\n\n"

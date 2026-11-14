@@ -527,6 +527,18 @@ export const en = {
   "sw.credit": "Sadhak shows every switch word exactly as it was given.",
   "sw.health": "For health problems, use switch words and flower remedies alongside your doctor's care, never instead of it.",
   "tools.swDesc": "Switch words for what you need, exactly as they were given.",
+
+  // Accounts (optional Google sign-in) and saved chats
+  "auth.signIn": "Sign in",
+  "auth.signOut": "Sign out",
+  "auth.account": "Your account",
+  "auth.history": "Chat history",
+  "chat.newChat": "New chat",
+  "chat.historyTitle": "Your chats",
+  "chat.historyEmpty": "No saved chats yet. Your questions will appear here.",
+  "chat.historyClose": "Close chat history",
+  "chat.delete": "Delete chat",
+  "chat.notFound": "That chat could not be found.",
 } as const;
 
 export type Key = keyof typeof en;

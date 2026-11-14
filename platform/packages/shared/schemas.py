@@ -217,3 +217,49 @@ class VectorStoreHealth(BaseModel):
     vector_store_docs: int
     model: str
     last_ingestion: Optional[datetime] = None
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Accounts (Google sign-in)
+# ──────────────────────────────────────────────────────────────────────────────
+
+class GoogleLoginRequest(BaseModel):
+    credential: str = Field(..., min_length=1, description="Google ID token from Google Identity Services")
+
+
+class UserOut(BaseModel):
+    id: str
+    email: str
+    name: Optional[str] = None
+    picture: Optional[str] = None
+
+
+class ProfileData(BaseModel):
+    """Per-user data mirrored from the browser's localStorage. Shapes are owned by the web app."""
+    birth: Optional[dict] = None
+    place: Optional[dict] = None
+    japa: Optional[dict] = None
+    updated_at: Optional[datetime] = None
+
+
+class ConversationSummary(BaseModel):
+    id: str
+    title: str
+    updated_at: datetime
+    turn_count: int
+
+
+class ConversationTurn(BaseModel):
+    q: str
+    a: str
+    sources: list[SourceNode] = []
+    suggested: list[str] = []
+    ts: Optional[datetime] = None
+
+
+class ConversationDetail(BaseModel):
+    id: str
+    title: str
+    created_at: datetime
+    updated_at: datetime
+    turns: list[ConversationTurn]

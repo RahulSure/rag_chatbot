@@ -1,6 +1,7 @@
 /** The visitor's own birth details, kept in this browser only and shared by the kundli tools. */
 
 import type { BirthDetails } from "./api";
+import { pushProfile } from "./profileSync";
 
 const STORAGE_KEY = "sadhak_birth";
 
@@ -19,4 +20,5 @@ export function saveBirth(details: BirthDetails) {
   } catch {
     /* storage unavailable: the reading still shows, it just won't be remembered */
   }
+  pushProfile("birth", details); // signed-in users: keep a copy on their account
 }

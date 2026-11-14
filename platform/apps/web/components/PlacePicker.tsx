@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { MapPin } from "lucide-react";
 import { searchPlaces, type Place } from "@/lib/api";
 import { useT } from "@/lib/i18n";
+import { pushProfile } from "@/lib/profileSync";
 
 // One remembered city for every "today" view (home panchang, muhurat …).
 const PLACE_KEY = "sadhak_today_place";
@@ -23,6 +24,7 @@ function savePlace(p: Place) {
   } catch {
     /* remembered only if storage is available */
   }
+  pushProfile("place", p);
 }
 
 /** "Change city" link that opens a search field with suggestions. */

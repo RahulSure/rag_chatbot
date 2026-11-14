@@ -59,3 +59,9 @@ pydantic>=2.10.0
 
 # Bson for ObjectId
 pymongo[srv]>=4.10.0
+
+# Google sign-in: verify Google ID tokens, issue our own session JWT
+google-auth>=2.30.0
+PyJWT>=2.8.0
+# Tests (apps/api/tests): in-memory MongoDB
+mongomock>=4.1.0

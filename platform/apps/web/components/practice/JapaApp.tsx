@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bell, BellOff, MessageCircle, RotateCcw, Smartphone, Undo2 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
+import { PROFILE_SYNCED_EVENT, pushProfile } from "@/lib/profileSync";
 
 const BEADS = 108;
 const TARGETS = [1, 3, 5, 11, 21];
@@ -67,7 +68,13 @@ export function JapaApp() {
   const [s, setS] = useState<JapaState | null>(null);
   const audio = useRef<AudioContext | null>(null);
 
-  useEffect(() => setS(load()), []);
+  useEffect(() => {
+    setS(load());
+    // Signing in may bring this account's count from another device into localStorage.
+    const reload = () => setS(load());
+    window.addEventListener(PROFILE_SYNCED_EVENT, reload);
+    return () => window.removeEventListener(PROFILE_SYNCED_EVENT, reload);
+  }, []);
   useEffect(() => {
     if (!s) return;
     try {
@@ -75,6 +82,7 @@ export function JapaApp() {
     } catch {
       /* the counter still works, it just won't be remembered */
     }
+    pushProfile("japa", s); // debounced; only when signed in
   }, [s]);
 
   const count = useCallback(() => {

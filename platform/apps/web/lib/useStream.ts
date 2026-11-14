@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { sendQuery, RateLimitError, SourceNode } from "./api";
+import { sendQuery, RateLimitError, SourceNode, type ConversationDetail } from "./api";
 
 export interface ChatMessage {
   id: string;
@@ -48,6 +48,8 @@ export function useStreamChat(sessionIdRef: React.MutableRefObject<string | unde
 
       try {
         const response = await sendQuery(question, 12, sessionIdRef.current);
+        // The server picks the id for a new conversation (and replaces a stale one); keep using it.
+        if (response.session_id) sessionIdRef.current = response.session_id;
 
         setMessages((prev) =>
           prev.map((m) =>
@@ -105,5 +107,36 @@ export function useStreamChat(sessionIdRef: React.MutableRefObject<string | unde
     setError(null);
   }, []);
 
-  return { messages, isLoading, error, sendMessage, clearChat };
+  /** Show a saved conversation and continue it. */
+  const loadConversation = useCallback(
+    (convo: ConversationDetail) => {
+      sessionIdRef.current = convo.id;
+      setError(null);
+      setMessages(
+        convo.turns.flatMap((turn, i): ChatMessage[] => [
+          { id: `user-${convo.id}-${i}`, role: "user", content: turn.q },
+          {
+            id: `assistant-${convo.id}-${i}`,
+            role: "assistant",
+            content: turn.a,
+            sources: turn.sources,
+            suggestedQuestions: turn.suggested,
+          },
+        ])
+      );
+    },
+    [sessionIdRef]
+  );
+
+  /** Start over: the next question opens a new conversation. */
+  const newChat = useCallback(
+    (sessionId?: string) => {
+      sessionIdRef.current = sessionId;
+      setMessages([]);
+      setError(null);
+    },
+    [sessionIdRef]
+  );
+
+  return { messages, isLoading, error, sendMessage, clearChat, loadConversation, newChat };
 }
