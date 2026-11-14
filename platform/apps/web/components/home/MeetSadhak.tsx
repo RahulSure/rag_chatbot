@@ -43,7 +43,7 @@ export function MeetSadhak() {
                 type="button"
                 id={`convo-tab-${i}`}
                 aria-selected={active === i}
-                aria-controls="convo-panel"
+                aria-controls={`convo-panel-${i}`}
                 onClick={() => setActive(i)}
                 className={`whitespace-nowrap border-b-2 px-5 py-3.5 text-sm transition-colors ${
                   active === i ? "border-gold text-foreground" : "border-transparent text-cosmic-400 hover:text-foreground"
@@ -54,19 +54,35 @@ export function MeetSadhak() {
             ))}
           </div>
 
-          <div id="convo-panel" role="tabpanel" aria-labelledby={`convo-tab-${active}`} className="space-y-5 p-5 sm:p-7">
-            <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-gold/15 px-4 py-3 text-foreground">
-              {convo.question}
-            </p>
-            <div className="flex gap-3">
-              <span
-                aria-hidden="true"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gold/50 font-serif text-lg text-gold"
+          {/* Every conversation sits in the same grid cell, so the card is always as tall as the
+              longest one: switching tabs never resizes it or shifts the column beside it. */}
+          <div className="grid">
+            {replies.map((c, i) => (
+              <div
+                key={i}
+                id={`convo-panel-${i}`}
+                role="tabpanel"
+                aria-labelledby={`convo-tab-${i}`}
+                aria-hidden={active !== i}
+                inert={active !== i}
+                className={`space-y-5 p-5 transition-opacity duration-300 [grid-area:1/1] sm:p-7 ${
+                  active === i ? "opacity-100" : "invisible opacity-0"
+                }`}
               >
-                स
-              </span>
-              <p className="whitespace-pre-line text-[0.95rem] leading-relaxed text-cosmic-200">{convo.reply}</p>
-            </div>
+                <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-gold/15 px-4 py-3 text-foreground">
+                  {c.question}
+                </p>
+                <div className="flex gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gold/50 font-serif text-lg text-gold"
+                  >
+                    स
+                  </span>
+                  <p className="whitespace-pre-line text-[0.95rem] leading-relaxed text-cosmic-200">{c.reply}</p>
+                </div>
+              </div>
+            ))}
           </div>
 
           <div className="flex items-center justify-between gap-4 border-t border-line bg-surface-2 px-5 py-3.5 sm:px-7">
