@@ -304,6 +304,60 @@ html.dark .ganga-scene {
   0%, 100% { opacity: 0; }
   40%, 60% { opacity: 0.9; }
 }
+/* Reflection of a lamp stretching down into the water */
+@keyframes ganga-streak {
+  from { transform: scaleY(0.75); opacity: 0.55; }
+  to { transform: scaleY(1.15); opacity: 0.85; }
+}
+.ganga-streak {
+  animation: ganga-streak 2.8s ease-in-out infinite alternate;
+  transform-origin: top;
+}
+/* The zodiac wheel turning slowly around the moon */
+@keyframes ganga-wheel {
+  to { transform: rotate(360deg); }
+}
+.ganga-wheel { animation: ganga-wheel 360s linear infinite; transform-box: fill-box; transform-origin: center; }
+
+/* Cinematic display type: italic gold with a candle glow */
+.ganga-display {
+  font-family: var(--font-serif), var(--font-serif-deva), Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  background: linear-gradient(170deg, #f7e3b8 10%, #e2bf84 45%, #b98f4e 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 22px rgb(255 205 120 / 0.3));
+}
+html[lang="hi"] .ganga-display { font-style: normal; } /* italic breaks Devanagari */
+
+/* Ornate river button: gold hairline pill on glass, like a temple lamp ledge */
+.btn-ganga {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 28px;
+  border-radius: 999px;
+  border: 1px solid rgb(226 190 130 / 0.65);
+  box-shadow: inset 0 0 0 1px rgb(226 190 130 / 0.2), inset 0 0 18px rgb(255 205 120 / 0.08), 0 4px 24px rgb(0 0 0 / 0.35);
+  background: rgb(10 9 18 / 0.45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #f3dcae;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.btn-ganga:hover {
+  border-color: rgb(246 216 160 / 0.95);
+  box-shadow: inset 0 0 0 1px rgb(226 190 130 / 0.35), inset 0 0 22px rgb(255 205 120 / 0.16), 0 4px 30px rgb(255 190 90 / 0.25);
+  transform: translateY(-1px);
+}
+
 .ganga-drift { animation: ganga-drift linear infinite; }
 .ganga-bob { animation: ganga-bob 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 .ganga-flame { animation: ganga-flame 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }

@@ -22,7 +22,7 @@ import { ComposeOverlay } from "./ComposeOverlay";
 import { DiyaOverlay } from "./DiyaOverlay";
 import { DiyaSprite } from "./DiyaSprite";
 import { Panel } from "./Panel";
-import { StageArt } from "./StageArt";
+import { SceneBackdrop } from "./SceneBackdrop";
 
 const LANES = [
   { top: 46, s: 0.78, dur: 105, at: 0.24 },
@@ -52,7 +52,10 @@ function DriftingDiya({ diya, index, still, hidden, onSelect }: {
       {diya.action && ACTION_MARK[diya.action] && (
         <span aria-hidden="true" className="absolute -right-1 top-0 text-sm drop-shadow">{ACTION_MARK[diya.action]}</span>
       )}
-      <span className="mt-1 rounded-full bg-black/35 px-2.5 py-0.5 text-[0.7rem] text-white/90 backdrop-blur-sm transition-colors group-hover:bg-black/55">
+      {/* the lamp's reflection stretching into the water */}
+      <span aria-hidden="true" className="ganga-streak -mt-2.5 block h-9 w-1.5 rounded-full blur-[2px]"
+            style={{ background: "linear-gradient(to bottom, rgb(255 205 122 / 0.55), rgb(255 160 70 / 0))", animationDelay: `${-index * 0.9}s` }} />
+      <span className="-mt-5 rounded-full border border-[#f3dcae]/20 bg-black/40 px-2.5 py-0.5 text-[0.7rem] text-[#f2e8d5] backdrop-blur-sm transition-colors group-hover:border-[#f3dcae]/50 group-hover:bg-black/60">
         {diya.from} · <span className="text-[#ffd27a] lining-nums">{diya.maitri.score}</span>
       </span>
     </button>
@@ -209,7 +212,7 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
         my.set(((e.clientY - r.top) / r.height) * 2 - 1);
       }}
     >
-      <StageArt mx={mx} my={my} still={still} narrow={narrow} />
+      <SceneBackdrop mx={mx} my={my} still={still} narrow={narrow} />
 
       {/* the day's diyas, drifting */}
       {visible.map((d, i) => (
@@ -283,42 +286,40 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
       )}
 
       {/* HUD: who you are, sound, today's share, the three doors */}
-      <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full border border-line bg-surface/85 py-1 pl-4 pr-1.5 backdrop-blur-sm">
-        <span className="text-sm text-cosmic-300">
-          {t("ganga.signedAs")} <span className="font-serif text-gold">{profile.name}</span>
+      <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full border border-[#f3dcae]/30 bg-black/45 py-1 pl-4 pr-1.5 backdrop-blur-sm">
+        <span className="text-sm text-[#d9cdb4]">
+          {t("ganga.signedAs")} <span className="font-serif italic text-[#f0cf92]">{profile.name}</span>
         </span>
-        <button type="button" onClick={onEdit} className="rounded-full px-2 py-1 text-xs text-cosmic-400 hover:text-foreground">{t("ganga.edit")}</button>
+        <button type="button" onClick={onEdit} className="rounded-full px-2 py-1 text-xs text-[#bdb296] hover:text-[#f3dcae]">{t("ganga.edit")}</button>
         <button type="button"
                 onClick={async () => { if (window.confirm(t("ganga.leaveConfirm"))) { await gangaApi.leave().catch(() => undefined); onLeft(); } }}
-                className="rounded-full px-2 py-1 text-xs text-cosmic-500 hover:text-foreground">
+                className="rounded-full px-2 py-1 text-xs text-[#9a9079] hover:text-[#f3dcae]">
           {t("ganga.leave")}
         </button>
       </div>
       <div className="absolute right-3 top-3 flex items-center gap-2">
         {data && (
-          <span className="rounded-full border border-line bg-surface/85 px-3 py-1.5 text-sm text-cosmic-200 backdrop-blur-sm lining-nums"
+          <span className="rounded-full border border-[#f3dcae]/30 bg-black/45 px-3 py-1.5 text-sm text-[#e8dcc2] backdrop-blur-sm lining-nums"
                 title={data.left > 0 ? fill(t("ganga.catchLeft"), { n: data.left }) : t("ganga.catchDone")}>
             🪔 {data.diyas.length}/{data.share}
           </span>
         )}
         <button type="button" onClick={toggleSound} aria-pressed={sound}
                 aria-label={sound ? t("ganga.stage.soundOn") : t("ganga.stage.soundOff")}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface/85 text-cosmic-300 backdrop-blur-sm hover:text-gold">
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#f3dcae]/30 bg-black/45 text-[#d9cdb4] backdrop-blur-sm hover:text-[#ffd27a]">
           {sound ? <Volume2 size={16} /> : <VolumeX size={16} />}
         </button>
       </div>
-      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-center justify-center gap-2 p-3 sm:justify-end sm:p-5">
-        <button type="button" onClick={() => setCompose({ initial: pending, error: null })} className="btn-gold px-5 py-2.5 text-sm shadow-cosmic">
+      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-center justify-center gap-2.5 p-3 sm:justify-end sm:p-5">
+        <button type="button" onClick={() => setCompose({ initial: pending, error: null })} className="btn-ganga px-6 py-2.5 text-sm">
           <span aria-hidden="true">🪔</span> {t("ganga.stage.write")}
         </button>
-        <button type="button" onClick={() => setPanel("mine")}
-                className="inline-flex items-center gap-2 rounded-md border border-line bg-surface/85 px-4 py-2.5 text-sm text-cosmic-200 backdrop-blur-sm hover:text-foreground">
+        <button type="button" onClick={() => setPanel("mine")} className="btn-ganga px-5 py-2.5 text-sm opacity-90">
           <ScrollText size={15} aria-hidden="true" /> {t("ganga.tabMine")}
         </button>
-        <button type="button" onClick={() => { setThread(null); setPanel("letters"); }}
-                className="inline-flex items-center gap-2 rounded-md border border-line bg-surface/85 px-4 py-2.5 text-sm text-cosmic-200 backdrop-blur-sm hover:text-foreground">
+        <button type="button" onClick={() => { setThread(null); setPanel("letters"); }} className="btn-ganga px-5 py-2.5 text-sm opacity-90">
           <Mail size={15} aria-hidden="true" /> {t("ganga.tabLetters")}
-          {unread > 0 && <span className="rounded-full bg-gold px-1.5 text-xs font-semibold text-background lining-nums">{unread}</span>}
+          {unread > 0 && <span className="rounded-full bg-[#e2bf84] px-1.5 text-xs font-semibold text-black lining-nums">{unread}</span>}
         </button>
       </div>
 
