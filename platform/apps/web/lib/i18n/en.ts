@@ -671,6 +671,21 @@ export const en = {
   "ganga.reportThread": "Report & block",
   "ganga.you": "You",
   "ganga.safety": "Never share your number, address or money with anyone here. Report anything that feels wrong.",
+
+  // Ganga: the interactive river stage
+  "ganga.stage.tapHint": "Tap a glowing diya to lift it from the water",
+  "ganga.stage.dragHint": "Drag your diya onto the river and let go",
+  "ganga.stage.setAfloat": "Set it afloat",
+  "ganga.stage.setAfloatHint": "Your diya is lit and ready.",
+  "ganga.stage.light": "Light the diya",
+  "ganga.stage.write": "Write a diya",
+  "ganga.stage.floated": "Your diya is on its way downstream. 🪔",
+  "ganga.stage.quiet": "The river is quiet right now. Float a diya of your own, and come back later today.",
+  "ganga.stage.swipeHint": "or swipe the card aside to let it float on",
+  "ganga.stage.close": "Close",
+  "ganga.stage.diyaFrom": "Diya from {name}",
+  "ganga.stage.soundOn": "River sounds playing — tap to silence",
+  "ganga.stage.soundOff": "Play the sounds of the ghat",
 } as const;
 
 export type Key = keyof typeof en;

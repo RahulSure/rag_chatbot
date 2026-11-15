@@ -241,6 +241,8 @@ select:focus-visible {
   --bank: 116 84 62;
   --orb: 238 160 82;
   --glint: 255 216 156;
+  --stars-op: 0;      /* no stars at dawn */
+  --windows-op: 0.35; /* lit temple windows barely show by day */
 }
 html.dark .ganga-scene {
   --sky-top: 12 11 26;
@@ -250,6 +252,8 @@ html.dark .ganga-scene {
   --bank: 5 5 11;
   --orb: 238 228 204;
   --glint: 200 169 110;
+  --stars-op: 0.7;
+  --windows-op: 1;
 }
 @keyframes ganga-drift {
   from { transform: translateX(0); }

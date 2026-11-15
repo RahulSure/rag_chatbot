@@ -671,4 +671,19 @@ export const hi: Record<Key, string> = {
   "ganga.reportThread": "रिपोर्ट और ब्लॉक",
   "ganga.you": "आप",
   "ganga.safety": "यहाँ किसी से अपना नंबर, पता या पैसा कभी साझा न करें। जो भी गलत लगे, रिपोर्ट करें।",
+
+  // Ganga: the interactive river stage
+  "ganga.stage.tapHint": "जलते दीये को छूकर जल से उठाएँ",
+  "ganga.stage.dragHint": "अपना दीया खींचकर नदी पर ले जाएँ और छोड़ दें",
+  "ganga.stage.setAfloat": "प्रवाहित करें",
+  "ganga.stage.setAfloatHint": "आपका दीया जल चुका है, तैयार है।",
+  "ganga.stage.light": "दीया जलाएँ",
+  "ganga.stage.write": "दीया लिखें",
+  "ganga.stage.floated": "आपका दीया नदी में बह चला है। 🪔",
+  "ganga.stage.quiet": "अभी नदी शांत है। अपना एक दीया प्रवाहित करें और आज बाद में लौटें।",
+  "ganga.stage.swipeHint": "या कार्ड को एक ओर सरकाएँ और इसे आगे बहने दें",
+  "ganga.stage.close": "बंद करें",
+  "ganga.stage.diyaFrom": "{name} का दीया",
+  "ganga.stage.soundOn": "नदी की ध्वनि चालू है — बंद करने के लिए छुएँ",
+  "ganga.stage.soundOff": "घाट की ध्वनि सुनें",
 };
