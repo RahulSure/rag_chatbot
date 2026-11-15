@@ -84,7 +84,7 @@ export function DiyaOverlay({ diya, onChange, onClose, onOpenThread }: {
         {/* the diya itself sits on the card's rim */}
         <div className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2">
           <div className="relative">
-            <DiyaSprite size={84} />
+            <DiyaSprite size={84} seed={1} />
             {blessing && <Petals />}
           </div>
         </div>

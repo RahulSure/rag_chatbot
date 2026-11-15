@@ -48,7 +48,7 @@ function DriftingDiya({ diya, index, still, hidden, onSelect }: {
       className="group relative -m-2 flex flex-col items-center p-2 outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-gold"
       style={{ transform: `scale(${lane.s})` }}
     >
-      <DiyaSprite size={66} />
+      <DiyaSprite size={66} seed={index * 3 + 1} />
       {diya.action && ACTION_MARK[diya.action] && (
         <span aria-hidden="true" className="absolute -right-1 top-0 text-sm drop-shadow">{ACTION_MARK[diya.action]}</span>
       )}
@@ -65,14 +65,29 @@ function DriftingDiya({ diya, index, still, hidden, onSelect }: {
       </div>
     );
   }
+  // The current is not even: each diya hurries through the middle of the river and
+  // lingers near the banks, swaying and tilting on its own rhythm as it goes.
+  const wayX = index % 2 ? ["-14vw", "26vw", "72vw", "114vw"] : ["-14vw", "38vw", "64vw", "114vw"];
+  const times = index % 2 ? [0, 0.42, 0.68, 1] : [0, 0.3, 0.62, 1];
   return (
     <div className={`absolute left-0 transition-opacity duration-300 ${hidden ? "pointer-events-none opacity-0" : ""}`}
          style={{ top: `${lane.top}%` }}>
       <motion.div
-        animate={{ x: ["-14vw", "114vw"] }}
-        transition={{ duration: lane.dur, repeat: Infinity, ease: "linear", delay: -lane.dur * lane.at }}
+        animate={{ x: wayX }}
+        transition={{ duration: lane.dur, times, repeat: Infinity, ease: "easeInOut", delay: -lane.dur * lane.at }}
       >
-        {body}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: 1, scale: 1, y: [0, 9, -7, 4, 0], rotate: [0, 1.8, -1.5, 0.9, 0] }}
+          transition={{
+            opacity: { duration: 1.1, delay: 0.3 + index * 0.3 },
+            scale: { duration: 1.1, delay: 0.3 + index * 0.3 },
+            y: { duration: 8 + (index % 3) * 2.6, repeat: Infinity, ease: "easeInOut", delay: -index * 1.7 },
+            rotate: { duration: 8 + (index % 3) * 2.6, repeat: Infinity, ease: "easeInOut", delay: -index * 1.7 },
+          }}
+        >
+          {body}
+        </motion.div>
       </motion.div>
     </div>
   );
@@ -206,9 +221,12 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
       <AnimatePresence>
         {sail && (
           <motion.div key="sail" className="pointer-events-none absolute" style={{ left: `${sail.left}%`, top: `${sail.top}%` }}
-                      initial={{ x: 0, y: 0, scale: 1.1 }} animate={{ x: sail.dx, y: -28, scale: 0.8 }} exit={{ opacity: 0 }}
-                      transition={{ duration: 9, ease: "linear" }} onAnimationComplete={() => setSail(null)} aria-hidden="true">
-            <DiyaSprite size={70} />
+                      initial={{ x: 0, y: 0, scale: 1.1, rotate: 0 }}
+                      animate={{ x: [0, sail.dx * 0.3, sail.dx], y: [0, -12, -30], scale: [1.1, 0.95, 0.78], rotate: [0, 2.5, -1.5] }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 10, times: [0, 0.42, 1], ease: "easeInOut" }}
+                      onAnimationComplete={() => setSail(null)} aria-hidden="true">
+            <DiyaSprite size={70} seed={2} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -232,7 +250,7 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
             initial={still ? undefined : { scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
-            <DiyaSprite size={88} />
+            <DiyaSprite size={88} seed={5} />
           </motion.div>
           <div className="pointer-events-auto mt-2 max-w-[14rem]">
             <p className="rounded-xl bg-black/40 px-3 py-2 text-center text-xs leading-snug text-white/95 backdrop-blur-sm">

@@ -272,10 +272,48 @@ html.dark .ganga-scene {
   0%, 100% { opacity: 0.25; }
   50% { opacity: 0.8; }
 }
+/* Rings widening in the wake of a floating diya */
+@keyframes ganga-ring {
+  from { transform: scale(0.35); opacity: 0.5; }
+  to { transform: scale(1.75); opacity: 0; }
+}
+/* The orb's light breathes on the water: bars widen and brighten, never in step */
+@keyframes ganga-shimmer {
+  0%, 100% { transform: scaleX(0.72); opacity: 0.25; }
+  50% { transform: scaleX(1.25); opacity: 0.8; }
+}
+/* Ripples wander a little with the current */
+@keyframes ganga-sway {
+  from { transform: translateX(-26px); }
+  to { transform: translateX(26px); }
+}
+/* Mist along the far bank */
+@keyframes ganga-mist {
+  from { transform: translateX(-70px); }
+  to { transform: translateX(70px); }
+}
+/* Fireflies over the night water */
+@keyframes ganga-fly {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(16px, -12px); }
+  50% { transform: translate(-8px, -22px); }
+  75% { transform: translate(12px, -8px); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes ganga-blink {
+  0%, 100% { opacity: 0; }
+  40%, 60% { opacity: 0.9; }
+}
 .ganga-drift { animation: ganga-drift linear infinite; }
 .ganga-bob { animation: ganga-bob 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 .ganga-flame { animation: ganga-flame 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
 .ganga-glint { animation: ganga-glint 3.2s ease-in-out infinite; }
+.ganga-ring { animation: ganga-ring 3.2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.ganga-shimmer { animation: ganga-shimmer 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.ganga-sway { animation: ganga-sway 9s ease-in-out infinite alternate; }
+.ganga-mist { animation: ganga-mist 30s ease-in-out infinite alternate; }
+.ganga-fly { animation: ganga-fly 16s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.ganga-blink { animation: ganga-blink 4.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
   /* Still water: each diya rests where it would be, nothing moves. */
   .ganga-drift { animation: none; transform: translateX(var(--rest)); }

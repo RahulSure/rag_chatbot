@@ -81,6 +81,10 @@ export function StageArt({ mx, my, still, narrow }: { mx: MotionValue<number>; m
           <stop offset="0" stopColor="rgb(var(--orb))" stopOpacity="0.5" />
           <stop offset="1" stopColor="rgb(var(--orb))" stopOpacity="0" />
         </radialGradient>
+        <radialGradient id="st-lamp-glow">
+          <stop offset="0" stopColor="#ffd27a" stopOpacity="0.5" />
+          <stop offset="1" stopColor="#ffd27a" stopOpacity="0" />
+        </radialGradient>
         <filter id="st-soft" x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="4" />
         </filter>
@@ -114,6 +118,12 @@ export function StageArt({ mx, my, still, narrow }: { mx: MotionValue<number>; m
         <g transform={`translate(0 ${2 * HORIZON}) scale(1 -1)`} opacity="0.1" filter="url(#st-soft)">
           <path d={SKYLINE} fill="rgb(var(--bank))" />
         </g>
+        {/* mist lying on the water along the far bank */}
+        <g filter="url(#st-soft)" opacity="0.3">
+          <ellipse className="ganga-mist" cx="420" cy={HORIZON + 8} rx="260" ry="13" fill="rgb(var(--sky-bottom))" />
+          <ellipse className="ganga-mist" cx="1060" cy={HORIZON + 13} rx="300" ry="15" fill="rgb(var(--sky-bottom))"
+                   style={{ animationDelay: "-14s", animationDirection: "alternate-reverse" }} />
+        </g>
       </motion.g>
 
       {/* water */}
@@ -126,15 +136,25 @@ export function StageArt({ mx, my, still, narrow }: { mx: MotionValue<number>; m
           const y = HORIZON + 10 + i * 17;
           const w = 20 + i * 7 + (i % 3) * 10;
           return (
-            <rect key={i} className="ganga-glint" x={ORB.x - w / 2 + ((i * 37) % 13) - 6} y={y} width={w} height="2.2" rx="1.1"
-                  fill="rgb(var(--glint))" style={{ animationDelay: `${-(i * 0.45)}s` }} />
+            <rect key={i} className="ganga-shimmer" x={ORB.x - w / 2 + ((i * 37) % 13) - 6} y={y} width={w} height="2.2" rx="1.1"
+                  fill="rgb(var(--glint))" style={{ animationDelay: `${-(i * 0.47)}s`, animationDuration: `${3 + (i % 4) * 0.55}s` }} />
           );
         })}
         </g>
-        {/* ripples */}
+        {/* ripples, wandering with the current */}
         {Array.from({ length: 30 }, (_, i) => (
-          <rect key={i} x={(i * 263) % VIEW_W} y={HORIZON + 20 + ((i * 97) % (VIEW_H - HORIZON - 50))} width={34 + ((i * 17) % 60)}
-                height="1.6" rx="0.8" fill="rgb(var(--glint))" opacity="0.16" />
+          <rect key={i} className="ganga-sway" x={(i * 263) % VIEW_W} y={HORIZON + 20 + ((i * 97) % (VIEW_H - HORIZON - 50))}
+                width={34 + ((i * 17) % 60)} height="1.6" rx="0.8" fill="rgb(var(--glint))" opacity="0.16"
+                style={{ animationDelay: `${-(i * 1.3)}s`, animationDuration: `${8 + (i % 5) * 2}s` }} />
+        ))}
+        {/* other sadhaks' lamps, far out on the water */}
+        {[{ y: 328, d: 110, at: 0.15 }, { y: 344, d: 140, at: 0.55 }, { y: 336, d: 125, at: 0.85 }].map((p, i) => (
+          <g key={`lamp-${i}`} transform={`translate(-80 ${p.y})`}>
+            <g className="ganga-drift" style={{ animationDuration: `${p.d}s`, animationDelay: `${-p.d * p.at}s`, ["--rest" as string]: `${220 + i * 420}px` }}>
+              <circle r="8" fill="url(#st-lamp-glow)" />
+              <circle r="1.9" fill="#ffd27a" className="ganga-glint" style={{ animationDelay: `${-i * 1.4}s` }} />
+            </g>
+          </g>
         ))}
         {/* a boatman crossing, far away */}
         <g transform="translate(-120 352)">
@@ -159,6 +179,15 @@ export function StageArt({ mx, my, still, narrow }: { mx: MotionValue<number>; m
           <path d={`M${VIEW_W - 60} ${VIEW_H}q-6-70 4-110l6 2q-6 48-2 108Z`} />
           <path d={`M${VIEW_W - 36} ${VIEW_H}q2-56 14-88l6 3q-10 36-12 85Z`} />
           <path d={`M${VIEW_W - 86} ${VIEW_H}q-10-44-4-78l6 1q-4 40 6 77Z`} />
+        </g>
+        {/* fireflies, only after dark */}
+        <g opacity="var(--stars-op)">
+          {[{ x: 250, y: 560 }, { x: 110, y: 480 }, { x: 1240, y: 600 }, { x: 1330, y: 520 }, { x: 640, y: 690 }].map((f, i) => (
+            <g key={i} className="ganga-fly" transform={`translate(${f.x} ${f.y})`}
+               style={{ animationDelay: `${-i * 3.7}s`, animationDuration: `${13 + (i % 3) * 4}s` }}>
+              <circle className="ganga-blink" r="2" fill="#ffe9a6" style={{ animationDelay: `${-i * 1.9}s`, animationDuration: `${3.6 + (i % 4) * 0.8}s` }} />
+            </g>
+          ))}
         </g>
         </g>
       </motion.g>
