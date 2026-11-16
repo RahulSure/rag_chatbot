@@ -686,4 +686,14 @@ export const hi: Record<Key, string> = {
   "ganga.stage.diyaFrom": "{name} का दीया",
   "ganga.stage.soundOn": "नदी की ध्वनि चालू है — बंद करने के लिए छुएँ",
   "ganga.stage.soundOff": "घाट की ध्वनि सुनें",
+
+  // Ganga: one diya at a time, in the hand
+  "ganga.flow.arriving": "नदी से एक दीया बहता आ रहा है…",
+  "ganga.flow.touch": "छूकर जल से उठाएँ",
+  "ganga.flow.holds": "नदी में आज आपके लिए {n} और हैं",
+  "ganga.flow.holdBless": "आशीर्वाद के लिए दबाए रखें",
+  "ganga.flow.flick": "…या आगे बहाने के लिए इसे नदी में उछाल दें",
+  "ganga.flow.release": "जल को इसे ले जाने दें",
+  "ganga.flow.answered": "आज के दीये",
+  "ganga.flow.sent": "आपका पत्र चल पड़ा है। दीया आगे बहता है।",
 };

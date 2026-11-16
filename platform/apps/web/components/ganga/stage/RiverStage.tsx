@@ -20,81 +20,15 @@ import { useGangaUnread } from "../unread";
 import { startAmbience, stopAmbience } from "./ambience";
 import { ComposeOverlay } from "./ComposeOverlay";
 import { DiyaOverlay } from "./DiyaOverlay";
+import { RiverFlow } from "./RiverFlow";
 import { DiyaSprite } from "./DiyaSprite";
+import { LampOnWater } from "./LampOnWater";
 import { Panel } from "./Panel";
 import { SceneBackdrop } from "./SceneBackdrop";
 
-const LANES = [
-  { top: 46, s: 0.78, dur: 105, at: 0.24 },
-  { top: 56, s: 0.95, dur: 86, at: 0.58 },
-  { top: 67, s: 1.1, dur: 72, at: 0.84 },
-  { top: 79, s: 1.28, dur: 60, at: 0.4 },
-];
-const STATIC_X = [16, 42, 66, 84]; // resting places when motion is reduced
 const SOUND_KEY = "sadhak_ganga_sound";
 
 const ACTION_MARK: Record<string, string> = { blessed: "🙏", replied: "✉️" };
-
-function DriftingDiya({ diya, index, still, hidden, onSelect }: {
-  diya: CaughtDiya; index: number; still: boolean; hidden: boolean; onSelect: () => void;
-}) {
-  const { t } = useLanguage();
-  const lane = LANES[index % LANES.length];
-  const body = (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-label={`${fill(t("ganga.stage.diyaFrom"), { name: diya.from })} · ${t("ganga.maitri")} ${diya.maitri.score}`}
-      className="group relative -m-2 flex flex-col items-center p-2 outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-gold"
-      style={{ transform: `scale(${lane.s})` }}
-    >
-      <DiyaSprite size={66} seed={index * 3 + 1} />
-      {diya.action && ACTION_MARK[diya.action] && (
-        <span aria-hidden="true" className="absolute -right-1 top-0 text-sm drop-shadow">{ACTION_MARK[diya.action]}</span>
-      )}
-      {/* the lamp's reflection stretching into the water */}
-      <span aria-hidden="true" className="ganga-streak -mt-2.5 block h-9 w-1.5 rounded-full blur-[2px]"
-            style={{ background: "linear-gradient(to bottom, rgb(255 205 122 / 0.55), rgb(255 160 70 / 0))", animationDelay: `${-index * 0.9}s` }} />
-      <span className="-mt-5 rounded-full border border-[#f3dcae]/20 bg-black/40 px-2.5 py-0.5 text-[0.7rem] text-[#f2e8d5] backdrop-blur-sm transition-colors group-hover:border-[#f3dcae]/50 group-hover:bg-black/60">
-        {diya.from} · <span className="text-[#ffd27a] lining-nums">{diya.maitri.score}</span>
-      </span>
-    </button>
-  );
-  if (still) {
-    return (
-      <div className={`absolute ${hidden ? "pointer-events-none opacity-0" : ""}`}
-           style={{ top: `${lane.top}%`, left: `${STATIC_X[index % STATIC_X.length]}%` }}>
-        {body}
-      </div>
-    );
-  }
-  // The current is not even: each diya hurries through the middle of the river and
-  // lingers near the banks, swaying and tilting on its own rhythm as it goes.
-  const wayX = index % 2 ? ["-14vw", "26vw", "72vw", "114vw"] : ["-14vw", "38vw", "64vw", "114vw"];
-  const times = index % 2 ? [0, 0.42, 0.68, 1] : [0, 0.3, 0.62, 1];
-  return (
-    <div className={`absolute left-0 transition-opacity duration-300 ${hidden ? "pointer-events-none opacity-0" : ""}`}
-         style={{ top: `${lane.top}%` }}>
-      <motion.div
-        animate={{ x: wayX }}
-        transition={{ duration: lane.dur, times, repeat: Infinity, ease: "easeInOut", delay: -lane.dur * lane.at }}
-      >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.7 }}
-          animate={{ opacity: 1, scale: 1, y: [0, 9, -7, 4, 0], rotate: [0, 1.8, -1.5, 0.9, 0] }}
-          transition={{
-            opacity: { duration: 1.1, delay: 0.3 + index * 0.3 },
-            scale: { duration: 1.1, delay: 0.3 + index * 0.3 },
-            y: { duration: 8 + (index % 3) * 2.6, repeat: Infinity, ease: "easeInOut", delay: -index * 1.7 },
-            rotate: { duration: 8 + (index % 3) * 2.6, repeat: Infinity, ease: "easeInOut", delay: -index * 1.7 },
-          }}
-        >
-          {body}
-        </motion.div>
-      </motion.div>
-    </div>
-  );
-}
 
 export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile; onEdit: () => void; onLeft: () => void }) {
   const { t } = useLanguage();
@@ -107,7 +41,7 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
   const [data, setData] = useState<{ diyas: CaughtDiya[]; share: number; left: number } | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
-  const [touched, setTouched] = useState(false);
+  const [flowOpen, setFlowOpen] = useState(false); // a diya is held: the HUD steps back
   const [compose, setCompose] = useState<{ initial: { kind: DiyaKind; text: string } | null; error: string | null } | null>(null);
   const [pending, setPending] = useState<{ kind: DiyaKind; text: string } | null>(null);
   const [ghatKey, setGhatKey] = useState(0); // remounts the ghat diya so a missed drop springs back
@@ -191,9 +125,12 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
     }
   }
 
-  const visible = (data?.diyas ?? []).filter((d) => d.action !== "passed" && d.action !== "reported");
-  const selectedDiya = visible.find((d) => d.id === selected) ?? null;
-  const showHint = !touched && !selected && visible.length > 0;
+  // The river's queue: unanswered diyas arrive one by one; answered ones rest at the ghat.
+  const queue = (data?.diyas ?? []).filter((d) => !d.action);
+  const acted = (data?.diyas ?? []).filter((d) => d.action === "blessed" || d.action === "replied");
+  const selectedDiya = acted.find((d) => d.id === selected) ?? null;
+  const merge = (next: CaughtDiya) =>
+    setData((cur) => cur && { ...cur, diyas: cur.diyas.map((x) => (x.id === next.id ? next : x)) });
 
   const openThread = (id: string) => {
     setSelected(null);
@@ -214,11 +151,28 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
     >
       <SceneBackdrop mx={mx} my={my} still={still} narrow={narrow} />
 
-      {/* the day's diyas, drifting */}
-      {visible.map((d, i) => (
-        <DriftingDiya key={d.id} diya={d} index={i} still={still} hidden={selected === d.id}
-                      onSelect={() => { setTouched(true); setSelected(d.id); }} />
-      ))}
+      {/* the river brings the day's diyas one at a time */}
+      {data && (
+        <RiverFlow queue={queue} holdsMore={Math.max(0, queue.length - 1) + (data.left ?? 0)}
+                   onAct={merge} onToast={say} onOpenChange={setFlowOpen} stageRef={stageRef} />
+      )}
+
+      {/* diyas already answered today, resting at the ghat's edge */}
+      {acted.length > 0 && (
+        <div className="absolute left-3 top-16 z-10">
+          <p className="ganga-caption text-[11px] opacity-80">{t("ganga.flow.answered")}</p>
+          <div className="mt-0.5 flex gap-0.5">
+            {acted.map((d, i) => (
+              <button key={d.id} type="button" onClick={() => setSelected(d.id)}
+                      aria-label={`${fill(t("ganga.stage.diyaFrom"), { name: d.from })} (${d.action})`}
+                      className="relative rounded-full p-0.5 transition-[filter] hover:brightness-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
+                <DiyaSprite size={34} seed={i + 4} />
+                <span aria-hidden="true" className="absolute -right-0.5 -top-1 text-[10px] drop-shadow">{ACTION_MARK[d.action!]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* a freshly floated diya sailing downstream */}
       <AnimatePresence>
@@ -229,7 +183,7 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
                       exit={{ opacity: 0 }}
                       transition={{ duration: 10, times: [0, 0.42, 1], ease: "easeInOut" }}
                       onAnimationComplete={() => setSail(null)} aria-hidden="true">
-            <DiyaSprite size={70} seed={2} />
+            <LampOnWater size={70} seed={2} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -268,16 +222,10 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
 
       {/* captions on the water */}
       {loadError && <div className="absolute left-1/2 top-[46%] w-full max-w-md -translate-x-1/2 px-4"><ErrorNote code={loadError} /></div>}
-      {!loadError && data && visible.length === 0 && !pending && (
+      {!loadError && data && queue.length === 0 && !pending && (
         <p className="absolute left-1/2 top-[46%] w-full max-w-md -translate-x-1/2 px-6 text-center leading-relaxed text-white/85 drop-shadow">
           {t("ganga.stage.quiet")}
         </p>
-      )}
-      {showHint && (
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
-                  className="pointer-events-none absolute left-1/2 top-[37%] -translate-x-1/2 whitespace-nowrap rounded-full bg-black/35 px-4 py-1.5 text-sm text-white/95 backdrop-blur-sm">
-          {t("ganga.stage.tapHint")}
-        </motion.p>
       )}
       {data && data.share > 3 && (
         <p className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-black/30 px-3 py-1 text-xs text-[#ffd27a] backdrop-blur-sm">
@@ -310,7 +258,7 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
           {sound ? <Volume2 size={16} /> : <VolumeX size={16} />}
         </button>
       </div>
-      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-center justify-center gap-2.5 p-3 sm:justify-end sm:p-5">
+      <div className={`absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-center justify-center gap-2.5 p-3 transition-opacity duration-300 sm:justify-end sm:p-5 ${flowOpen ? "pointer-events-none opacity-0" : "opacity-100"}`}>
         <button type="button" onClick={() => setCompose({ initial: pending, error: null })} className="btn-ganga px-6 py-2.5 text-sm">
           <span aria-hidden="true">🪔</span> {t("ganga.stage.write")}
         </button>

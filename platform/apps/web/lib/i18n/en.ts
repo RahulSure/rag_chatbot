@@ -686,6 +686,16 @@ export const en = {
   "ganga.stage.diyaFrom": "Diya from {name}",
   "ganga.stage.soundOn": "River sounds playing — tap to silence",
   "ganga.stage.soundOff": "Play the sounds of the ghat",
+
+  // Ganga: one diya at a time, in the hand
+  "ganga.flow.arriving": "A diya is coming down the river…",
+  "ganga.flow.touch": "Touch it to lift it from the water",
+  "ganga.flow.holds": "The river holds {n} more for you today",
+  "ganga.flow.holdBless": "Hold to bless",
+  "ganga.flow.flick": "…or flick it back into the river to pass it on",
+  "ganga.flow.release": "Let the water take it",
+  "ganga.flow.answered": "Today's diyas",
+  "ganga.flow.sent": "Your letter is on its way. The diya floats on.",
 } as const;
 
 export type Key = keyof typeof en;

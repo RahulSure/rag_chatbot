@@ -66,6 +66,34 @@ export function startAmbience() {
   stopFns.push(() => clearTimeout(timer));
 }
 
+/** Tiny game sounds; silent unless the river's sound is on. */
+export function sfx(kind: "lift" | "plip" | "chime") {
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  if (kind === "chime") {
+    bell(now);
+    return;
+  }
+  const osc = ctx.createOscillator();
+  const amp = ctx.createGain();
+  if (kind === "lift") {
+    // water letting go: a soft upward sweep
+    osc.frequency.setValueAtTime(260, now);
+    osc.frequency.exponentialRampToValueAtTime(620, now + 0.16);
+    amp.gain.setValueAtTime(0.05, now);
+    amp.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+  } else {
+    // plip: a drop striking the surface
+    osc.frequency.setValueAtTime(640, now);
+    osc.frequency.exponentialRampToValueAtTime(170, now + 0.1);
+    amp.gain.setValueAtTime(0.08, now);
+    amp.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+  }
+  osc.connect(amp).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.25);
+}
+
 export function stopAmbience() {
   for (const fn of stopFns) {
     try { fn(); } catch { /* already stopped */ }
