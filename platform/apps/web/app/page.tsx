@@ -3,6 +3,7 @@ import { Hero } from "@/components/home/Hero";
 import { TrustRow } from "@/components/home/TrustRow";
 import { MeetSadhak } from "@/components/home/MeetSadhak";
 import { SadhanaNeeds } from "@/components/home/SadhanaNeeds";
+import { GangaRiver } from "@/components/home/GangaRiver";
 import { TodayPractice } from "@/components/home/TodayPractice";
 import { KundliPreview } from "@/components/home/KundliPreview";
 import { FreeTools } from "@/components/home/FreeTools";
@@ -44,6 +45,7 @@ export default async function HomePage() {
       <TrustRow />
       <MeetSadhak />
       <SadhanaNeeds />
+      <GangaRiver />
       <TodayPractice initialPlace={JODHPUR} initialPanchang={panchang} />
       <KundliPreview chart={chart} />
       <FreeTools />

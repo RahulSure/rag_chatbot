@@ -696,6 +696,20 @@ export const en = {
   "ganga.flow.release": "Let the water take it",
   "ganga.flow.answered": "Today's diyas",
   "ganga.flow.sent": "Your letter is on its way. The diya floats on.",
+
+  // Ganga: the story, and the home-page river
+  "ganga.about.label": "The idea",
+  "ganga.about.title": "Why a diya on the Ganga?",
+  "ganga.about.p1": "For centuries, sadhaks have come down to the river at dusk to float a lit diya — a small clay lamp carrying what the heart could not say aloud: a question, a grief, a thanks, a prayer. The river accepts every one of them without judgement, and carries it out of sight.",
+  "ganga.about.p2": "Here, every diya on the water is a real person's words. And the river does not show them to everyone — it chooses who finds yours the way a kundli is matched: by the friendship of your Moon lords, your birth stars, your gana, your numbers. Not an algorithm built for attention; a quiet calculation of kinship.",
+  "ganga.about.p3": "There is nothing to win here and no one to follow — no likes, no profiles, no feed. The river brings you three diyas a day, and carries three of yours. If one answer grows into letters, you may have found what this river exists for: a friend who walks the same path.",
+  "ganga.about.p4": "Everyone appears by pen name only, and letters stay on the river — no phone numbers, links or money ever change hands. Anything unkind can be reported, and two reports take a diya off the water. In Brahma muhurta, between four and six in the morning, the river brings one diya more.",
+  "ganga.about.open": "About the river",
+  "home.ganga.label": "New · The river",
+  "home.ganga.lead": "Write what is in your heart and set it afloat at a midnight ghat. Each day the river brings you a few diyas from strangers whose stars sit kindly with yours — answer one, and letters begin.",
+  "home.ganga.point1": "Pen names only",
+  "home.ganga.point2": "Matched by your stars",
+  "home.ganga.point3": "Three diyas a day",
 } as const;
 
 export type Key = keyof typeof en;

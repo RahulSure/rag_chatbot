@@ -6,6 +6,7 @@ import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { gangaApi, type GangaProfile } from "@/lib/api";
 import { GOOGLE_CLIENT_ID, useAuth } from "@/lib/auth";
 import { useLanguage, type Key } from "@/lib/i18n";
+import { AboutRiver } from "./AboutRiver";
 import { JoinForm } from "./JoinForm";
 import { ErrorNote, codeOf } from "./shared";
 import { RiverStage } from "./stage/RiverStage";
@@ -67,6 +68,9 @@ export function GangaApp() {
           <div className="mt-6 flex justify-center">
             {GOOGLE_CLIENT_ID ? <GoogleSignInButton full /> : <p className="text-sm text-[#bdb296]">{t("ganga.noSignIn")}</p>}
           </div>
+        </div>
+        <div className="mx-auto max-w-2xl">
+          <AboutRiver onScene />
         </div>
       </div>
     );

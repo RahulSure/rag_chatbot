@@ -10,9 +10,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useMotionValue, useReducedMotion } from "framer-motion";
-import { Mail, ScrollText, Volume2, VolumeX } from "lucide-react";
+import { HelpCircle, Mail, ScrollText, Volume2, VolumeX } from "lucide-react";
 import { gangaApi, type CaughtDiya, type DiyaKind, type GangaProfile } from "@/lib/api";
 import { useLanguage } from "@/lib/i18n";
+import { AboutRiver } from "../AboutRiver";
 import { Letters } from "../Letters";
 import { MyDiyas } from "../MyDiyas";
 import { ErrorNote, codeOf, fill } from "../shared";
@@ -47,7 +48,7 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
   const [ghatKey, setGhatKey] = useState(0); // remounts the ghat diya so a missed drop springs back
   const [sail, setSail] = useState<{ left: number; top: number; dx: number } | null>(null);
   const [floated, setFloated] = useState(0);
-  const [panel, setPanel] = useState<"mine" | "letters" | null>(null);
+  const [panel, setPanel] = useState<"mine" | "letters" | "about" | null>(null);
   const [thread, setThread] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [sound, setSound] = useState(false);
@@ -257,6 +258,10 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#f3dcae]/30 bg-black/45 text-[#d9cdb4] backdrop-blur-sm hover:text-[#ffd27a]">
           {sound ? <Volume2 size={16} /> : <VolumeX size={16} />}
         </button>
+        <button type="button" onClick={() => setPanel("about")} aria-label={t("ganga.about.open")}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#f3dcae]/30 bg-black/45 text-[#d9cdb4] backdrop-blur-sm hover:text-[#ffd27a]">
+          <HelpCircle size={16} />
+        </button>
       </div>
       <div className={`absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-center justify-center gap-2.5 p-3 transition-opacity duration-300 sm:justify-end sm:p-5 ${flowOpen ? "pointer-events-none opacity-0" : "opacity-100"}`}>
         <button type="button" onClick={() => setCompose({ initial: pending, error: null })} className="btn-ganga px-6 py-2.5 text-sm">
@@ -295,6 +300,9 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
         )}
         {panel === "letters" && (
           <Panel key="letters" title="ganga.tabLetters" onClose={() => setPanel(null)}><Letters open={thread} onOpen={setThread} /></Panel>
+        )}
+        {panel === "about" && (
+          <Panel key="about" title="ganga.about.open" onClose={() => setPanel(null)}><AboutRiver /></Panel>
         )}
       </AnimatePresence>
     </div>
