@@ -346,6 +346,87 @@ html.dark .ganga-scene {
   100% { transform: translate(1.6%, 1.4%); }
 }
 .ganga-grain { animation: ganga-grain 0.9s steps(4) infinite; }
+/*
+ * The chit: the writer's letter, unrolled from the dona. Paper in every theme —
+ * the theme tokens are re-pointed inside it, so anything nested (reasons, the
+ * Maitri dial, report chips, error and crisis notes) is drawn in ink on paper.
+ */
+.ganga-chit {
+  --foreground: 52 34 18;
+  --surface: 250 242 224;
+  --surface-2: 241 228 202;
+  --line: 214 190 150;
+  --accent: 150 42 28;          /* kumkum red */
+  --accent-strong: 120 32 20;
+  --cosmic-200: 74 52 32;
+  --cosmic-300: 92 68 44;
+  --cosmic-400: 112 88 62;
+  --cosmic-500: 134 110 82;
+  --btn-bg: #8f2a1c;
+  --btn-fg: #fbf3df;
+  position: relative;
+  color: rgb(var(--foreground));
+  border-radius: 3px 5px 4px 3px;
+  background:
+    linear-gradient(to bottom, transparent calc(50% - 0.5px), rgb(120 80 40 / 0.14) 50%, rgb(255 255 255 / 0.35) calc(50% + 1px), transparent calc(50% + 2px)),
+    radial-gradient(ellipse at 18% 8%, rgb(255 252 240 / 0.8), transparent 55%),
+    radial-gradient(ellipse at 88% 92%, rgb(168 118 58 / 0.22), transparent 55%),
+    radial-gradient(ellipse at 6% 96%, rgb(168 118 58 / 0.14), transparent 40%),
+    linear-gradient(172deg, #f8eed6, #ead7b0);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.55),
+    inset 0 0 0 1px rgb(150 105 55 / 0.18),
+    0 22px 60px rgb(0 0 0 / 0.55),
+    0 3px 10px rgb(0 0 0 / 0.3);
+}
+.ganga-chit::before {
+  /* paper tooth */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.22;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.32 0 0 0 0 0.18 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)'/%3E%3C/svg%3E");
+}
+.ganga-kalava {
+  /* the red-and-gold thread that tied the chit */
+  position: absolute;
+  top: -5px;
+  left: 28px;
+  width: 54px;
+  height: 7px;
+  border-radius: 4px;
+  transform: rotate(-4deg);
+  background: repeating-linear-gradient(60deg, #b3261e 0 4px, #e8b13a 4px 6px, #9a1f18 6px 9px);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.35);
+}
+.ganga-ink {
+  font-family: var(--font-serif), var(--font-serif-deva), Georgia, serif;
+  font-style: italic;
+  color: #2c1c0e;
+}
+html[lang="hi"] .ganga-ink { font-style: normal; }
+.btn-chit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid rgb(122 74 34 / 0.45);
+  background: rgb(255 255 255 / 0.3);
+  color: #4a2c14;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+.btn-chit:hover { background: rgb(150 42 28 / 0.08); border-color: #962a1c; transform: translateY(-1px); }
+.btn-chit-primary { background: #8f2a1c; border-color: #8f2a1c; color: #fbf3df; }
+.btn-chit-primary:hover { background: #a3321f; border-color: #a3321f; }
+.btn-chit:disabled { opacity: 0.55; cursor: default; transform: none; }
+
 /* A name written on the night, not a UI pill */
 .ganga-caption {
   font-family: var(--font-serif), var(--font-serif-deva), Georgia, serif;

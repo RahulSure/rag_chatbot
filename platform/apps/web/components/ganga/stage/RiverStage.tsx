@@ -167,7 +167,7 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
               <button key={d.id} type="button" onClick={() => setSelected(d.id)}
                       aria-label={`${fill(t("ganga.stage.diyaFrom"), { name: d.from })} (${d.action})`}
                       className="relative rounded-full p-0.5 transition-[filter] hover:brightness-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
-                <DiyaSprite size={34} seed={i + 4} />
+                <DiyaSprite size={46} seed={i + 4} chit={false} />
                 <span aria-hidden="true" className="absolute -right-0.5 -top-1 text-[10px] drop-shadow">{ACTION_MARK[d.action!]}</span>
               </button>
             ))}
@@ -184,7 +184,7 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
                       exit={{ opacity: 0 }}
                       transition={{ duration: 10, times: [0, 0.42, 1], ease: "easeInOut" }}
                       onAnimationComplete={() => setSail(null)} aria-hidden="true">
-            <LampOnWater size={70} seed={2} />
+            <LampOnWater size={110} seed={2} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -208,7 +208,7 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
             initial={still ? undefined : { scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
-            <DiyaSprite size={88} seed={5} />
+            <DiyaSprite size={124} seed={5} />
           </motion.div>
           <div className="pointer-events-auto mt-2 max-w-[14rem]">
             <p className="rounded-xl bg-black/40 px-3 py-2 text-center text-xs leading-snug text-white/95 backdrop-blur-sm">
@@ -235,9 +235,9 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
       )}
 
       {/* HUD: who you are, sound, today's share, the three doors */}
-      <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full border border-[#f3dcae]/30 bg-black/45 py-1 pl-4 pr-1.5 backdrop-blur-sm">
+      <div className="absolute left-3 top-3 flex items-center gap-0.5 rounded-full border border-[#f3dcae]/30 bg-black/45 py-1 pl-3.5 pr-1 backdrop-blur-sm sm:gap-1 sm:pl-4 sm:pr-1.5">
         <span className="text-sm text-[#d9cdb4]">
-          {t("ganga.signedAs")} <span className="font-serif italic text-[#f0cf92]">{profile.name}</span>
+          <span className="hidden sm:inline">{t("ganga.signedAs")} </span><span className="font-serif italic text-[#f0cf92]">{profile.name}</span>
         </span>
         <button type="button" onClick={onEdit} className="rounded-full px-2 py-1 text-xs text-[#bdb296] hover:text-[#f3dcae]">{t("ganga.edit")}</button>
         <button type="button"

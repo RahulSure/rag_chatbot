@@ -1,14 +1,17 @@
 """
 Bring the Ganga backdrop to life: Seedance 2.5 image-to-video on the night
 still (only the water, flames and mist move; the camera holds), then a
-forward+reversed palindrome via the bundled ffmpeg so the loop has no seam.
+cross-faded, slowed, seamless loop cut with the bundled ffmpeg.
 
-Billable. Output: platform/apps/web/public/ganga/bg-night.mp4 (muted, ~1280w).
+Billable unless run with --loop-only on an already downloaded clip.
+Output: platform/apps/web/public/ganga/bg-night.mp4 (muted, ~1280w) and
+bg-night-poster.webp (the loop's exact first frame).
 """
 
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -36,7 +39,6 @@ def load_env() -> None:
 
 def main(still_png: Path, out_name: str = "bg-night.mp4") -> None:
     import httpx
-    import imageio_ffmpeg
     import higgsfield_client
     from higgsfield_client.exceptions import HiggsfieldClientError
 
@@ -58,20 +60,70 @@ def main(still_png: Path, out_name: str = "bg-night.mp4") -> None:
     raw.parent.mkdir(exist_ok=True)
     raw.write_bytes(httpx.get(url, timeout=300, follow_redirects=True).content)
     print(f"downloaded {raw} ({raw.stat().st_size // 1024} KB)", flush=True)
+    make_loop(raw, out_name)
 
-    # forward + reversed = a loop with no seam; scaled and muted for the web
+
+def _duration(ffmpeg: str, path: Path) -> float:
+    probe = subprocess.run([ffmpeg, "-hide_banner", "-i", str(path)], capture_output=True, text=True)
+    h, m, s = re.search(r"Duration: (\d+):(\d+):([\d.]+)", probe.stderr).groups()
+    return int(h) * 3600 + int(m) * 60 + float(s)
+
+
+def make_loop(raw: Path, out_name: str = "bg-night.mp4", fade: float = 1.5, slow: float = 1.75) -> None:
+    """
+    A seamless forward-flowing loop: the clip's tail is cross-faded into its own
+    head, so the last frame leads straight into the first and the water never
+    reverses. Then slowed (`slow`x) with motion-compensated in-between frames so
+    the calmer current stays smooth, keyframed every second, plus a poster that
+    is exactly the loop's first frame.
+    """
+    import imageio_ffmpeg
+    from PIL import Image
+
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
     WEB_PUBLIC.mkdir(parents=True, exist_ok=True)
     out = WEB_PUBLIC / out_name
+
+    # 1. Slow the whole clip first (scene-change detection off, or the interpolator
+    #    treats the last frames as a cut and jumps), so the loop seam below joins
+    #    two real, consecutive frames.
+    slowed = TOOLS / "out" / "river-slow.mp4"
     subprocess.run([
-        ffmpeg, "-y", "-i", str(raw),
-        "-filter_complex", "[0:v]split[a][b];[b]reverse[r];[a][r]concat=n=2:v=1,scale=1280:-2[v]",
-        "-map", "[v]", "-an", "-c:v", "libx264", "-preset", "slow", "-crf", "25",
-        "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(out),
+        ffmpeg, "-y", "-i", str(raw), "-vf",
+        f"setpts={slow}*PTS,minterpolate=fps=24:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1:scd=none",
+        "-an", "-c:v", "libx264", "-preset", "fast", "-crf", "14", str(slowed),
+    ], check=True, capture_output=True)
+
+    # 2. Cross-fade the slowed clip's tail into its own head.
+    d = _duration(ffmpeg, slowed)
+    fade *= slow
+    body = d - fade                       # length of the tail segment C[fade:d]
+    offset = body - fade                  # where the tail starts dissolving into the head
+    graph = (
+        f"[0:v]split[a][b];"
+        f"[a]trim=start={fade:.3f},setpts=PTS-STARTPTS[tail];"
+        f"[b]trim=end={fade:.3f},setpts=PTS-STARTPTS[head];"
+        f"[tail][head]xfade=transition=fade:duration={fade:.3f}:offset={offset:.3f},"
+        f"scale=1280:-2,format=yuv420p[v]"
+    )
+    print(f"cutting a {body:.1f}s seamless loop (x{slow / 1:.2f} slower)...", flush=True)
+    subprocess.run([
+        ffmpeg, "-y", "-i", str(slowed), "-filter_complex", graph, "-map", "[v]", "-an",
+        "-c:v", "libx264", "-preset", "slow", "-crf", "23", "-g", "24", "-keyint_min", "24",
+        "-movflags", "+faststart", str(out),
     ], check=True, capture_output=True)
     print(f"published {out} ({out.stat().st_size // 1024} KB)", flush=True)
+
+    poster_png = TOOLS / "out" / "poster.png"
+    subprocess.run([ffmpeg, "-y", "-i", str(out), "-frames:v", "1", str(poster_png)], check=True, capture_output=True)
+    poster = WEB_PUBLIC / out_name.replace(".mp4", "-poster.webp")
+    Image.open(poster_png).convert("RGB").save(poster, "WEBP", quality=84, method=6)
+    print(f"published {poster} ({poster.stat().st_size // 1024} KB)", flush=True)
 
 
 if __name__ == "__main__":
     load_env()
-    main(Path(sys.argv[1]))
+    if sys.argv[1:2] == ["--loop-only"]:
+        make_loop(Path(sys.argv[2]))   # re-cut an already downloaded clip, no API call
+    else:
+        main(Path(sys.argv[1]))

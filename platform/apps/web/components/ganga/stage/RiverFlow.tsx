@@ -26,7 +26,8 @@ import { Splash } from "./Splash";
 type Phase = "empty" | "waiting" | "arriving" | "resting" | "lifted" | "blessing" | "thrown" | "leaving";
 
 const REST = { left: "40%", top: "62%" };
-const LIFT = { left: "50%", top: "36%" };
+const LIFT = { left: "50%", top: "33%" };
+const DONA = 144; // px width of the dona at rest
 
 const buzz = (ms: number) => { try { navigator.vibrate?.(ms); } catch { /* no haptics */ } };
 
@@ -154,11 +155,11 @@ export function RiverFlow({ queue, holdsMore, onAct, onToast, onOpenChange, stag
 
   // Where the lamp is, per phase (left/top animate between river points; x/y carry the throw).
   const lampAnimate =
-    phase === "arriving" ? { left: ["104%", "70%", REST.left], top: ["50%", "55%", REST.top], scale: [0.5, 0.82, 1.2], opacity: 1 }
-    : phase === "resting" ? { left: REST.left, top: REST.top, scale: 1.2, opacity: 1 }
-    : phase === "thrown" && throwTo ? { x: [null, throwTo.x * 0.6, throwTo.x] as [null, number, number], y: [null, throwTo.midY, throwTo.y] as [null, number, number], scale: 0.9, rotate: [0, 4, -3], opacity: 1 }
-    : phase === "leaving" || phase === "blessing" ? { left: "86%", top: "56%", scale: 0.55, opacity: 0 }
-    : { left: LIFT.left, top: LIFT.top, scale: still ? 1.5 : 1.9, x: 0, y: 0, opacity: 1 };
+    phase === "arriving" ? { left: ["104%", "70%", REST.left], top: ["50%", "55%", REST.top], scale: [0.42, 0.72, 1], opacity: 1 }
+    : phase === "resting" ? { left: REST.left, top: REST.top, scale: 1, opacity: 1 }
+    : phase === "thrown" && throwTo ? { x: [null, throwTo.x * 0.6, throwTo.x] as [null, number, number], y: [null, throwTo.midY, throwTo.y] as [null, number, number], scale: 0.75, rotate: [0, 4, -3], opacity: 1 }
+    : phase === "leaving" || phase === "blessing" ? { left: "86%", top: "56%", scale: 0.45, opacity: 0 }
+    : { left: LIFT.left, top: LIFT.top, scale: still ? 1.05 : 1.2, x: 0, y: 0, opacity: 1 };
 
   const lampTransition =
     phase === "arriving" ? { duration: 4.2, times: [0, 0.55, 1], ease: "easeOut" as const }
@@ -198,7 +199,7 @@ export function RiverFlow({ queue, holdsMore, onAct, onToast, onOpenChange, stag
         drag={open && mode === "read" && !still && !busy}
         dragSnapToOrigin
         dragElastic={0.5}
-        whileDrag={{ scale: 2.0 }}
+        whileDrag={{ scale: 1.55 }}
         onDragEnd={(_, info) => {
           const speed = Math.hypot(info.velocity.x, info.velocity.y);
           if (speed > 550 || Math.hypot(info.offset.x, info.offset.y) > 150) doPass(info.velocity.x, info.velocity.y);
@@ -209,12 +210,13 @@ export function RiverFlow({ queue, holdsMore, onAct, onToast, onOpenChange, stag
           <button type="button" onClick={lift}
                   aria-label={`${fill(t("ganga.stage.diyaFrom"), { name: active.from })} · ${t("ganga.maitri")} ${active.maitri.score}`}
                   className="pointer-events-auto block outline-none focus-visible:rounded-3xl focus-visible:ring-2 focus-visible:ring-gold">
-            <LampOnWater size={84} seed={3}
+            <LampOnWater size={DONA} seed={3}
                          caption={<>{active.from} · <span className="not-italic text-[#ffd27a] lining-nums">{active.maitri.score}</span></>} />
           </button>
         ) : (
           <div className="relative">
-            <LampOnWater size={84} seed={3} />
+            {/* once lifted, the chit has been taken out of the dona and unrolled below */}
+            <LampOnWater size={DONA} seed={3} chit={phase !== "lifted"} />
             {phase === "blessing" && <Petals count={16} />}
           </div>
         )}
@@ -235,94 +237,102 @@ export function RiverFlow({ queue, holdsMore, onAct, onToast, onOpenChange, stag
         </>
       )}
 
-      {/* the message, unfurled beneath the lifted lamp */}
+      {/* the chit, taken out of the dona and unrolled beneath it */}
       <AnimatePresence>
         {open && (
-          <div key={active.id} className="pointer-events-auto absolute left-1/2 top-[46%] z-10 w-[min(92vw,34rem)] -translate-x-1/2">
-          <motion.div initial={{ opacity: 0, scaleY: 0.3, y: -36 }} animate={{ opacity: 1, scaleY: 1, y: 0 }}
-                      exit={{ opacity: 0, scaleY: 0.5, y: -24 }}
-                      transition={{ type: "spring", stiffness: 240, damping: 24 }} style={{ transformOrigin: "top center" }}>
-            <div className="relative max-h-[46dvh] overflow-y-auto rounded-2xl border border-[#f3dcae]/35 bg-[#0c0a14]/80 p-5 shadow-cosmic backdrop-blur-md sm:p-6">
-              <button type="button" onClick={() => { setPhase("resting"); setMode("read"); }} aria-label={t("ganga.stage.close")}
-                      className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-full text-[#8d8368] hover:text-[#f3dcae]">
-                <X size={16} aria-hidden="true" />
-              </button>
-              <div className="flex items-start gap-4">
-                <div className="min-w-0 flex-1">
-                  <p className="label-caps !text-[#e2bf84] text-[0.68rem]">{t(keyOf("ganga.k.", active.kind, "ganga.k.sharing"))}</p>
-                  <p className="mt-1 text-sm text-[#bdb296]">
-                    {t("ganga.from")} <span className="ganga-caption text-[15px]">{active.from}</span> · {ago(active.created_at, lang)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 text-right">
-                  <div>
-                    <p className="text-xs uppercase tracking-widest text-[#f0cf92]">{t("ganga.maitri")}</p>
-                    <p className="text-xs text-[#9a9079]">{active.maitri.by_kundli ? t("ganga.byKundli") : t("ganga.byPath")}</p>
+          <div key={active.id} className="pointer-events-auto absolute left-1/2 top-[45%] z-10 w-[min(92vw,34rem)] -translate-x-1/2"
+               style={{ perspective: 1000 }}>
+          <motion.div
+            initial={still ? { opacity: 0 } : { opacity: 0, y: -90, scale: 0.28, rotateX: -80 }}
+            animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+            exit={still ? { opacity: 0 } : { opacity: 0, y: -70, scale: 0.4, rotateX: -70 }}
+            transition={{ type: "spring", stiffness: 170, damping: 21, mass: 0.9 }}
+            style={{ transformOrigin: "top center" }}
+          >
+            <div className="ganga-chit">
+              <span aria-hidden="true" className="ganga-kalava" />
+              <div className="relative max-h-[48dvh] overflow-y-auto px-5 pb-5 pt-6 sm:px-7 sm:pb-6 sm:pt-7">
+                <button type="button" onClick={() => { setPhase("resting"); setMode("read"); }} aria-label={t("ganga.stage.close")}
+                        className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-full text-cosmic-500 hover:text-foreground">
+                  <X size={16} aria-hidden="true" />
+                </button>
+                <div className="flex items-start gap-4 pr-6">
+                  <div className="min-w-0 flex-1">
+                    <p className="label-caps text-[0.68rem]">{t(keyOf("ganga.k.", active.kind, "ganga.k.sharing"))}</p>
+                    <p className="mt-1 text-sm text-cosmic-400">
+                      {t("ganga.from")} <span className="ganga-ink text-[16px]">{active.from}</span> · {ago(active.created_at, lang)}
+                    </p>
                   </div>
-                  <MaitriDial score={active.maitri.score} />
+                  <div className="flex items-center gap-2 text-right">
+                    <div>
+                      <p className="text-xs uppercase tracking-widest text-gold">{t("ganga.maitri")}</p>
+                      <p className="text-xs text-cosmic-500">{active.maitri.by_kundli ? t("ganga.byKundli") : t("ganga.byPath")}</p>
+                    </div>
+                    <MaitriDial score={active.maitri.score} />
+                  </div>
                 </div>
-              </div>
 
-              <p lang={active.lang} className="mt-3 whitespace-pre-line font-serif text-lg leading-relaxed text-[#f4ecda] sm:text-xl">
-                {active.text}
-              </p>
+                <p lang={active.lang} className="ganga-ink mt-4 whitespace-pre-line text-xl leading-relaxed sm:text-[1.4rem]">
+                  {active.text}
+                </p>
 
-              {active.maitri.reasons.length > 0 && (
-                <ul className="mt-3 space-y-1 border-t border-[#f3dcae]/15 pt-3 text-sm text-[#cfc3a8]">
-                  {active.maitri.reasons.map((r, i) => (
-                    <li key={i} className="flex gap-2"><span className="text-[#f0cf92]" aria-hidden="true">✦</span>{reasonText(r, t, lang)}</li>
-                  ))}
-                </ul>
-              )}
-
-              <div className="mt-4">
-                {mode === "reply" ? (
-                  <form onSubmit={doReply}>
-                    <label htmlFor="flow-reply" className="sr-only">{t("ganga.reply")}</label>
-                    <textarea id="flow-reply" value={text} onChange={(e) => setText(e.target.value)} rows={4} maxLength={1000} required autoFocus
-                              placeholder={t("ganga.replyPlaceholder")}
-                              className="w-full resize-y rounded-lg border border-[#f3dcae]/25 bg-black/40 px-4 py-3 text-base text-[#f4ecda] placeholder:text-[#8d8368] focus:border-[#f0cf92]/70 focus:outline-none" />
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <button type="submit" disabled={busy || !text.trim()} className="btn-ganga px-5 py-2 text-sm disabled:opacity-60">
-                        <Send size={15} aria-hidden="true" /> {t("ganga.send")}
-                      </button>
-                      <button type="button" onClick={() => setMode("read")} className="px-3 py-2 text-sm text-[#bdb296] hover:text-[#f3dcae]">{t("ganga.cancel")}</button>
-                      <span className="ml-auto text-xs text-[#8d8368] lining-nums">{text.length} / 1000</span>
-                    </div>
-                  </form>
-                ) : mode === "report" ? (
-                  <ReportPicker onPick={doReport} onCancel={() => setMode("read")} />
-                ) : (
-                  <>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button type="button" onClick={() => setMode("reply")} className="btn-ganga px-5 py-2 text-sm">
-                        <Send size={15} aria-hidden="true" /> {t("ganga.reply")}
-                      </button>
-                      {/* hold to bless: the ring fills while you press */}
-                      <button type="button" disabled={busy}
-                              onPointerDown={startHold} onPointerUp={cancelHold} onPointerLeave={cancelHold} onPointerCancel={cancelHold}
-                              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); doBless(); } }}
-                              className="btn-ganga relative px-5 py-2 text-sm">
-                        <svg viewBox="0 0 34 34" className="h-5 w-5 -rotate-90" aria-hidden="true">
-                          <circle cx="17" cy="17" r="15" fill="none" strokeWidth="2.5" className="stroke-[#f3dcae]/25" />
-                          <circle cx="17" cy="17" r="15" fill="none" strokeWidth="2.5" strokeLinecap="round" className="stroke-[#ffd27a]"
-                                  strokeDasharray={ring} strokeDashoffset={holding ? 0 : ring}
-                                  style={{ transition: holding ? "stroke-dashoffset 0.9s linear" : "none" }} />
-                        </svg>
-                        <HandHeart size={15} aria-hidden="true" /> {t("ganga.flow.holdBless")}
-                      </button>
-                      <button type="button" disabled={busy} onClick={() => doPass()} className="px-3 py-2 text-sm text-[#bdb296] hover:text-[#f3dcae]">
-                        <Waves size={15} aria-hidden="true" className="mr-1 inline" /> {t("ganga.pass")}
-                      </button>
-                      <button type="button" onClick={() => setMode("report")} aria-label={t("ganga.report")}
-                              className="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-full text-[#8d8368] hover:text-[#f3dcae]">
-                        <Flag size={14} aria-hidden="true" />
-                      </button>
-                    </div>
-                    {!still && <p className="mt-3 text-center text-xs text-[#8d8368]">{t("ganga.flow.flick")}</p>}
-                  </>
+                {active.maitri.reasons.length > 0 && (
+                  <ul className="mt-4 space-y-1 border-t border-dashed border-line pt-3 text-sm text-cosmic-300">
+                    {active.maitri.reasons.map((r, i) => (
+                      <li key={i} className="flex gap-2"><span className="text-gold" aria-hidden="true">✦</span>{reasonText(r, t, lang)}</li>
+                    ))}
+                  </ul>
                 )}
-                {error && <div className="mt-3"><ErrorNote code={error} /></div>}
+
+                <div className="mt-5">
+                  {mode === "reply" ? (
+                    <form onSubmit={doReply}>
+                      <label htmlFor="flow-reply" className="sr-only">{t("ganga.reply")}</label>
+                      <textarea id="flow-reply" value={text} onChange={(e) => setText(e.target.value)} rows={4} maxLength={1000} required autoFocus
+                                placeholder={t("ganga.replyPlaceholder")}
+                                className="ganga-ink w-full resize-y rounded-md border border-line bg-white/40 px-4 py-3 text-lg placeholder:font-sans placeholder:text-sm placeholder:not-italic placeholder:text-cosmic-500 focus:border-gold/60 focus:outline-none" />
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <button type="submit" disabled={busy || !text.trim()} className="btn-chit btn-chit-primary text-sm">
+                          <Send size={15} aria-hidden="true" /> {t("ganga.send")}
+                        </button>
+                        <button type="button" onClick={() => setMode("read")} className="px-3 py-2 text-sm text-cosmic-400 hover:text-foreground">{t("ganga.cancel")}</button>
+                        <span className="ml-auto text-xs text-cosmic-500 lining-nums">{text.length} / 1000</span>
+                      </div>
+                    </form>
+                  ) : mode === "report" ? (
+                    <ReportPicker onPick={doReport} onCancel={() => setMode("read")} />
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button type="button" onClick={() => setMode("reply")} className="btn-chit btn-chit-primary text-sm">
+                          <Send size={15} aria-hidden="true" /> {t("ganga.reply")}
+                        </button>
+                        {/* hold to bless: the ring fills while you press */}
+                        <button type="button" disabled={busy}
+                                onPointerDown={startHold} onPointerUp={cancelHold} onPointerLeave={cancelHold} onPointerCancel={cancelHold}
+                                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); doBless(); } }}
+                                className="btn-chit relative text-sm">
+                          <svg viewBox="0 0 34 34" className="h-5 w-5 -rotate-90" aria-hidden="true">
+                            <circle cx="17" cy="17" r="15" fill="none" strokeWidth="2.5" className="stroke-[#7a4a22]/25" />
+                            <circle cx="17" cy="17" r="15" fill="none" strokeWidth="2.5" strokeLinecap="round" className="stroke-[#962a1c]"
+                                    strokeDasharray={ring} strokeDashoffset={holding ? 0 : ring}
+                                    style={{ transition: holding ? "stroke-dashoffset 0.9s linear" : "none" }} />
+                          </svg>
+                          <HandHeart size={15} aria-hidden="true" /> {t("ganga.flow.holdBless")}
+                        </button>
+                        <button type="button" disabled={busy} onClick={() => doPass()} className="px-3 py-2 text-sm text-cosmic-400 hover:text-foreground">
+                          <Waves size={15} aria-hidden="true" className="mr-1 inline" /> {t("ganga.pass")}
+                        </button>
+                        <button type="button" onClick={() => setMode("report")} aria-label={t("ganga.report")}
+                                className="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-full text-cosmic-500 hover:text-foreground">
+                          <Flag size={14} aria-hidden="true" />
+                        </button>
+                      </div>
+                      {!still && <p className="mt-3 text-center text-xs text-cosmic-500">{t("ganga.flow.flick")}</p>}
+                    </>
+                  )}
+                  {error && <div className="mt-3"><ErrorNote code={error} /></div>}
+                </div>
               </div>
             </div>
           </motion.div>
