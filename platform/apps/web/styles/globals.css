@@ -337,6 +337,19 @@ html.dark .ganga-scene {
   to { transform: translateX(110vw); }
 }
 .ganga-crossing { animation: ganga-crossing linear infinite; }
+/* The home hero's cosmos, vignetted around its sun so it has no edges: a band above the words on
+   phones, the right side of the hero on wide screens. */
+.hero-cosmos {
+  -webkit-mask-image: radial-gradient(ellipse 95% 62% at 50% 36%, #000 30%, transparent 70%);
+  mask-image: radial-gradient(ellipse 95% 62% at 50% 36%, #000 30%, transparent 70%);
+}
+@media (min-width: 1024px) {
+  .hero-cosmos {
+    -webkit-mask-image: radial-gradient(ellipse 62% 72% at 57% 48%, #000 28%, transparent 72%);
+    mask-image: radial-gradient(ellipse 62% 72% at 57% 48%, #000 28%, transparent 72%);
+  }
+}
+
 /* The home page's zodiac wheel turning with the sky: rim one way, nakshatras the other. */
 @keyframes zw-turn { to { transform: rotate(360deg); } }
 .zw-turn { animation: zw-turn 480s linear infinite; transform-box: fill-box; transform-origin: center; }
