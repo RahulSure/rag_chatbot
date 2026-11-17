@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useT, type Key } from "@/lib/i18n";
+import { LoopVideo } from "@/components/ganga/stage/RiverVideo";
 import { ZodiacWheel } from "./ZodiacWheel";
 
 const SUGGESTIONS: Key[] = ["v4.suggest1", "v4.suggest2", "v4.suggest3", "v4.suggest4"];
@@ -21,7 +22,14 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden px-4 pb-16 pt-16 sm:pb-24 sm:pt-24" aria-labelledby="hero-title">
-      <ZodiacWheel className="pointer-events-none absolute left-1/2 top-[-140px] w-[980px] max-w-none -translate-x-1/2 text-gold opacity-[0.12] sm:top-[-220px] sm:w-[1240px]" />
+      {/* By night: the cosmos turning behind the wheel — planets on golden orbits, a scrim keeping the words clear */}
+      <div aria-hidden="true" className="absolute inset-0 hidden dark:block">
+        <LoopVideo src="/cosmos/hero.mp4" poster="/cosmos/hero-poster.webp" fit="object-center" className="opacity-80" />
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 46% 52% at 50% 46%, rgb(var(--background) / 0.78), rgb(var(--background) / 0.35) 60%, transparent 85%)" }} />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/70 to-transparent" />
+      </div>
+      <ZodiacWheel spin className="pointer-events-none absolute left-1/2 top-[-140px] w-[980px] max-w-none -translate-x-1/2 text-gold opacity-[0.12] dark:opacity-[0.2] sm:top-[-220px] sm:w-[1240px]" />
       <div className="relative mx-auto max-w-3xl text-center">
         <p className="label-caps rise-in">{t("v4.heroLabel")}</p>
         <h1 id="hero-title" className="rise-in mt-6 text-[2.6rem] leading-[1.06] sm:text-6xl lg:text-[4.5rem]">

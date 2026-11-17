@@ -337,6 +337,13 @@ html.dark .ganga-scene {
   to { transform: translateX(110vw); }
 }
 .ganga-crossing { animation: ganga-crossing linear infinite; }
+/* The home page's zodiac wheel turning with the sky: rim one way, nakshatras the other. */
+@keyframes zw-turn { to { transform: rotate(360deg); } }
+.zw-turn { animation: zw-turn 480s linear infinite; transform-box: fill-box; transform-origin: center; }
+.zw-turn-rev { animation: zw-turn 340s linear infinite reverse; transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: reduce) {
+  .zw-turn, .zw-turn-rev { animation: none; }
+}
 /* A dona carried downstream; a negative delay places each one somewhere along its way. */
 @keyframes ganga-current {
   from { transform: translateX(-16vw); }

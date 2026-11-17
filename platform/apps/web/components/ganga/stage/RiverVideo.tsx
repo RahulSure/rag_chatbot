@@ -13,8 +13,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 
-const SRC = "/ganga/bg-night.mp4";
-const POSTER = "/ganga/bg-night-poster.webp";
 const XFADE = 0.45; // seconds the incoming layer takes to dissolve in
 
 export function usePhoto(src: string) {
@@ -27,9 +25,12 @@ export function usePhoto(src: string) {
   return ok;
 }
 
-export function RiverVideo({ className = "" }: { className?: string }) {
+/** Any seamless loop, double-buffered so it never blinks: the river, the home page's cosmos. */
+export function LoopVideo({ src, poster: posterSrc, className = "", fit = "object-[62%_center] sm:object-center" }: {
+  src: string; poster: string; className?: string; fit?: string;
+}) {
   const still = useReducedMotion() ?? false;
-  const poster = usePhoto(POSTER);
+  const poster = usePhoto(posterSrc);
   const a = useRef<HTMLVideoElement>(null);
   const b = useRef<HTMLVideoElement>(null);
   const [front, setFront] = useState<0 | 1>(0);
@@ -87,18 +88,18 @@ export function RiverVideo({ className = "" }: { className?: string }) {
     // `isolate`: the layers' z-order stays inside this box, never over the stage above it
     <div className={`absolute inset-0 isolate ${className}`} aria-hidden="true">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={POSTER} alt="" className="absolute inset-0 h-full w-full object-cover object-[62%_center] sm:object-center" />
+      <img src={posterSrc} alt="" className={`absolute inset-0 h-full w-full object-cover ${fit}`} />
       {!still && !failed && [a, b].map((ref, i) => (
         <video
           key={i}
           ref={ref}
-          src={SRC}
+          src={src}
           muted
           playsInline
           preload="auto"
           disablePictureInPicture
           onError={() => setFailed(true)}
-          className="absolute inset-0 h-full w-full object-cover object-[62%_center] sm:object-center"
+          className={`absolute inset-0 h-full w-full object-cover ${fit}`}
           style={{
             zIndex: front === i ? 2 : 1,
             opacity: started && front === i ? 1 : 0,
@@ -109,4 +110,9 @@ export function RiverVideo({ className = "" }: { className?: string }) {
       ))}
     </div>
   );
+}
+
+/** The night river at the ghat. */
+export function RiverVideo({ className = "" }: { className?: string }) {
+  return <LoopVideo src="/ganga/bg-night.mp4" poster="/ganga/bg-night-poster.webp" className={className} />;
 }

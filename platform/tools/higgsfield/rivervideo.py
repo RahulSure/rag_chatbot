@@ -69,7 +69,8 @@ def _duration(ffmpeg: str, path: Path) -> float:
     return int(h) * 3600 + int(m) * 60 + float(s)
 
 
-def make_loop(raw: Path, out_name: str = "bg-night.mp4", fade: float = 1.5, slow: float = 1.75) -> None:
+def make_loop(raw: Path, out_name: str = "bg-night.mp4", fade: float = 1.5, slow: float = 1.75,
+              out_dir: Path = WEB_PUBLIC, width: int = 1280) -> None:
     """
     A seamless forward-flowing loop: the clip's tail is cross-faded into its own
     head, so the last frame leads straight into the first and the water never
@@ -81,13 +82,14 @@ def make_loop(raw: Path, out_name: str = "bg-night.mp4", fade: float = 1.5, slow
     from PIL import Image
 
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
-    WEB_PUBLIC.mkdir(parents=True, exist_ok=True)
-    out = WEB_PUBLIC / out_name
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / out_name
+    stem = Path(out_name).stem
 
     # 1. Slow the whole clip first (scene-change detection off, or the interpolator
     #    treats the last frames as a cut and jumps), so the loop seam below joins
     #    two real, consecutive frames.
-    slowed = TOOLS / "out" / "river-slow.mp4"
+    slowed = TOOLS / "out" / f"{stem}-slow.mp4"
     subprocess.run([
         ffmpeg, "-y", "-i", str(raw), "-vf",
         f"setpts={slow}*PTS,minterpolate=fps=24:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1:scd=none",
@@ -104,7 +106,7 @@ def make_loop(raw: Path, out_name: str = "bg-night.mp4", fade: float = 1.5, slow
         f"[a]trim=start={fade:.3f},setpts=PTS-STARTPTS[tail];"
         f"[b]trim=end={fade:.3f},setpts=PTS-STARTPTS[head];"
         f"[tail][head]xfade=transition=fade:duration={fade:.3f}:offset={offset:.3f},"
-        f"scale=1280:-2,format=yuv420p[v]"
+        f"scale={width}:-2,format=yuv420p[v]"
     )
     print(f"cutting a {body:.1f}s seamless loop (x{slow / 1:.2f} slower)...", flush=True)
     subprocess.run([
@@ -114,9 +116,9 @@ def make_loop(raw: Path, out_name: str = "bg-night.mp4", fade: float = 1.5, slow
     ], check=True, capture_output=True)
     print(f"published {out} ({out.stat().st_size // 1024} KB)", flush=True)
 
-    poster_png = TOOLS / "out" / "poster.png"
+    poster_png = TOOLS / "out" / f"{stem}-poster.png"
     subprocess.run([ffmpeg, "-y", "-i", str(out), "-frames:v", "1", str(poster_png)], check=True, capture_output=True)
-    poster = WEB_PUBLIC / out_name.replace(".mp4", "-poster.webp")
+    poster = out_dir / f"{stem}-poster.webp"
     Image.open(poster_png).convert("RGB").save(poster, "WEBP", quality=84, method=6)
     print(f"published {poster} ({poster.stat().st_size // 1024} KB)", flush=True)
 
