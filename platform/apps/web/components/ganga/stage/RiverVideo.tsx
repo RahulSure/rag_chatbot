@@ -15,6 +15,24 @@ import { useReducedMotion } from "framer-motion";
 
 const XFADE = 0.45; // seconds the incoming layer takes to dissolve in
 
+/**
+ * Whether the page is in its night theme right now (follows the html.dark class, so it
+ * tracks the toggle and the system setting). null until mounted, so nothing renders
+ * on the server that could disagree with the client.
+ */
+export function useIsDark() {
+  const [dark, setDark] = useState<boolean | null>(null);
+  useEffect(() => {
+    const root = document.documentElement;
+    const read = () => setDark(root.classList.contains("dark"));
+    read();
+    const watch = new MutationObserver(read);
+    watch.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => watch.disconnect();
+  }, []);
+  return dark;
+}
+
 export function usePhoto(src: string) {
   const [ok, setOk] = useState(false);
   useEffect(() => {
@@ -115,4 +133,9 @@ export function LoopVideo({ src, poster: posterSrc, className = "", fit = "objec
 /** The night river at the ghat. */
 export function RiverVideo({ className = "" }: { className?: string }) {
   return <LoopVideo src="/ganga/bg-night.mp4" poster="/ganga/bg-night-poster.webp" className={className} />;
+}
+
+/** The river at first light. */
+export function DawnRiverVideo({ className = "" }: { className?: string }) {
+  return <LoopVideo src="/ganga/bg-dawn.mp4" poster="/ganga/bg-dawn-poster.webp" className={className} />;
 }

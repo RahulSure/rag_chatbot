@@ -37,26 +37,32 @@ def load_env() -> None:
                 os.environ.setdefault(name.strip(), value.strip().strip("'\""))
 
 
-def main(still_png: Path, out_name: str = "bg-night.mp4") -> None:
+def main(still_png: Path, out_name: str = "bg-night.mp4", prompt: str = PROMPT) -> None:
     import httpx
     import higgsfield_client
     from higgsfield_client.exceptions import HiggsfieldClientError
 
     print("uploading the still...", flush=True)
     image_url = higgsfield_client.upload_file(str(still_png))
-    print("submitting bytedance/seedance-2.5/image-to-video (5s, 720p, billable)...", flush=True)
-    try:
-        result = higgsfield_client.subscribe(
-            "bytedance/seedance-2.5/image-to-video",
-            arguments={"image_url": image_url, "prompt": PROMPT, "duration": 5, "resolution": "720p",
-                       "generate_audio": False},
-        )
-    except HiggsfieldClientError as e:
-        sys.exit(f"refused: {e}")
+    result = None
+    for label, extra in (("720p", {"resolution": "720p"}), ("480p draft", {"draft": True})):
+        print(f"submitting bytedance/seedance-2.5/image-to-video (5s, {label}, billable)...", flush=True)
+        try:
+            result = higgsfield_client.subscribe(
+                "bytedance/seedance-2.5/image-to-video",
+                arguments={"image_url": image_url, "prompt": prompt, "duration": 5, "generate_audio": False, **extra},
+            )
+            break
+        except HiggsfieldClientError as e:
+            print(f"  refused at {label}: {e}", flush=True)
+            if "credit" not in str(e).lower():
+                sys.exit(1)
+    else:
+        sys.exit("no tier could be afforded; nothing was charged")
     url = ((result or {}).get("video") or {}).get("url")
     if not url:
         sys.exit(f"no video in result: status={(result or {}).get('status')}")
-    raw = TOOLS / "out" / "river-raw.mp4"
+    raw = TOOLS / "out" / f"{Path(out_name).stem}-raw.mp4"
     raw.parent.mkdir(exist_ok=True)
     raw.write_bytes(httpx.get(url, timeout=300, follow_redirects=True).content)
     print(f"downloaded {raw} ({raw.stat().st_size // 1024} KB)", flush=True)
@@ -69,8 +75,14 @@ def _duration(ffmpeg: str, path: Path) -> float:
     return int(h) * 3600 + int(m) * 60 + float(s)
 
 
+def _frames(ffmpeg: str, path: Path) -> int:
+    probe = subprocess.run([ffmpeg, "-hide_banner", "-i", str(path), "-map", "0:v:0", "-f", "null", "-"],
+                           capture_output=True, text=True)
+    return int(re.findall(r"frame=\s*(\d+)", probe.stderr)[-1])
+
+
 def make_loop(raw: Path, out_name: str = "bg-night.mp4", fade: float = 1.5, slow: float = 1.75,
-              out_dir: Path = WEB_PUBLIC, width: int = 1280) -> None:
+              out_dir: Path = WEB_PUBLIC, width: int = 1280, mode: str = "crossfade") -> None:
     """
     A seamless forward-flowing loop: the clip's tail is cross-faded into its own
     head, so the last frame leads straight into the first and the water never
@@ -96,6 +108,23 @@ def make_loop(raw: Path, out_name: str = "bg-night.mp4", fade: float = 1.5, slow
         "-an", "-c:v", "libx264", "-preset", "fast", "-crf", "14", str(slowed),
     ], check=True, capture_output=True)
 
+    if mode == "palindrome":
+        # 2. For a moving camera a cross-fade ghosts two viewpoints; play forward then back instead.
+        #    Every frame meets its true neighbour, and neither turning point repeats a frame.
+        n = _frames(ffmpeg, slowed)
+        graph = (
+            f"[0:v]split[a][b];[b]reverse,trim=start_frame=1:end_frame={n - 1},setpts=PTS-STARTPTS[r];"
+            f"[a][r]concat=n=2:v=1,scale={width}:-2,format=yuv420p[v]"
+        )
+        print(f"cutting a {(2 * n - 2) / 24:.1f}s palindrome loop (x{slow:.2f} slower)...", flush=True)
+        subprocess.run([
+            ffmpeg, "-y", "-i", str(slowed), "-filter_complex", graph, "-map", "[v]", "-an",
+            "-c:v", "libx264", "-preset", "slow", "-crf", "23", "-g", "24", "-keyint_min", "24",
+            "-movflags", "+faststart", str(out),
+        ], check=True, capture_output=True)
+        _poster(ffmpeg, out, out_dir, stem)
+        return
+
     # 2. Cross-fade the slowed clip's tail into its own head.
     d = _duration(ffmpeg, slowed)
     fade *= slow
@@ -115,6 +144,12 @@ def make_loop(raw: Path, out_name: str = "bg-night.mp4", fade: float = 1.5, slow
         "-movflags", "+faststart", str(out),
     ], check=True, capture_output=True)
     print(f"published {out} ({out.stat().st_size // 1024} KB)", flush=True)
+    _poster(ffmpeg, out, out_dir, stem)
+
+
+def _poster(ffmpeg: str, out: Path, out_dir: Path, stem: str) -> None:
+    """A still that is exactly the loop's first frame, shown before (and under) playback."""
+    from PIL import Image
 
     poster_png = TOOLS / "out" / f"{stem}-poster.png"
     subprocess.run([ffmpeg, "-y", "-i", str(out), "-frames:v", "1", str(poster_png)], check=True, capture_output=True)
@@ -123,9 +158,20 @@ def make_loop(raw: Path, out_name: str = "bg-night.mp4", fade: float = 1.5, slow
     print(f"published {poster} ({poster.stat().st_size // 1024} KB)", flush=True)
 
 
+DAWN_PROMPT = (
+    "The river water flows gently at first light: the sun's golden path shimmers and stretches on small "
+    "drifting ripples, the temple's reflection wavers softly in the water, the small floating diya flames "
+    "flicker, thin morning mist drifts slowly across the river, flower petals stir slightly on the stone "
+    "steps. The camera is completely static, locked off. The temple, trees, sky and sun remain still. No "
+    "people moving, no new objects appear. Calm, slow, ambient, photorealistic, seamless atmosphere."
+)
+
+
 if __name__ == "__main__":
     load_env()
     if sys.argv[1:2] == ["--loop-only"]:
-        make_loop(Path(sys.argv[2]))   # re-cut an already downloaded clip, no API call
+        make_loop(Path(sys.argv[2]), sys.argv[3] if len(sys.argv) > 3 else "bg-night.mp4")  # no API call
+    elif sys.argv[1:2] == ["--dawn"]:
+        main(Path(sys.argv[2]), "bg-dawn.mp4", DAWN_PROMPT)
     else:
         main(Path(sys.argv[1]))

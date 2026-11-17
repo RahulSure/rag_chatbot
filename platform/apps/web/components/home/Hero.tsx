@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useT, type Key } from "@/lib/i18n";
-import { LoopVideo } from "@/components/ganga/stage/RiverVideo";
-import { ZodiacWheel } from "./ZodiacWheel";
+import { LoopVideo, useIsDark } from "@/components/ganga/stage/RiverVideo";
+import { DawnSky } from "./DawnSky";
 
 const SUGGESTIONS: Key[] = ["v4.suggest1", "v4.suggest2", "v4.suggest3", "v4.suggest4"];
 
@@ -19,6 +19,7 @@ export function Hero() {
   const t = useT();
   const router = useRouter();
   const [question, setQuestion] = useState("");
+  const dark = useIsDark();
 
   const ask = (q: string) => {
     const text = q.trim();
@@ -30,13 +31,15 @@ export function Hero() {
       {/* by night: the cosmos */}
       <div aria-hidden="true"
            className="hero-cosmos pointer-events-none absolute inset-x-0 top-0 hidden h-[48vh] dark:block lg:inset-y-0 lg:left-auto lg:right-0 lg:h-auto lg:w-[62%]">
-        <LoopVideo src="/cosmos/hero.mp4" poster="/cosmos/hero-poster.webp" fit="object-[50%_42%]" />
+        {dark && <LoopVideo src="/cosmos/hero.mp4" poster="/cosmos/hero-poster.webp" fit="object-[50%_42%]" />}
       </div>
-      {/* by day: the sidereal wheel */}
-      <ZodiacWheel spin className="pointer-events-none absolute left-1/2 top-[-140px] w-[980px] max-w-none -translate-x-1/2 text-gold opacity-[0.12] dark:hidden sm:top-[-220px] sm:w-[1240px] lg:left-[74%] lg:top-1/2 lg:w-[940px] lg:-translate-y-1/2" />
+      {/* by day: the wheel at sunrise, the navagraha on their orbits */}
+      {dark === false && (
+        <DawnSky className="dawnsky-band pointer-events-none absolute left-1/2 top-0 w-[640px] max-w-none -translate-x-1/2 -translate-y-[24%] sm:w-[780px] lg:left-[78%] lg:top-1/2 lg:w-[920px] lg:-translate-y-1/2" />
+      )}
 
       <div className="relative mx-auto w-full max-w-6xl">
-        <div className="mx-auto max-w-2xl text-center dark:pt-[29vh] sm:dark:pt-[32vh] lg:mx-0 lg:max-w-[38rem] lg:text-left lg:dark:pt-0 xl:max-w-[40rem]">
+        <div className="mx-auto max-w-2xl text-center pt-[29vh] sm:pt-[32vh] lg:mx-0 lg:max-w-[38rem] lg:text-left lg:pt-0 xl:max-w-[40rem]">
           <p className="label-caps rise-in">{t("v4.heroLabel")}</p>
           <h1 id="hero-title" className="rise-in mt-6 text-[2.6rem] leading-[1.06] sm:text-6xl lg:text-[3.6rem] xl:text-[3.9rem]">
             {t("v4.heroTitle1")}

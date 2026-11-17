@@ -61,12 +61,12 @@ def main() -> None:
     raw.parent.mkdir(exist_ok=True)
     raw.write_bytes(httpx.get(url, timeout=300, follow_redirects=True).content)
     print(f"downloaded {raw} ({raw.stat().st_size // 1024} KB)", flush=True)
-    make_loop(raw, "hero.mp4", out_dir=OUT_DIR, slow=1.5)
+    make_loop(raw, "hero.mp4", out_dir=OUT_DIR, slow=2.2, mode="palindrome")
 
 
 if __name__ == "__main__":
     load_env()
     if sys.argv[1:2] == ["--loop-only"]:
-        make_loop(Path(sys.argv[2]), "hero.mp4", out_dir=OUT_DIR, slow=1.5)
+        make_loop(Path(sys.argv[2]), "hero.mp4", out_dir=OUT_DIR, slow=2.2, mode="palindrome")
     else:
         main()

@@ -350,12 +350,22 @@ html.dark .ganga-scene {
   }
 }
 
+/* On phones and tablets the daytime sky is a band above the words, fading before they begin. */
+@media (max-width: 1023px) {
+  .dawnsky-band {
+    -webkit-mask-image: linear-gradient(to bottom, #000 52%, transparent 74%);
+    mask-image: linear-gradient(to bottom, #000 52%, transparent 74%);
+  }
+}
+
 /* The home page's zodiac wheel turning with the sky: rim one way, nakshatras the other. */
 @keyframes zw-turn { to { transform: rotate(360deg); } }
 .zw-turn { animation: zw-turn 480s linear infinite; transform-box: fill-box; transform-origin: center; }
 .zw-turn-rev { animation: zw-turn 340s linear infinite reverse; transform-box: fill-box; transform-origin: center; }
+/* a graha travelling its orbit around the wheel's centre */
+.zw-orbit { animation: zw-turn 120s linear infinite; transform-box: fill-box; transform-origin: center; }
 @media (prefers-reduced-motion: reduce) {
-  .zw-turn, .zw-turn-rev { animation: none; }
+  .zw-turn, .zw-turn-rev, .zw-orbit { animation: none; }
 }
 /* A dona carried downstream; a negative delay places each one somewhere along its way. */
 @keyframes ganga-current {
