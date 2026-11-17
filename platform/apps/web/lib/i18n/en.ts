@@ -674,7 +674,7 @@ export const en = {
 
   // Ganga: the interactive river stage
   "ganga.stage.tapHint": "Tap a glowing diya to lift it from the water",
-  "ganga.stage.dragHint": "Drag your diya onto the river and let go",
+  "ganga.stage.dragHint": "Tap your diya to set it afloat, or carry it onto the water",
   "ganga.stage.setAfloat": "Set it afloat",
   "ganga.stage.setAfloatHint": "Your diya is lit and ready.",
   "ganga.stage.light": "Light the diya",

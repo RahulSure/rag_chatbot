@@ -674,7 +674,7 @@ export const hi: Record<Key, string> = {
 
   // Ganga: the interactive river stage
   "ganga.stage.tapHint": "जलते दीये को छूकर जल से उठाएँ",
-  "ganga.stage.dragHint": "अपना दीया खींचकर नदी पर ले जाएँ और छोड़ दें",
+  "ganga.stage.dragHint": "प्रवाहित करने के लिए दीये को छुएँ, या उसे जल तक ले जाएँ",
   "ganga.stage.setAfloat": "प्रवाहित करें",
   "ganga.stage.setAfloatHint": "आपका दीया जल चुका है, तैयार है।",
   "ganga.stage.light": "दीया जलाएँ",

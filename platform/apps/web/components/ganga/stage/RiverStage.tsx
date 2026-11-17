@@ -18,7 +18,8 @@ import { Letters } from "../Letters";
 import { MyDiyas } from "../MyDiyas";
 import { ErrorNote, codeOf, fill } from "../shared";
 import { useGangaUnread } from "../unread";
-import { startAmbience, stopAmbience } from "./ambience";
+import { sfx, startAmbience, stopAmbience } from "./ambience";
+import { ChitRoll, type RollPath } from "./ChitRoll";
 import { ComposeOverlay } from "./ComposeOverlay";
 import { DiyaOverlay } from "./DiyaOverlay";
 import { RiverFlow } from "./RiverFlow";
@@ -28,6 +29,8 @@ import { Panel } from "./Panel";
 import { SceneBackdrop } from "./SceneBackdrop";
 
 const SOUND_KEY = "sadhak_ganga_sound";
+// Where your dona waits on the stone ledge of the backdrop (fractions of the stage).
+const GHAT = { wide: { x: 0.17, y: 0.78 }, narrow: { x: 0.3, y: 0.75 } };
 
 const ACTION_MARK: Record<string, string> = { blessed: "🙏", replied: "✉️" };
 
@@ -45,6 +48,7 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
   const [flowOpen, setFlowOpen] = useState(false); // a diya is held: the HUD steps back
   const [compose, setCompose] = useState<{ initial: { kind: DiyaKind; text: string } | null; error: string | null } | null>(null);
   const [pending, setPending] = useState<{ kind: DiyaKind; text: string } | null>(null);
+  const [rollIn, setRollIn] = useState<{ path: RollPath; next: { kind: DiyaKind; text: string } } | null>(null);
   const [ghatKey, setGhatKey] = useState(0); // remounts the ghat diya so a missed drop springs back
   const [sail, setSail] = useState<{ left: number; top: number; dx: number } | null>(null);
   const [floated, setFloated] = useState(0);
@@ -106,15 +110,18 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
     if (!pending || busyRef.current) return;
     busyRef.current = true;
     const rect = stageRef.current?.getBoundingClientRect();
+    const ghat = narrow ? GHAT.narrow : GHAT.wide;
     try {
       await gangaApi.float(pending.kind, pending.text);
       try { navigator.vibrate?.(30); } catch { /* no haptics */ }
+      sfx("plip");
       setPending(null);
       setFloated((n) => n + 1);
       if (rect && !still) {
-        const left = (drop?.px ?? 0.13) * 100;
-        const top = (drop?.py ?? 0.82) * 100;
-        setSail({ left, top, dx: (1.18 - (drop?.px ?? 0.13)) * rect.width });
+        const px = drop?.px ?? ghat.x;
+        const left = px * 100;
+        const top = (drop?.py ?? ghat.y) * 100;
+        setSail({ left, top, dx: (1.2 - px) * rect.width });
       }
       say(t("ganga.stage.floated"));
     } catch (e) {
@@ -154,7 +161,7 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
 
       {/* the river brings the day's diyas one at a time */}
       {data && (
-        <RiverFlow queue={queue} holdsMore={Math.max(0, queue.length - 1) + (data.left ?? 0)}
+        <RiverFlow queue={queue} holdsMore={Math.max(0, queue.length - 4) + (data.left ?? 0)}
                    onAct={merge} onToast={say} onOpenChange={setFlowOpen} stageRef={stageRef} />
       )}
 
@@ -189,36 +196,48 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
         )}
       </AnimatePresence>
 
-      {/* your written diya, lit and waiting on the ghat landing */}
+      {/* your written diya, lit and waiting on the ghat's stone ledge: tap it, or drag it onto the water */}
       {pending && (
-        <div key={ghatKey} className="absolute bottom-[9%] z-20" style={{ left: narrow ? "14%" : "8%" }}>
+        <div key={ghatKey} className="absolute z-20 -translate-x-1/2 -translate-y-1/2"
+             style={{ left: `${(narrow ? GHAT.narrow : GHAT.wide).x * 100}%`, top: `${(narrow ? GHAT.narrow : GHAT.wide).y * 100}%` }}>
           <motion.div
             drag={!still}
             dragMomentum={false}
-            whileDrag={{ scale: 1.15 }}
+            whileDrag={{ scale: 1.12 }}
+            whileHover={{ scale: 1.05 }}
+            onTap={() => floatNow()}
             onDragEnd={(_, info) => {
               const r = stageRef.current?.getBoundingClientRect();
               if (!r) return;
               const px = (info.point.x - r.left) / r.width;
               const py = (info.point.y - r.top) / r.height;
-              if (py > 0.34 && py < 0.97 && px > 0.22) floatNow({ px, py });
+              if (py > 0.5 && py < 0.97 && px > (narrow ? 0.05 : 0.3)) floatNow({ px, py });
               else setGhatKey((k) => k + 1);
             }}
             className="cursor-grab touch-none active:cursor-grabbing"
-            initial={still ? undefined : { scale: 0, opacity: 0 }}
+            initial={still ? undefined : { scale: 0.6, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 18 }}
           >
-            <DiyaSprite size={124} seed={5} />
+            <DiyaSprite size={128} seed={5} />
           </motion.div>
-          <div className="pointer-events-auto mt-2 max-w-[14rem]">
-            <p className="rounded-xl bg-black/40 px-3 py-2 text-center text-xs leading-snug text-white/95 backdrop-blur-sm">
-              {still ? t("ganga.stage.setAfloatHint") : t("ganga.stage.dragHint")}
-            </p>
-            <button type="button" onClick={() => floatNow()} className="btn-gold mx-auto mt-2 block px-4 py-1.5 text-xs">
-              {t("ganga.stage.setAfloat")}
-            </button>
-          </div>
+          <p className="ganga-caption mt-2 w-56 -translate-x-[22%] text-center text-[13px] leading-snug">
+            {still ? t("ganga.stage.setAfloatHint") : t("ganga.stage.dragHint")}
+          </p>
+          <button type="button" onClick={() => floatNow()} className="sr-only focus:not-sr-only focus:mt-2 focus:block focus:rounded-full focus:bg-black/50 focus:px-3 focus:py-1 focus:text-xs focus:text-white">
+            {t("ganga.stage.setAfloat")}
+          </button>
         </div>
+      )}
+
+      {/* a written chit, rolled, flying into its dona on the ghat */}
+      {rollIn && (
+        <ChitRoll from={rollIn.path.from} to={rollIn.path.to} onDone={() => {
+          setPending(rollIn.next);
+          setGhatKey((k) => k + 1);
+          setRollIn(null);
+          sfx("plip");
+        }} />
       )}
 
       {/* captions on the water */}
@@ -292,8 +311,19 @@ export function RiverStage({ profile, onEdit, onLeft }: { profile: GangaProfile;
                        onChange={(next) => setData((cur) => cur && { ...cur, diyas: cur.diyas.map((x) => (x.id === next.id ? next : x)) })} />
         )}
         {compose && (
-          <ComposeOverlay key="compose" initial={compose.initial} error={compose.error} onClose={() => setCompose(null)}
-                          onLight={(kind, text) => { setCompose(null); setPending({ kind, text }); setGhatKey((k) => k + 1); }} />
+          <ComposeOverlay key="compose" initial={compose.initial} error={compose.error} stageRef={stageRef} onClose={() => setCompose(null)}
+                          onLight={(kind, text, edge) => {
+                            setCompose(null);
+                            const stage = stageRef.current;
+                            const ghat = narrow ? GHAT.narrow : GHAT.wide;
+                            if (edge && stage && !still) {
+                              setPending(null);
+                              setRollIn({ path: { from: edge, to: { x: stage.clientWidth * ghat.x, y: stage.clientHeight * ghat.y } }, next: { kind, text } });
+                            } else {
+                              setPending({ kind, text });
+                              setGhatKey((k) => k + 1);
+                            }
+                          }} />
         )}
         {panel === "mine" && (
           <Panel key="mine" title="ganga.tabMine" onClose={() => setPanel(null)}><MyDiyas version={floated} /></Panel>

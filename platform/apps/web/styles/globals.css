@@ -337,6 +337,12 @@ html.dark .ganga-scene {
   to { transform: translateX(110vw); }
 }
 .ganga-crossing { animation: ganga-crossing linear infinite; }
+/* A dona carried downstream; a negative delay places each one somewhere along its way. */
+@keyframes ganga-current {
+  from { transform: translateX(-16vw); }
+  to { transform: translateX(112vw); }
+}
+.ganga-current { animation: ganga-current linear infinite; will-change: transform; }
 /* Film grain, shivering in place */
 @keyframes ganga-grain {
   0% { transform: translate(0, 0); }
@@ -401,6 +407,14 @@ html.dark .ganga-scene {
   transform: rotate(-4deg);
   background: repeating-linear-gradient(60deg, #b3261e 0 4px, #e8b13a 4px 6px, #9a1f18 6px 9px);
   box-shadow: 0 2px 4px rgb(0 0 0 / 0.35);
+}
+/* Ruled lines for writing on the chit; they scroll with the words. */
+.ganga-ruled {
+  line-height: 2.1rem;
+  padding-top: 0.32rem;
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(2.1rem - 1px), rgb(150 105 55 / 0.28) calc(2.1rem - 1px), rgb(150 105 55 / 0.28) 2.1rem);
+  background-attachment: local;
+  background-position: 0 0.32rem;
 }
 .ganga-ink {
   font-family: var(--font-serif), var(--font-serif-deva), Georgia, serif;
