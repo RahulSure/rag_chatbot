@@ -169,5 +169,12 @@ def ensure_indexes() -> None:
         db = get_db()
         db["users"].create_index("google_sub", unique=True)
         db["conversations"].create_index([("user_id", 1), ("updated_at", -1)])
+        # Ganga: what the river brings each sadhak, and the diyas still floating.
+        db["ganga_catches"].create_index([("user", 1), ("delivered_at", -1)])
+        db["ganga_catches"].create_index([("diya", 1), ("user", 1)], unique=True)
+        db["ganga_diyas"].create_index([("status", 1), ("created_at", -1)])
+        db["ganga_diyas"].create_index([("author", 1), ("created_at", -1)])
+        db["ganga_threads"].create_index([("members", 1), ("updated_at", -1)])
+        db["ganga_letters"].create_index([("thread", 1), ("created_at", 1)])
     except Exception:
         pass

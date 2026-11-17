@@ -232,6 +232,316 @@ select:focus-visible {
   }
 }
 
+/* Ganga: the river at dawn (light) or under the moon (dark). Diyas drift, flames breathe. */
+.ganga-scene {
+  --sky-top: 246 214 178;
+  --sky-bottom: 250 236 214;
+  --water-top: 122 146 156;
+  --water-bottom: 64 86 104;
+  --bank: 116 84 62;
+  --orb: 238 160 82;
+  --glint: 255 216 156;
+  --stars-op: 0;      /* no stars at dawn */
+  --windows-op: 0.35; /* lit temple windows barely show by day */
+}
+html.dark .ganga-scene {
+  --sky-top: 12 11 26;
+  --sky-bottom: 34 27 56;
+  --water-top: 26 28 54;
+  --water-bottom: 7 8 17;
+  --bank: 5 5 11;
+  --orb: 238 228 204;
+  --glint: 200 169 110;
+  --stars-op: 0.7;
+  --windows-op: 1;
+}
+@keyframes ganga-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(1340px); }
+}
+@keyframes ganga-bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(3px) rotate(2deg); }
+}
+@keyframes ganga-flame {
+  0%, 100% { transform: scale(1, 1); opacity: 1; }
+  40% { transform: scale(0.92, 1.08); opacity: 0.9; }
+  70% { transform: scale(1.05, 0.95); opacity: 1; }
+}
+@keyframes ganga-glint {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.8; }
+}
+/* Rings widening in the wake of a floating diya */
+@keyframes ganga-ring {
+  from { transform: scale(0.35); opacity: 0.5; }
+  to { transform: scale(1.75); opacity: 0; }
+}
+/* The orb's light breathes on the water: bars widen and brighten, never in step */
+@keyframes ganga-shimmer {
+  0%, 100% { transform: scaleX(0.72); opacity: 0.25; }
+  50% { transform: scaleX(1.25); opacity: 0.8; }
+}
+/* Ripples wander a little with the current */
+@keyframes ganga-sway {
+  from { transform: translateX(-26px); }
+  to { transform: translateX(26px); }
+}
+/* Mist along the far bank */
+@keyframes ganga-mist {
+  from { transform: translateX(-70px); }
+  to { transform: translateX(70px); }
+}
+/* Fireflies over the night water */
+@keyframes ganga-fly {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(16px, -12px); }
+  50% { transform: translate(-8px, -22px); }
+  75% { transform: translate(12px, -8px); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes ganga-blink {
+  0%, 100% { opacity: 0; }
+  40%, 60% { opacity: 0.9; }
+}
+/* Reflection of a lamp stretching down into the water */
+@keyframes ganga-streak {
+  from { transform: scaleY(0.75); opacity: 0.55; }
+  to { transform: scaleY(1.15); opacity: 0.85; }
+}
+.ganga-streak {
+  animation: ganga-streak 2.8s ease-in-out infinite alternate;
+  transform-origin: top;
+}
+/* The water breathing under a mirrored reflection (applied inside a scaleY(-1) wrapper) */
+@keyframes ganga-reflect {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.86) scaleX(1.04); }
+}
+.ganga-reflect { animation: ganga-reflect 3.4s ease-in-out infinite; transform-origin: top center; }
+/* Lamplight pooling on the water */
+@keyframes ganga-lampglow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+.ganga-lampglow { animation: ganga-lampglow 3s ease-in-out infinite; }
+/* The slow breath of the camera across the backdrop */
+@keyframes ganga-kenburns {
+  from { transform: scale(1.04) translate(0.4%, 0.3%); }
+  to { transform: scale(1.11) translate(-0.8%, -0.7%); }
+}
+.ganga-kenburns { animation: ganga-kenburns 60s ease-in-out infinite alternate; will-change: transform; }
+/* Anything carried across the whole river by the current (mist, petals, far lamps) */
+@keyframes ganga-crossing {
+  from { transform: translateX(-10vw); }
+  to { transform: translateX(110vw); }
+}
+.ganga-crossing { animation: ganga-crossing linear infinite; }
+/* The home hero's cosmos, vignetted around its sun so it has no edges: a band above the words on
+   phones, the right side of the hero on wide screens. */
+.hero-cosmos {
+  -webkit-mask-image: radial-gradient(ellipse 95% 62% at 50% 36%, #000 30%, transparent 70%);
+  mask-image: radial-gradient(ellipse 95% 62% at 50% 36%, #000 30%, transparent 70%);
+}
+@media (min-width: 1024px) {
+  .hero-cosmos {
+    -webkit-mask-image: radial-gradient(ellipse 62% 72% at 57% 48%, #000 28%, transparent 72%);
+    mask-image: radial-gradient(ellipse 62% 72% at 57% 48%, #000 28%, transparent 72%);
+  }
+}
+
+/* On phones and tablets the daytime sky is a band above the words, fading before they begin. */
+@media (max-width: 1023px) {
+  .dawnsky-band {
+    -webkit-mask-image: linear-gradient(to bottom, #000 52%, transparent 74%);
+    mask-image: linear-gradient(to bottom, #000 52%, transparent 74%);
+  }
+}
+
+/* The home page's zodiac wheel turning with the sky: rim one way, nakshatras the other. */
+@keyframes zw-turn { to { transform: rotate(360deg); } }
+.zw-turn { animation: zw-turn 480s linear infinite; transform-box: fill-box; transform-origin: center; }
+.zw-turn-rev { animation: zw-turn 340s linear infinite reverse; transform-box: fill-box; transform-origin: center; }
+/* a graha travelling its orbit around the wheel's centre */
+.zw-orbit { animation: zw-turn 120s linear infinite; transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: reduce) {
+  .zw-turn, .zw-turn-rev, .zw-orbit { animation: none; }
+}
+/* A dona carried downstream; a negative delay places each one somewhere along its way. */
+@keyframes ganga-current {
+  from { transform: translateX(-16vw); }
+  to { transform: translateX(112vw); }
+}
+.ganga-current { animation: ganga-current linear infinite; will-change: transform; }
+/* Film grain, shivering in place */
+@keyframes ganga-grain {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-1.6%, 1.1%); }
+  50% { transform: translate(1.2%, -1.8%); }
+  75% { transform: translate(-1%, -0.8%); }
+  100% { transform: translate(1.6%, 1.4%); }
+}
+.ganga-grain { animation: ganga-grain 0.9s steps(4) infinite; }
+/*
+ * The chit: the writer's letter, unrolled from the dona. Paper in every theme —
+ * the theme tokens are re-pointed inside it, so anything nested (reasons, the
+ * Maitri dial, report chips, error and crisis notes) is drawn in ink on paper.
+ */
+.ganga-chit {
+  --foreground: 52 34 18;
+  --surface: 250 242 224;
+  --surface-2: 241 228 202;
+  --line: 214 190 150;
+  --accent: 150 42 28;          /* kumkum red */
+  --accent-strong: 120 32 20;
+  --cosmic-200: 74 52 32;
+  --cosmic-300: 92 68 44;
+  --cosmic-400: 112 88 62;
+  --cosmic-500: 134 110 82;
+  --btn-bg: #8f2a1c;
+  --btn-fg: #fbf3df;
+  position: relative;
+  color: rgb(var(--foreground));
+  border-radius: 3px 5px 4px 3px;
+  background:
+    linear-gradient(to bottom, transparent calc(50% - 0.5px), rgb(120 80 40 / 0.14) 50%, rgb(255 255 255 / 0.35) calc(50% + 1px), transparent calc(50% + 2px)),
+    radial-gradient(ellipse at 18% 8%, rgb(255 252 240 / 0.8), transparent 55%),
+    radial-gradient(ellipse at 88% 92%, rgb(168 118 58 / 0.22), transparent 55%),
+    radial-gradient(ellipse at 6% 96%, rgb(168 118 58 / 0.14), transparent 40%),
+    linear-gradient(172deg, #f8eed6, #ead7b0);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.55),
+    inset 0 0 0 1px rgb(150 105 55 / 0.18),
+    0 22px 60px rgb(0 0 0 / 0.55),
+    0 3px 10px rgb(0 0 0 / 0.3);
+}
+.ganga-chit::before {
+  /* paper tooth */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.22;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.32 0 0 0 0 0.18 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)'/%3E%3C/svg%3E");
+}
+.ganga-kalava {
+  /* the red-and-gold thread that tied the chit */
+  position: absolute;
+  top: -5px;
+  left: 28px;
+  width: 54px;
+  height: 7px;
+  border-radius: 4px;
+  transform: rotate(-4deg);
+  background: repeating-linear-gradient(60deg, #b3261e 0 4px, #e8b13a 4px 6px, #9a1f18 6px 9px);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.35);
+}
+/* Ruled lines for writing on the chit; they scroll with the words. */
+.ganga-ruled {
+  line-height: 2.1rem;
+  padding-top: 0.32rem;
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(2.1rem - 1px), rgb(150 105 55 / 0.28) calc(2.1rem - 1px), rgb(150 105 55 / 0.28) 2.1rem);
+  background-attachment: local;
+  background-position: 0 0.32rem;
+}
+.ganga-ink {
+  font-family: var(--font-serif), var(--font-serif-deva), Georgia, serif;
+  font-style: italic;
+  color: #2c1c0e;
+}
+html[lang="hi"] .ganga-ink { font-style: normal; }
+.btn-chit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid rgb(122 74 34 / 0.45);
+  background: rgb(255 255 255 / 0.3);
+  color: #4a2c14;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+.btn-chit:hover { background: rgb(150 42 28 / 0.08); border-color: #962a1c; transform: translateY(-1px); }
+.btn-chit-primary { background: #8f2a1c; border-color: #8f2a1c; color: #fbf3df; }
+.btn-chit-primary:hover { background: #a3321f; border-color: #a3321f; }
+.btn-chit:disabled { opacity: 0.55; cursor: default; transform: none; }
+
+/* A name written on the night, not a UI pill */
+.ganga-caption {
+  font-family: var(--font-serif), var(--font-serif-deva), Georgia, serif;
+  font-style: italic;
+  color: #f5ead2;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.85), 0 0 16px rgb(255 200 110 / 0.3);
+}
+html[lang="hi"] .ganga-caption { font-style: normal; }
+/* The zodiac wheel turning slowly around the moon */
+@keyframes ganga-wheel {
+  to { transform: rotate(360deg); }
+}
+.ganga-wheel { animation: ganga-wheel 360s linear infinite; transform-box: fill-box; transform-origin: center; }
+
+/* Cinematic display type: italic gold with a candle glow */
+.ganga-display {
+  font-family: var(--font-serif), var(--font-serif-deva), Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  background: linear-gradient(170deg, #f7e3b8 10%, #e2bf84 45%, #b98f4e 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 22px rgb(255 205 120 / 0.3));
+}
+html[lang="hi"] .ganga-display { font-style: normal; } /* italic breaks Devanagari */
+
+/* Ornate river button: gold hairline pill on glass, like a temple lamp ledge */
+.btn-ganga {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 28px;
+  border-radius: 999px;
+  border: 1px solid rgb(226 190 130 / 0.65);
+  box-shadow: inset 0 0 0 1px rgb(226 190 130 / 0.2), inset 0 0 18px rgb(255 205 120 / 0.08), 0 4px 24px rgb(0 0 0 / 0.35);
+  background: rgb(10 9 18 / 0.45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #f3dcae;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.btn-ganga:hover {
+  border-color: rgb(246 216 160 / 0.95);
+  box-shadow: inset 0 0 0 1px rgb(226 190 130 / 0.35), inset 0 0 22px rgb(255 205 120 / 0.16), 0 4px 30px rgb(255 190 90 / 0.25);
+  transform: translateY(-1px);
+}
+
+.ganga-drift { animation: ganga-drift linear infinite; }
+.ganga-bob { animation: ganga-bob 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.ganga-flame { animation: ganga-flame 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.ganga-glint { animation: ganga-glint 3.2s ease-in-out infinite; }
+.ganga-ring { animation: ganga-ring 3.2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.ganga-shimmer { animation: ganga-shimmer 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.ganga-sway { animation: ganga-sway 9s ease-in-out infinite alternate; }
+.ganga-mist { animation: ganga-mist 30s ease-in-out infinite alternate; }
+.ganga-fly { animation: ganga-fly 16s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.ganga-blink { animation: ganga-blink 4.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  /* Still water: each diya rests where it would be, nothing moves. */
+  .ganga-drift { animation: none; transform: translateX(var(--rest)); }
+  .ganga-bob,
+  .ganga-flame,
+  .ganga-glint { animation: none; }
+}
+
 /* Markdown content */
 .prose-spiritual h2 {
   @apply text-3xl text-foreground mt-10 mb-4;

@@ -13,34 +13,42 @@ function Spoke({ r1, r2, deg }: { r1: number; r2: number; deg: number }) {
   return <line x1={x1} y1={y1} x2={x2} y2={y2} />;
 }
 
-export function ZodiacWheel({ className = "" }: { className?: string }) {
+/**
+ * `spin` turns the wheel as the sky turns: the rim of padas and rashis slowly one
+ * way, the inner nakshatra ring the other (both stop under reduced motion).
+ */
+export function ZodiacWheel({ className = "", spin = false }: { className?: string; spin?: boolean }) {
   return (
     <svg viewBox="-450 -450 900 900" aria-hidden="true" focusable="false" className={className}>
-      <g fill="none" stroke="currentColor" strokeWidth="1">
-        <circle r="440" />
-        <circle r="418" />
-        <circle r="330" />
+      <g className={spin ? "zw-turn" : undefined}>
+        <g fill="none" stroke="currentColor" strokeWidth="1">
+          <circle r="440" />
+          <circle r="418" />
+          <circle r="330" />
+          {Array.from({ length: 108 }, (_, i) => (
+            <Spoke key={`p${i}`} r1={i % 9 === 0 ? 404 : 418} r2={440} deg={(i * 360) / 108} />
+          ))}
+          {Array.from({ length: 12 }, (_, i) => (
+            <Spoke key={`r${i}`} r1={330} r2={418} deg={i * 30} />
+          ))}
+        </g>
+        <g fill="currentColor" fontSize="26" textAnchor="middle" fontFamily="var(--font-serif-deva), serif">
+          {RASHIS.map((name, i) => (
+            <text key={name} transform={`rotate(${i * 30 + 15}) translate(0 -364)`} dominantBaseline="middle">
+              {name}
+            </text>
+          ))}
+        </g>
+      </g>
+      <g className={spin ? "zw-turn-rev" : undefined} fill="none" stroke="currentColor" strokeWidth="1">
         <circle r="300" />
         <circle r="262" />
         <circle r="120" strokeDasharray="2 6" />
-        {Array.from({ length: 108 }, (_, i) => (
-          <Spoke key={`p${i}`} r1={i % 9 === 0 ? 404 : 418} r2={440} deg={(i * 360) / 108} />
-        ))}
-        {Array.from({ length: 12 }, (_, i) => (
-          <Spoke key={`r${i}`} r1={330} r2={418} deg={i * 30} />
-        ))}
         {Array.from({ length: 27 }, (_, i) => (
           <Spoke key={`n${i}`} r1={262} r2={300} deg={(i * 360) / 27} />
         ))}
         {Array.from({ length: 12 }, (_, i) => (
           <Spoke key={`c${i}`} r1={120} r2={262} deg={i * 30 + 15} />
-        ))}
-      </g>
-      <g fill="currentColor" fontSize="26" textAnchor="middle" fontFamily="var(--font-serif-deva), serif">
-        {RASHIS.map((name, i) => (
-          <text key={name} transform={`rotate(${i * 30 + 15}) translate(0 -364)`} dominantBaseline="middle">
-            {name}
-          </text>
         ))}
       </g>
     </svg>

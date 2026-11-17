@@ -45,6 +45,7 @@ export const TOOL_GROUPS: { title: Key; tools: Tool[] }[] = [
   {
     title: "tools.practice",
     tools: [
+      { href: "/ganga", title: "nav.ganga", desc: "tools.gangaDesc" },
       { href: "/japa", title: "tools.japaShort", desc: "tools.japaDesc" },
       { href: "/vastu", title: "vastu.label", desc: "tools.vastuDesc" },
       { href: "/chat", title: "nav.chat", desc: "tools.askDesc" },

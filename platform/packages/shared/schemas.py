@@ -5,7 +5,7 @@ Shared Pydantic schemas used across apps/api and services.
 from __future__ import annotations
 
 from datetime import date as date_type, datetime, time as time_type
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 
@@ -263,3 +263,43 @@ class ConversationDetail(BaseModel):
     created_at: datetime
     updated_at: datetime
     turns: list[ConversationTurn]
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Ganga: diyas floated between sadhaks
+# ──────────────────────────────────────────────────────────────────────────────
+
+DIYA_KINDS = ("seeking", "sharing", "gratitude", "prayer", "partner")
+GANGA_PRACTICES = ("japa", "meditation", "mantra", "bhakti", "yoga", "seva", "jyotish", "tantra", "pranayama", "scripture")
+
+
+class GangaBirth(BaseModel):
+    """Birth details sent once to derive Moon sign, nakshatra and numerology; never stored."""
+    date: date_type
+    time: time_type
+    latitude: float = Field(..., ge=-90, le=90)
+    longitude: float = Field(..., ge=-180, le=180)
+    tz: str
+
+
+class GangaProfileIn(BaseModel):
+    name: str = Field(..., min_length=2, max_length=24, description="Pen name shown to others")
+    languages: list[Literal["en", "hi"]] = Field(..., min_length=1)
+    practices: list[str] = Field(default_factory=list, max_length=6)
+    adult: bool = Field(..., description="Confirms the person is 18 or older")
+    accept_rules: bool
+    birth: Optional[GangaBirth] = Field(None, description="Opt-in: match by kundli and numerology")
+    tz: str = "Asia/Kolkata"
+
+
+class DiyaIn(BaseModel):
+    kind: Literal["seeking", "sharing", "gratitude", "prayer", "partner"]
+    text: str = Field(..., max_length=2000)
+
+
+class LetterIn(BaseModel):
+    text: str = Field(..., max_length=2000)
+
+
+class GangaReportIn(BaseModel):
+    reason: Literal["unsafe", "abuse", "sexual", "money", "spam", "other"] = "other"
